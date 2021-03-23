@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(runs)
+project(gps_injection)
 
 find_package(catkin REQUIRED COMPONENTS
         roscpp
         rospy
+        ublox
         )
 
 catkin_package()
