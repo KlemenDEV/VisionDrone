@@ -19,7 +19,7 @@
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rospy</exec_depend>
 
-  <depend>ublox</depend>
+  <depend>ublox_msgs</depend>
 
   <export>
   </export>
