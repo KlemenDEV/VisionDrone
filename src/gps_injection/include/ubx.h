@@ -126,12 +126,3 @@ generateUBXMessage(uint8_t msgClass, uint8_t msgID, uint8_t *data, uint16_t leng
 
     return result;
 }
-
-// Message generator test sample code
-/*uint8_t data[] = {0xF0, 0x00};
-std::vector<uint8_t> msg = generateUBXMessage(0x06, 0x01, data, 2);
-printf("\n");
-for (uint8_t i : msg) {
-    printf("%02x ", i);
-}
-printf("\n");*/

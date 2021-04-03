@@ -12,7 +12,10 @@ catkin_package()
 include_directories(${catkin_INCLUDE_DIRS} include)
 
 # Node for GPS generator
-add_executable(GPSGenerator
-        src/gps_generator.cc
+add_executable(GPSGenerator src/gps_injection_node.cc
+        src/UBXSender.cc
+        src/GPSData.cc
         )
+
+add_dependencies(GPSGenerator ${catkin_EXPORTED_TARGETS})
 target_link_libraries(GPSGenerator ${catkin_LIBRARIES})
