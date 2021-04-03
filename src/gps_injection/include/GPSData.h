@@ -10,7 +10,7 @@ class GPSData {
 
 public:
     uint32_t time;
-    uint16_t week;
+    uint16_t week = 1721;
 
     int32_t longitude;
     int32_t latitude;

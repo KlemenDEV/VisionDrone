@@ -45,6 +45,7 @@ int main(int argc, char **argv) {
             // check if we got any data from the GPS module
             if (gps_pos_antenna.isComplete() && gps_pos_antenna.has3DLock()) {
                 gps_pos_origin = new GPSData(gps_pos_antenna); // origin location is placed on Heap
+                ROS_INFO("GPS origin set");
             }
 
             continue; // until we have origin point, we can't do any other processing
@@ -52,7 +53,7 @@ int main(int argc, char **argv) {
 
         // TODO: set inject_data depending on mavlink RC messages
 
-        if (inject_data) { // TODO: additional check if data is reliable and relevant (from timestamp)
+        if (inject_data) { // TODO: additional check if data is reliable and relevant
             // TODO: read data from topic and send data offset to true GPS
             // TODO.setTime(gps_time); // use local time
             // ubxSender.sendData(TODO);

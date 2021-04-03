@@ -4,7 +4,11 @@ void GPSData::consume(const uublox_msgs::NavPOSLLH::ConstPtr &msg) {
     if (this->isComplete()) // if we consume on complete data, we re-initialize the data
         this->markDirty();
 
-    // TODO: consume
+    // TODO: verify units!! - use UBX raw units
+    // https://github.com/KumarRobotics/ublox/blob/master/ublox_msgs/msg/NavPOSLLH.msg
+    this->longitude = msg->lon;
+    this->latitude = msg->lat;
+    this->altitude_msl = msg->hMSL;
 
     this->hasPOSLLH = true;
 }
@@ -13,7 +17,13 @@ void GPSData::consume(const uublox_msgs::NavVELNED::ConstPtr &msg) {
     if (this->isComplete()) // if we consume on complete data, we re-initialize the data
         this->markDirty();
 
-    // TODO: consume
+    // TODO: verify units!! - use UBX raw units
+    // https://github.com/KumarRobotics/ublox/blob/master/ublox_msgs/msg/NavVELNED.msg
+    this->ned_north = msg->velN;
+    this->ned_east = msg->velE;
+    this->ned_down = msg->velD;
+    this->speed_2d = msg->gSpeed;
+    this->heading_2d = msg->heading;
 
     this->hasVELNED = true;
 }
@@ -22,7 +32,12 @@ void GPSData::consume(const uublox_msgs::NavSOL::ConstPtr &msg) {
     if (this->isComplete()) // if we consume on complete data, we re-initialize the data
         this->markDirty();
 
-    // TODO: consume
+    // TODO: verify units!! - use UBX raw units
+    // https://github.com/KumarRobotics/ublox/blob/master/ublox_msgs/msg/NavSOL.msg
+    this->fix_type = msg->gpsFix;
+    this->fix_status = msg->flags;
+    this->position_DOP = msg->pDOP;
+    this->satellites = msg->numSV;
 
     this->hasSOLUTION = true;
 }
@@ -36,7 +51,7 @@ void GPSData::markDirty() {
 }
 
 bool GPSData::has3DLock() {
-    return false; // TODO: implement this
+    return this->fix_type == 0x03;
 }
 
 void GPSData::setTime(uint32_t time) {
@@ -45,39 +60,39 @@ void GPSData::setTime(uint32_t time) {
 
 ubx_nav_posllh GPSData::getPOSLLH() {
     ubx_nav_posllh msg_posllh;
-    msg_posllh.time = gps_time;
-    msg_posllh.longitude = 0;
-    msg_posllh.latitude = 0;
-    msg_posllh.altitude_msl = 0;
+    msg_posllh.time = this->gps_time;
+    msg_posllh.longitude = this->longitude;
+    msg_posllh.latitude = this->latitude;
+    msg_posllh.altitude_msl = this->altitude_msl;
     return msg_posllh;
 }
 
 ubx_nav_status GPSData::getSTATUS() {
     ubx_nav_status msg_status;
-    msg_status.time = gps_time;
-    msg_status.fix_type = 0x03;
-    msg_status.fix_status = 0b1101;
+    msg_status.time = this->gps_time;
+    msg_status.fix_type = this->fix_type;
+    msg_status.fix_status = this->fix_status;
     return msg_status;
 }
 
 ubx_nav_solution GPSData::getSOLUTION() {
     ubx_nav_solution msg_solution;
-    msg_solution.time = gps_time;
-    msg_solution.week = 1721;
-    msg_solution.fix_type = 0x03;
-    msg_solution.fix_status = 0b1101;
-    msg_solution.position_DOP = 5;
-    msg_solution.satellites = 5;
+    msg_solution.time = this->gps_time;
+    msg_solution.week = this->week;
+    msg_solution.fix_type = this->fix_type;
+    msg_solution.fix_status = this->fix_status;
+    msg_solution.position_DOP = this->position_DOP;
+    msg_solution.satellites = this->satellites;
     return msg_solution;
 }
 
 ubx_nav_velned GPSData::getVELNED() {
     ubx_nav_velned msg_velned;
-    msg_velned.time = gps_time;
-    msg_velned.ned_north = 0;
-    msg_velned.ned_east = 0;
-    msg_velned.ned_down = 0;
-    msg_velned.speed_2d = 0;
-    msg_velned.heading_2d = 0;
+    msg_velned.time = this->gps_time;
+    msg_velned.ned_north = this->ned_north;
+    msg_velned.ned_east = this->ned_east;
+    msg_velned.ned_down = this->ned_down;
+    msg_velned.speed_2d = this->speed_2d;
+    msg_velned.heading_2d = this->heading_2d;
     return msg_velned;
 }
