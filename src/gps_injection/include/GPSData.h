@@ -42,6 +42,8 @@ public:
     void consume(const uublox_msgs::NavVELNED::ConstPtr &msg);
     void consume(const uublox_msgs::NavSOL::ConstPtr &msg);
 
+    void printData();
+
     ubx_nav_posllh getPOSLLH();
     ubx_nav_status getSTATUS();
     ubx_nav_solution getSOLUTION();

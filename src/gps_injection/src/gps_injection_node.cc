@@ -41,19 +41,19 @@ int main(int argc, char **argv) {
     bool inject_data = false;
 
     while (ros::ok()) {
+        // if gps origin is not set yet, wait for it
         if (gps_pos_origin == nullptr) {
             // check if we got any data from the GPS module
             if (gps_pos_antenna.isComplete() && gps_pos_antenna.has3DLock()) {
                 gps_pos_origin = new GPSData(gps_pos_antenna); // origin location is placed on Heap
                 ROS_INFO("GPS origin set");
+                gps_pos_origin->printData(); // Print location for debugging
             }
-
-            continue; // until we have origin point, we can't do any other processing
         }
 
         // TODO: set inject_data depending on mavlink RC messages
 
-        if (inject_data) { // TODO: additional check if data is reliable and relevant
+        if (inject_data && gps_pos_origin != nullptr) { // TODO: additional check if data is reliable and relevant
             // TODO: read data from topic and send data offset to true GPS
             // TODO.setTime(gps_time); // use local time
             // ubxSender.sendData(TODO);
