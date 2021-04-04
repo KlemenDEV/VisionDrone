@@ -13,27 +13,18 @@ GPSData *gps_pos_origin = nullptr;
 // hold the current position as sent from the GPS module/antenna
 GPSData gps_pos_antenna;
 
-void navPosllhCallback(const ublox_msgs::NavPOSLLH::ConstPtr &msg) {
-    gps_pos_antenna.consume(msg);
-}
-
-void navVelnedCallback(const ublox_msgs::NavVELNED::ConstPtr &msg) {
-    gps_pos_antenna.consume(msg);
-}
-
-void navSolCallback(const ublox_msgs::NavSOL::ConstPtr &msg) {
-    gps_pos_antenna.consume(msg);
-}
-
 int main(int argc, char **argv) {
     ros::init(argc, argv, "gps_injection_node");
     ros::NodeHandle nh;
 
     ros::Rate loop_rate(10); // GPS has 4/5Hz, use 10Hz to fulfill Shannon's requirement
 
-    ros::Subscriber navposllh_sub = nh.subscribe<ublox_msgs::NavPOSLLH>("/ublox/navposllh", 1, navPosllhCallback);
-    ros::Subscriber navvelned_sub = nh.subscribe<ublox_msgs::NavVELNED>("/ublox/navvelned", 1, navVelnedCallback);
-    ros::Subscriber navsol_sub = nh.subscribe<ublox_msgs::NavSOL>("/ublox/navsol", 1, navSolCallback);
+    ros::Subscriber navposllh_sub = nh.subscribe<ublox_msgs::NavPOSLLH>
+            ("/ublox/navposllh", 1, &GPSData::consume, &gps_pos_antenna);
+    ros::Subscriber navvelned_sub = nh.subscribe<ublox_msgs::NavVELNED>
+            ("/ublox/navvelned", 1, &GPSData::consume, &gps_pos_antenna);
+    ros::Subscriber navsol_sub = nh.subscribe<ublox_msgs::NavSOL>
+            ("/ublox/navsol", 1, &GPSData::consume, &gps_pos_antenna);
 
     UBXSender ubxSender;
     uint32_t gps_time = 0;
@@ -70,8 +61,8 @@ int main(int argc, char **argv) {
             gps_pos_antenna.markDirty(); // mark data dirty so we do not re-send same data
         }
 
-        // increment GPS time for 200ms (5Hz loop)
-        gps_time += 200;
+        // increment GPS time for 100ms (10Hz loop)
+        gps_time += 100;
 
         ros::spinOnce();
 
