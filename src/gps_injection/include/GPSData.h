@@ -48,4 +48,6 @@ public:
     ubx_nav_status getSTATUS();
     ubx_nav_solution getSOLUTION();
     ubx_nav_velned getVELNED();
+
+    void consume(GPSData base, double x, double y, double z, double vx, double vy, double vz, double heading);
 };

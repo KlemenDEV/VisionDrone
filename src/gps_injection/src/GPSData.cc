@@ -97,6 +97,28 @@ ubx_nav_velned GPSData::getVELNED() {
     return msg_velned;
 }
 
-void GPSData::printData() {
+/**
+ * Consumes cartesian data and offsets the base GPSData for this cartesian data and stores
+ * in the current GPSData instance.
+ *
+ * @param base - GPSData to offset from
+ * @param x - offset in x axis [m]
+ * @param y - offset in y axis (height) [m]
+ * @param z - offset in z axis [m]
+ * @param vx - velocity along x axis (south to north) [m/s]
+ * @param vy - velocity along y axis (up to down) [m/s]
+ * @param vz - velocity along z axis (east to west) [m/s]
+ * @param heading - heading of the drone relative to the Earth's north
+ */
+void GPSData::consume(GPSData base, double x, double y, double z, double vx, double vy, double vz, double heading) {
+    // TODO: implement this
 
+    // mark complete
+    this->hasPOSLLH = true;
+    this->hasSOLUTION = true;
+    this->hasVELNED = true;
+}
+
+void GPSData::printData() {
+    // TODO: implement this
 }
