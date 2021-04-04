@@ -113,6 +113,13 @@ ubx_nav_velned GPSData::getVELNED() {
 void GPSData::consume(GPSData base, double x, double y, double z, double vx, double vy, double vz, double heading) {
     // TODO: implement this
 
+    // fill out GPS status info
+    this->fix_type = 0x03; // 3D lock
+    this->fix_status = 0b1101;
+    this->position_DOP = 5; // some arbitrary value
+    this->satellites = 99; // 99 indicates we are in cartesian prediction mode on quadcopter's video OSD
+    this->week = 1721; // some arbitrary value
+
     // mark complete
     this->hasPOSLLH = true;
     this->hasSOLUTION = true;
