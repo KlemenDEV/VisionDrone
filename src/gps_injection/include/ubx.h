@@ -6,7 +6,7 @@
 #define PACKED __attribute__((__packed__))
 #define __APM_REQUIRED
 
-#define DEBUG
+//#define DEBUG
 
 // Protocol specification
 // https://www.u-blox.com/sites/default/files/products/documents/u-blox6_ReceiverDescrProtSpec_%28GPS.G6-SW-10018%29_Public.pdf

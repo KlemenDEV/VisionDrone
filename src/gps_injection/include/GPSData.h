@@ -10,7 +10,7 @@ class GPSData {
 
 public:
     uint32_t time;
-    uint16_t week = 1721;
+    uint16_t week;
 
     int32_t longitude;
     int32_t latitude;
@@ -38,9 +38,9 @@ public:
     void setTime(uint32_t time);
     void markDirty();
 
-    void consume(const uublox_msgs::NavPOSLLH::ConstPtr &msg);
-    void consume(const uublox_msgs::NavVELNED::ConstPtr &msg);
-    void consume(const uublox_msgs::NavSOL::ConstPtr &msg);
+    void consume(const ublox_msgs::NavPOSLLH::ConstPtr &msg);
+    void consume(const ublox_msgs::NavVELNED::ConstPtr &msg);
+    void consume(const ublox_msgs::NavSOL::ConstPtr &msg);
 
     void printData();
 

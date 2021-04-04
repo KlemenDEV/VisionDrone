@@ -1,6 +1,6 @@
 #include "GPSData.h"
 
-void GPSData::consume(const uublox_msgs::NavPOSLLH::ConstPtr &msg) {
+void GPSData::consume(const ublox_msgs::NavPOSLLH::ConstPtr &msg) {
     if (this->isComplete()) // if we consume on complete data, we re-initialize the data
         this->markDirty();
 
@@ -12,7 +12,7 @@ void GPSData::consume(const uublox_msgs::NavPOSLLH::ConstPtr &msg) {
     this->hasPOSLLH = true;
 }
 
-void GPSData::consume(const uublox_msgs::NavVELNED::ConstPtr &msg) {
+void GPSData::consume(const ublox_msgs::NavVELNED::ConstPtr &msg) {
     if (this->isComplete()) // if we consume on complete data, we re-initialize the data
         this->markDirty();
 
@@ -26,7 +26,7 @@ void GPSData::consume(const uublox_msgs::NavVELNED::ConstPtr &msg) {
     this->hasVELNED = true;
 }
 
-void GPSData::consume(const uublox_msgs::NavSOL::ConstPtr &msg) {
+void GPSData::consume(const ublox_msgs::NavSOL::ConstPtr &msg) {
     if (this->isComplete()) // if we consume on complete data, we re-initialize the data
         this->markDirty();
 
@@ -35,6 +35,7 @@ void GPSData::consume(const uublox_msgs::NavSOL::ConstPtr &msg) {
     this->fix_status = msg->flags;
     this->position_DOP = msg->pDOP; // [1 / 0.01]
     this->satellites = msg->numSV;
+    this->week = 1721;
 
     this->hasSOLUTION = true;
 }
@@ -44,7 +45,9 @@ bool GPSData::isComplete() {
 }
 
 void GPSData::markDirty() {
-    this->hasPOSLLH = this->hasSOLUTION = this->hasVELNED = false;
+    this->hasPOSLLH = false;
+    this->hasSOLUTION = false;
+    this->hasVELNED = false;
 }
 
 bool GPSData::has3DLock() {
@@ -57,7 +60,7 @@ void GPSData::setTime(uint32_t time) {
 
 ubx_nav_posllh GPSData::getPOSLLH() {
     ubx_nav_posllh msg_posllh;
-    msg_posllh.time = this->gps_time;
+    msg_posllh.time = this->time;
     msg_posllh.longitude = this->longitude;
     msg_posllh.latitude = this->latitude;
     msg_posllh.altitude_msl = this->altitude_msl;
@@ -66,7 +69,7 @@ ubx_nav_posllh GPSData::getPOSLLH() {
 
 ubx_nav_status GPSData::getSTATUS() {
     ubx_nav_status msg_status;
-    msg_status.time = this->gps_time;
+    msg_status.time = this->time;
     msg_status.fix_type = this->fix_type;
     msg_status.fix_status = this->fix_status;
     return msg_status;
@@ -74,7 +77,7 @@ ubx_nav_status GPSData::getSTATUS() {
 
 ubx_nav_solution GPSData::getSOLUTION() {
     ubx_nav_solution msg_solution;
-    msg_solution.time = this->gps_time;
+    msg_solution.time = this->time;
     msg_solution.week = this->week;
     msg_solution.fix_type = this->fix_type;
     msg_solution.fix_status = this->fix_status;
@@ -85,7 +88,7 @@ ubx_nav_solution GPSData::getSOLUTION() {
 
 ubx_nav_velned GPSData::getVELNED() {
     ubx_nav_velned msg_velned;
-    msg_velned.time = this->gps_time;
+    msg_velned.time = this->time;
     msg_velned.ned_north = this->ned_north;
     msg_velned.ned_east = this->ned_east;
     msg_velned.ned_down = this->ned_down;

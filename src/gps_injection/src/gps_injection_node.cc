@@ -13,32 +13,34 @@ GPSData *gps_pos_origin = nullptr;
 // hold the current position as sent from the GPS module/antenna
 GPSData gps_pos_antenna;
 
-void navPosllhCallback(const uublox_msgs::NavPOSLLH::ConstPtr &msg) {
+void navPosllhCallback(const ublox_msgs::NavPOSLLH::ConstPtr &msg) {
     gps_pos_antenna.consume(msg);
 }
 
-void navVelnedCallback(const uublox_msgs::NavVELNED::ConstPtr &msg) {
+void navVelnedCallback(const ublox_msgs::NavVELNED::ConstPtr &msg) {
     gps_pos_antenna.consume(msg);
 }
 
-void navSolCallback(const uublox_msgs::NavSOL::ConstPtr &msg) {
+void navSolCallback(const ublox_msgs::NavSOL::ConstPtr &msg) {
     gps_pos_antenna.consume(msg);
 }
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "GPSGenerator");
+    ros::init(argc, argv, "gps_injection_node");
     ros::NodeHandle nh;
 
     ros::Rate loop_rate(10); // GPS has 4/5Hz, use 10Hz to fulfill Shannon's requirement
 
-    nh.subscribe("ublox/nav/posllh", 1, navPosllhCallback);
-    nh.subscribe("ublox/nav/velned", 1, navVelnedCallback);
-    nh.subscribe("ublox/nav/sol", 1, navSolCallback);
+    ros::Subscriber navposllh_sub = nh.subscribe<ublox_msgs::NavPOSLLH>("/ublox/navposllh", 1, navPosllhCallback);
+    ros::Subscriber navvelned_sub = nh.subscribe<ublox_msgs::NavVELNED>("/ublox/navvelned", 1, navVelnedCallback);
+    ros::Subscriber navsol_sub = nh.subscribe<ublox_msgs::NavSOL>("/ublox/navsol", 1, navSolCallback);
 
     UBXSender ubxSender;
     uint32_t gps_time = 0;
 
     bool inject_data = false;
+
+    ROS_DEBUG("GPS injector ready");
 
     while (ros::ok()) {
         // if gps origin is not set yet, wait for it
@@ -46,8 +48,11 @@ int main(int argc, char **argv) {
             // check if we got any data from the GPS module
             if (gps_pos_antenna.isComplete() && gps_pos_antenna.has3DLock()) {
                 gps_pos_origin = new GPSData(gps_pos_antenna); // origin location is placed on Heap
+
                 ROS_INFO("GPS origin set");
                 gps_pos_origin->printData(); // Print location for debugging
+            } else {
+                ROS_INFO_THROTTLE(5, "GPS origin not ready yet!");
             }
         }
 
@@ -69,10 +74,11 @@ int main(int argc, char **argv) {
         gps_time += 200;
 
         ros::spinOnce();
+
         loop_rate.sleep();
     }
 
-    ubxSender.close();
+    ubxSender.closeSerialPort();
 
     ros::shutdown();
 

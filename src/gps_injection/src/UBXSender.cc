@@ -28,32 +28,30 @@ UBXSender::UBXSender() {
 
     if (tcsetattr(serial_port, TCSANOW, &tty) != 0) {
         printf("Error %i from tcsetattr: %s\n", errno, strerror(errno));
-        return -1;
     }
 }
 
 void UBXSender::sendData(GPSData *data) {
-    // Testing showed status message is not strictly needed for APM to operate
-    /*ubx_nav_status msg_status = data->getSTATUS();
+    ubx_nav_status msg_status = data->getSTATUS();
     std::vector<uint8_t> msg_status_full = generateUBXMessage(UBX_CLASS_NAV, UBX_NAV_STATUS_ID,
                                                               reinterpret_cast<uint8_t *>(&msg_status),
                                                               sizeof(ubx_nav_status));
     write(this->serial_port, msg_status_full.data(), msg_status_full.size());
-    this_thread::sleep_for(std::chrono::milliseconds(100));*/
+    this_thread::sleep_for(std::chrono::milliseconds(50));
 
     ubx_nav_posllh msg_posllh = data->getPOSLLH();
     std::vector<uint8_t> msg_posllh_full = generateUBXMessage(UBX_CLASS_NAV, UBX_NAV_POSLLH_ID,
                                                               reinterpret_cast<uint8_t *>(&msg_posllh),
                                                               sizeof(ubx_nav_posllh));
     write(this->serial_port, msg_posllh_full.data(), msg_posllh_full.size());
-    this_thread::sleep_for(std::chrono::milliseconds(100));
+    this_thread::sleep_for(std::chrono::milliseconds(50));
 
     ubx_nav_velned msg_velned = data->getVELNED();
     std::vector<uint8_t> msg_velned_full = generateUBXMessage(UBX_CLASS_NAV, UBX_NAV_VELNED_ID,
                                                               reinterpret_cast<uint8_t *>(&msg_velned),
                                                               sizeof(ubx_nav_velned));
     write(this->serial_port, msg_velned_full.data(), msg_velned_full.size());
-    this_thread::sleep_for(std::chrono::milliseconds(100));
+    this_thread::sleep_for(std::chrono::milliseconds(50));
 
     ubx_nav_solution msg_solution = data->getSOLUTION();
     std::vector<uint8_t> msg_solution_full = generateUBXMessage(UBX_CLASS_NAV, UBX_NAV_SOLUTION_ID,
@@ -62,7 +60,7 @@ void UBXSender::sendData(GPSData *data) {
     write(this->serial_port, msg_solution_full.data(), msg_solution_full.size());
 }
 
-void UBXSender::close() {
+void UBXSender::closeSerialPort() {
     // close the serial port
     close(this->serial_port);
 }

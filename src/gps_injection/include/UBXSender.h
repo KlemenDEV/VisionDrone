@@ -31,6 +31,6 @@ public:
     UBXSender();
     void sendData(GPSData *data);
 
-    void close();
+    void closeSerialPort();
 
 };

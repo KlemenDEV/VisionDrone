@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+    <node pkg="ublox_gps" type="ublox_gps" name="ublox"
+          output="screen"
+          clear_params="false"
+          respawn="true"
+          respawn_delay="30">
+        <param name="device" type="string" value="/dev/ttyAMA4"/>
+        <rosparam command="load" file="$(find gps_injection)/config/gps_config.yaml"/>
+    </node>
+
+    <node pkg="gps_injection" type="gps_injection_node" name="gps"
+          output="screen"
+          clear_params="false"
+          respawn="true"
+          respawn_delay="30">
+    </node>
+</launch>

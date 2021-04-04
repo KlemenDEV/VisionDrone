@@ -14,8 +14,8 @@ inf:
   all: true
 
 publish:
-  all: true
-  aid:
-    hui: false
   nav:
-    posecef: false
+    status: true
+    posllh: true
+    velned: true
+    sol: true
