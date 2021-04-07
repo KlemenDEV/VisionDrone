@@ -1,8 +1,13 @@
 #pragma once
 
+#include <math.h>
+
 #include <ublox_msgs/NavPOSLLH.h>
 #include <ublox_msgs/NavVELNED.h>
 #include <ublox_msgs/NavSOL.h>
+
+#include <sensor_msgs/NavSatFix.h>
+#include <geometry_msgs/TwistWithCovarianceStamped.h>
 
 #include "ubx.h"
 
@@ -38,16 +43,18 @@ public:
     void setTime(uint32_t time);
     void markDirty();
 
+    // Set of 3 consumers to assemble GPSData from UBLOX messages
     void consume(const ublox_msgs::NavPOSLLH::ConstPtr &msg);
     void consume(const ublox_msgs::NavVELNED::ConstPtr &msg);
     void consume(const ublox_msgs::NavSOL::ConstPtr &msg);
 
-    void printData();
+    // Set of 2 consumers to assemble GPSData from location predictions
+    void consume(const sensor_msgs::NavSatFix::ConstPtr &msg);
+    void consume(const geometry_msgs::TwistWithCovarianceStamped::ConstPtr &msg);
 
     ubx_nav_posllh getPOSLLH();
     ubx_nav_status getSTATUS();
     ubx_nav_solution getSOLUTION();
     ubx_nav_velned getVELNED();
 
-    void consume(GPSData base, double x, double y, double z, double vx, double vy, double vz, double heading);
 };

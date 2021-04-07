@@ -97,21 +97,10 @@ ubx_nav_velned GPSData::getVELNED() {
     return msg_velned;
 }
 
-/**
- * Consumes cartesian data and offsets the base GPSData for this cartesian data and stores
- * in the current GPSData instance.
- *
- * @param base - GPSData to offset from
- * @param x - offset in x axis [m]
- * @param y - offset in y axis (height) [m]
- * @param z - offset in z axis [m]
- * @param vx - velocity along x axis (south to north) [m/s]
- * @param vy - velocity along y axis (up to down) [m/s]
- * @param vz - velocity along z axis (east to west) [m/s]
- * @param heading - heading of the drone relative to the Earth's north
- */
-void GPSData::consume(GPSData base, double x, double y, double z, double vx, double vy, double vz, double heading) {
-    // TODO: implement this
+void GPSData::consume(const sensor_msgs::NavSatFix::ConstPtr &msg) {
+    this->longitude = round(msg->latitude * 1e7); // [deg / 1e-7]
+    this->latitude = round(msg->latitude * 1e7); // [deg / 1e-7]
+    this->altitude_msl = round(msg->altitude * 1000); // Height above mean sea level [mm]
 
     // fill out GPS status info
     this->fix_type = 0x03; // 3D lock
@@ -120,12 +109,25 @@ void GPSData::consume(GPSData base, double x, double y, double z, double vx, dou
     this->satellites = 99; // 99 indicates we are in cartesian prediction mode on quadcopter's video OSD
     this->week = 1721; // some arbitrary value
 
-    // mark complete
+    // we got position and faked gps status
     this->hasPOSLLH = true;
     this->hasSOLUTION = true;
-    this->hasVELNED = true;
 }
 
-void GPSData::printData() {
-    // TODO: implement this
+void GPSData::consume(const geometry_msgs::TwistWithCovarianceStamped::ConstPtr &msg) {
+    // Twist provides local ENU(xyz) frame, we need NED
+    this->ned_north = round(msg->twist.twist.linear.y * 100); // NED north velocity [cm/s]
+    this->ned_east = round(msg->twist.twist.linear.x * 100); // NED east velocity [cm/s]
+    this->ned_down = -round(msg->twist.twist.linear.z * 100); // NED down velocity [cm/s]
+
+    // Calculate 2D speed from E and N
+    this->speed_2d = round(sqrt(pow(msg->twist.twist.linear.y, 2) + pow(msg->twist.twist.linear.x, 2)) *
+                           100); // Ground Speed (2-D) [cm/s]
+
+    // Calculate 2D heading from E and N
+    this->heading_2d = round(atan2(msg->twist.twist.linear.y, msg->twist.twist.linear.x) * (180 / M_PI) *
+                             1e5); // Heading of motion 2-D [deg / 1e-5]
+
+    // we got velocity data
+    this->hasVELNED = true;
 }

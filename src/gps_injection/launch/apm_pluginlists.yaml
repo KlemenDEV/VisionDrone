@@ -1,0 +1,20 @@
+plugin_blacklist:
+  # common
+  - actuator_control
+  - ftp
+  - safety_area
+  - hil
+  # extras
+  - altitude
+  - debug_value
+  - image_pub
+  - px4flow
+  - vibration
+  - vision_speed_estimate
+  - wheel_odometry
+  # custom
+  - fake_gps
+
+plugin_whitelist:
+  - rc_io
+  #- 'sys_*'

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+    <!-- UBLOX GPS module driver -->
+    <node pkg="ublox_gps" type="ublox_gps" name="ublox"
+          output="screen"
+          clear_params="false"
+          respawn="true"
+          respawn_delay="30">
+        <param name="device" type="string" value="/dev/ttyAMA4"/>
+        <rosparam command="load" file="$(find gps_injection)/config/gps_config.yaml"/>
+    </node>
+
+    <!-- GPS injector serial messages generator and switcher -->
+    <node pkg="gps_injection" type="gps_injection_node" name="gps"
+          output="screen"
+          clear_params="false"
+          respawn="true"
+          respawn_delay="30">
+    </node>
+
+    <!-- Mavlink driver to listen to switch for GPS source switching -->
+    <include file="$(find gps_injection)/launch/mavros.launch">
+        <arg name="pluginlists_yaml" value="$(find gps_injection)/launch/apm_pluginlists.yaml"/>
+        <arg name="config_yaml" value="$(find gps_injection)/launch/apm_config.yaml"/>
+
+        <arg name="fcu_url" value="/dev/ttyAMA1:57600"/>
+        <arg name="gcs_url" value=""/>
+        <arg name="tgt_system" value="1"/>
+        <arg name="tgt_component" value="1"/>
+        <arg name="log_output" value="screen"/>
+        <arg name="fcu_protocol" value="v1.0"/>
+        <arg name="respawn_mavros" value="true"/>
+    </include>
+    <node pkg="rosservice" type="rosservice" name="mavros_stream_rate" args="call /mavros/set_stream_rate 0 10 1" />
+</launch>

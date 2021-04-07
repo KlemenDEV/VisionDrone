@@ -5,6 +5,9 @@ find_package(catkin REQUIRED COMPONENTS
         roscpp
         rospy
         ublox_msgs
+        sensor_msgs
+        geometry_msgs
+        mavros_msgs
         )
 
 catkin_package()

@@ -1,0 +1,38 @@
+# Common configuration for APM2 autopilot
+#
+# node:
+startup_px4_usb_quirk: false
+
+# --- system plugins ---
+
+# sys_status & sys_time connection options
+conn:
+  heartbeat_rate: 1.0    # send hertbeat rate in Hertz
+  heartbeat_mav_type: "ONBOARD_CONTROLLER"
+  timeout: 10.0          # hertbeat timeout in seconds
+  timesync_rate: 10.0    # TIMESYNC rate in Hertz (feature disabled if 0.0)
+  system_time_rate: 1.0  # send system time to FCU rate in Hertz (disabled if 0.0)
+
+# sys_status
+sys:
+  min_voltage: 10.0   # diagnostics min voltage
+  disable_diag: false # disable all sys_status diagnostics, except heartbeat
+
+# sys_time
+time:
+  time_ref_source: "fcu"  # time_reference source
+  timesync_mode: MAVLINK
+  timesync_avg_alpha: 0.6 # timesync averaging factor
+
+# --- mavros plugins ---
+
+# imu_pub
+imu:
+  frame_id: "base_link"
+  # need find actual values
+  linear_acceleration_stdev: 0.0003
+  angular_velocity_stdev: 0.0003490659 // 0.02 degrees
+  orientation_stdev: 1.0
+  magnetic_stdev: 0.0
+
+rc_io: {}

@@ -37,27 +37,29 @@ void UBXSender::sendData(GPSData *data) {
                                                               reinterpret_cast<uint8_t *>(&msg_status),
                                                               sizeof(ubx_nav_status));
     write(this->serial_port, msg_status_full.data(), msg_status_full.size());
-    this_thread::sleep_for(std::chrono::milliseconds(50));
+    tcdrain(this->serial_port); // Wait until transmission ends
 
     ubx_nav_posllh msg_posllh = data->getPOSLLH();
     std::vector<uint8_t> msg_posllh_full = generateUBXMessage(UBX_CLASS_NAV, UBX_NAV_POSLLH_ID,
                                                               reinterpret_cast<uint8_t *>(&msg_posllh),
                                                               sizeof(ubx_nav_posllh));
     write(this->serial_port, msg_posllh_full.data(), msg_posllh_full.size());
-    this_thread::sleep_for(std::chrono::milliseconds(50));
+    tcdrain(this->serial_port); // Wait until transmission ends
 
     ubx_nav_velned msg_velned = data->getVELNED();
     std::vector<uint8_t> msg_velned_full = generateUBXMessage(UBX_CLASS_NAV, UBX_NAV_VELNED_ID,
                                                               reinterpret_cast<uint8_t *>(&msg_velned),
                                                               sizeof(ubx_nav_velned));
     write(this->serial_port, msg_velned_full.data(), msg_velned_full.size());
-    this_thread::sleep_for(std::chrono::milliseconds(50));
+    tcdrain(this->serial_port); // Wait until transmission ends
 
     ubx_nav_solution msg_solution = data->getSOLUTION();
     std::vector<uint8_t> msg_solution_full = generateUBXMessage(UBX_CLASS_NAV, UBX_NAV_SOLUTION_ID,
                                                                 reinterpret_cast<uint8_t *>(&msg_solution),
                                                                 sizeof(ubx_nav_solution));
     write(this->serial_port, msg_solution_full.data(), msg_solution_full.size());
+    tcdrain(this->serial_port); // Wait until transmission ends
+
 }
 
 void UBXSender::closeSerialPort() {
