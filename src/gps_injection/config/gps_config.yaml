@@ -4,8 +4,13 @@ device: /dev/ttyAMA4
 frame_id: gps
 rate: 4
 nav_rate: 4
-dynamic_model: airborne2
+dynamic_model: portable
 fix_mode: auto
+gnss:
+  sbas: true
+sbas:
+  max: 3
+  usage: 3 # ranging source + corrections
 
 uart1:
   baudrate: 38400
