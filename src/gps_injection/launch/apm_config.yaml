@@ -1,11 +1,5 @@
-# Common configuration for APM2 autopilot
-#
-# node:
 startup_px4_usb_quirk: false
 
-# --- system plugins ---
-
-# sys_status & sys_time connection options
 conn:
   heartbeat_rate: 1.0    # send hertbeat rate in Hertz
   heartbeat_mav_type: "ONBOARD_CONTROLLER"
@@ -13,20 +7,15 @@ conn:
   timesync_rate: 10.0    # TIMESYNC rate in Hertz (feature disabled if 0.0)
   system_time_rate: 1.0  # send system time to FCU rate in Hertz (disabled if 0.0)
 
-# sys_status
 sys:
   min_voltage: 10.0   # diagnostics min voltage
   disable_diag: false # disable all sys_status diagnostics, except heartbeat
 
-# sys_time
 time:
   time_ref_source: "fcu"  # time_reference source
   timesync_mode: MAVLINK
   timesync_avg_alpha: 0.6 # timesync averaging factor
 
-# --- mavros plugins ---
-
-# imu_pub
 imu:
   frame_id: "base_link"
   # need find actual values
@@ -35,4 +24,27 @@ imu:
   orientation_stdev: 1.0
   magnetic_stdev: 0.0
 
+global_position:
+  frame_id: "map"             # origin frame
+  child_frame_id: "base_link" # body-fixed frame
+  rot_covariance: 99999.0   # covariance for attitude?
+  gps_uere: 1.0             # User Equivalent Range Error (UERE) of GPS sensor (m)
+  use_relative_alt: true    # use relative altitude for local coordinates
+  tf:
+    send: false               # send TF?
+    frame_id: "map"  # TF frame_id
+    global_frame_id: "earth"  # TF earth frame_id
+    child_frame_id: "base_link" # TF child_frame_id
+
 rc_io: {}
+
+distance_sensor:
+  sonar_pub:
+    id: 0
+    frame_id: "sonar"
+    orientation: PITCH_270
+    field_of_view: 0.0
+    send_tf: true
+    sensor_position: {x:  0.0, y:  0.0, z:  -0.1}
+
+rangefinder: {}

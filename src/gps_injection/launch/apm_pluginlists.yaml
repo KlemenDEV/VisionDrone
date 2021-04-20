@@ -1,10 +1,8 @@
 plugin_blacklist:
-  # common
   - actuator_control
   - ftp
   - safety_area
   - hil
-  # extras
   - altitude
   - debug_value
   - image_pub
@@ -12,9 +10,10 @@ plugin_blacklist:
   - vibration
   - vision_speed_estimate
   - wheel_odometry
-  # custom
   - fake_gps
 
 plugin_whitelist:
   - rc_io
-  #- 'sys_*'
+  - rangefinder
+  - distance_sensor
+  - global_position
