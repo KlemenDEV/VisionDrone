@@ -10,6 +10,7 @@ sudo apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-key C1CF
 sudo apt-get update
 sudo apt-get upgrade
 sudo apt install -y python-rosdep python-rosinstall-generator python-wstool python-rosinstall build-essential cmake
+pip install moviepy
 sudo rosdep init
 rosdep update
 
@@ -18,7 +19,7 @@ cd ~/ros_catkin_ws
 rosinstall_generator ros_comm movie_publisher dynamic_reconfigure rosbag rostest ublox_msgs ublox sensor_msgs geometry_msgs mavros_msgs mavros tf sensor_msgs image_transport cv_bridge --rosdistro melodic --deps --wet-only --tar > melodic-custom_ros.rosinstall
 ```
 
-## 2. Build Pangolin
+## 2. Build ORB SLAM 3
 
 ```
 cd non_ros/Pangolin
@@ -29,15 +30,14 @@ cmake ..
 cmake --build .
 ```
 
-## 3. Build ORB SLAM 3
-
 ```
 cd non_ros/orb_slam3
 sudo apt install libeigen3-dev libblas-dev liblapack-dev libglew-dev libboost-serialization-dev libpcap-dev libssl-dev
+sudo ln -s /usr/include/eigen3/Eigen /usr/include/Eigen
 ./build.sh
 ```
 
-## 4. Build librealsense
+## 3. Build librealsense
 
 ```
 cd non_ros/librealsense
@@ -55,10 +55,6 @@ sudo make install
 ```
 
 ## 5. Build the custom workspace
-
-```
-sudo ln -s /usr/include/eigen3/Eigen /usr/include/Eigen
-```
 
 Run catkin_make in the workspace
 
