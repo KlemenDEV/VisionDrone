@@ -5,7 +5,7 @@
         args="0 0 0 0 0 0 map base_link 50" />
 
   <node name="movie_publisher_node" pkg="movie_publisher" type="movie_publisher_node">
-	<param name="movie_file" type="string" value="$(dirname)/../test1.mp4" />
+	<param name="movie_file" type="string" value="$(dirname)/../../runs/test1.mp4" />
 	<param name="fps" type="double" value="30" />
   </node>
 
