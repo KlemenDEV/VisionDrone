@@ -16,7 +16,7 @@ rosdep update
 
 mkdir -p ~/ros_catkin_ws
 cd ~/ros_catkin_ws
-rosinstall_generator ros_comm movie_publisher dynamic_reconfigure rosbag rostest ublox_msgs ublox sensor_msgs geometry_msgs mavros_msgs mavros tf sensor_msgs image_transport cv_bridge --rosdistro melodic --deps --wet-only --tar > melodic-custom_ros.rosinstall
+rosinstall_generator ros_comm movie_publisher dynamic_reconfigure usb_cam rosbag rostest ublox_msgs ublox sensor_msgs geometry_msgs mavros_msgs mavros tf sensor_msgs image_transport cv_bridge --rosdistro melodic --deps --wet-only --tar > melodic-custom_ros.rosinstall
 ```
 
 ## 2. Build ORB SLAM 3
@@ -60,8 +60,67 @@ Run catkin_make in the workspace
 
 # Pi config.txt
 
-TODO
+```
+# Pi camera
+dtparam=i2c_arm=on
+start_x=1
+gpu_mem=128
+
+# Multiple UARTs
+enable_uart=1
+dtoverlay=uart2
+dtoverlay=uart3
+dtoverlay=uart4
+dtoverlay=uart5
+
+# turn off bluetooth
+dtoverlay=disable-bt
+
+# shutdown button
+dtoverlay=gpio-shutdown,gpio_pin=20,active_low=1,gpio_pull=up,debounce=3000
+```
 
 # WiFi configuration
 
-TODO
+Based on https://thepi.io/how-to-use-your-raspberry-pi-as-a-wireless-access-point/
+
+
+```
+/etc/dhcpcd.conf
+
+NOTHING
+
+/etc/network/interfaces
+
+auto wlan0
+iface wlan0 inet static
+address 192.168.42.1
+netmask 255.255.255.0
+
+/etc/hostapd/hostapd.conf
+
+interface=wlan0
+#bridge=br0
+hw_mode=g
+channel=7
+wmm_enabled=0
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+wpa=2
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+ssid=VisionDrone
+wpa_passphrase=visiondrone
+
+/etc/default/hostapd
+
+DAEMON_CONF="/etc/hostapd/hostapd.conf"
+
+/etc/dnsmasq.conf
+
+no-resolv
+interface=wlan0
+dhcp-range=192.168.42.10,192.168.42.30,255.255.255.0,24h
+```
