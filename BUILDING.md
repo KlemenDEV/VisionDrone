@@ -61,3 +61,11 @@ sudo ln -s /usr/include/eigen3/Eigen /usr/include/Eigen
 ```
 
 Run catkin_make in the workspace
+
+# Pi config.txt
+
+TODO
+
+# WiFi configuration
+
+TODO
