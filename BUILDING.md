@@ -60,7 +60,7 @@ Run catkin_make in the workspace
 
 # Pi config.txt
 
-Make sure to disable tty in boot command so boot messages are not printed to serial.
+Make sure to disable console=serial0,115200 in boot command so boot messages are not printed to serial.
 
 ```
 # Pi camera
