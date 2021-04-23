@@ -60,6 +60,8 @@ Run catkin_make in the workspace
 
 # Pi config.txt
 
+Make sure to disable tty in boot command so boot messages are not printed to serial.
+
 ```
 # Pi camera
 dtparam=i2c_arm=on
