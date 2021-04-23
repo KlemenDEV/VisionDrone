@@ -1,3 +1,37 @@
+# Pi config.txt
+
+Make sure to disable console=serial0,115200 in boot command so boot messages are not printed to serial.
+
+```
+# Pi camera
+dtparam=i2c_arm=on
+start_x=1
+gpu_mem=128
+
+# Multiple UARTs
+enable_uart=1
+dtoverlay=uart2
+dtoverlay=uart3
+dtoverlay=uart4
+dtoverlay=uart5
+
+# turn off bluetooth
+dtoverlay=disable-bt
+
+# shutdown button
+dtoverlay=gpio-shutdown,gpio_pin=20,active_low=1,gpio_pull=up,debounce=3000
+```
+
+# Initial Pi setup
+
+```
+rm -rf ~/*
+sudo apt purge xserver* lightdm* raspberrypi-ui-mods vlc* lxde* chromium* desktop* gnome* gstreamer* gtk* hicolor-icon-theme* lx* mesa* 'x11-*'
+sudo apt --purge autoremove
+sudo apt update
+sudo apt upgrade
+```
+
 # Building instructions
 
 ## 1. Install ROS and required packages
@@ -57,30 +91,6 @@ sudo make install
 ## 5. Build the custom workspace
 
 Run catkin_make in the workspace
-
-# Pi config.txt
-
-Make sure to disable console=serial0,115200 in boot command so boot messages are not printed to serial.
-
-```
-# Pi camera
-dtparam=i2c_arm=on
-start_x=1
-gpu_mem=128
-
-# Multiple UARTs
-enable_uart=1
-dtoverlay=uart2
-dtoverlay=uart3
-dtoverlay=uart4
-dtoverlay=uart5
-
-# turn off bluetooth
-dtoverlay=disable-bt
-
-# shutdown button
-dtoverlay=gpio-shutdown,gpio_pin=20,active_low=1,gpio_pull=up,debounce=3000
-```
 
 # WiFi configuration
 
