@@ -51,7 +51,17 @@ rosdep update
 
 mkdir -p ~/ros_catkin_ws
 cd ~/ros_catkin_ws
+rosinstall_generator ros_comm --rosdistro melodic --deps --wet-only --tar > melodic-ros_comm-wet.rosinstall
+wstool init src melodic-ros_comm-wet.rosinstall
+
 rosinstall_generator ros_comm movie_publisher dynamic_reconfigure usb_cam rosbag rostest ublox_msgs ublox sensor_msgs geometry_msgs mavros_msgs mavros tf sensor_msgs image_transport cv_bridge --rosdistro melodic --deps --wet-only --tar > melodic-custom_ros.rosinstall
+
+wstool merge -t src melodic-custom_ros.rosinstall
+wstool update -t src
+
+rosdep install --from-paths src --ignore-src --rosdistro melodic -y -r --os=debian:buster
+
+sudo ./src/catkin/bin/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release --install-space /opt/ros/melodic
 ```
 
 ## 2. Build ORB SLAM 3
