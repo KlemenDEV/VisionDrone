@@ -25,7 +25,8 @@ dtoverlay=gpio-shutdown,gpio_pin=20,active_low=1,gpio_pull=up,debounce=3000
 # Initial Pi setup
 
 ```
-rm -rf ~/*
+cd ~
+rm -rf Bookshelf  Desktop  Documents  Downloads  Music  Pictures  Public  Templates  Videos
 sudo apt purge xserver* lightdm* raspberrypi-ui-mods vlc* lxde* chromium* desktop* gnome* gstreamer* gtk* hicolor-icon-theme* lx* mesa* 'x11-*'
 sudo apt --purge autoremove
 sudo apt update
