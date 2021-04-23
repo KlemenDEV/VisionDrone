@@ -61,7 +61,10 @@ wstool update -t src
 
 rosdep install --from-paths src --ignore-src --rosdistro melodic -y -r --os=debian:buster
 
-sudo ./src/catkin/bin/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release --install-space /opt/ros/melodic
+sudo ./src/catkin/bin/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release --install-space /opt/ros/melodic -j2
+
+source /opt/ros/melodic/setup.bash
+echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc
 ```
 
 ## 2. Build ORB SLAM 3
