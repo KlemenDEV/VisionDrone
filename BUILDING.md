@@ -114,14 +114,8 @@ Based on https://thepi.io/how-to-use-your-raspberry-pi-as-a-wireless-access-poin
 ```
 /etc/dhcpcd.conf
 
-NOTHING
-
-/etc/network/interfaces
-
-auto wlan0
-iface wlan0 inet static
-address 192.168.42.1
-netmask 255.255.255.0
+interface wlan0
+static ip_address=192.168.42.1/24
 
 /etc/hostapd/hostapd.conf
 
