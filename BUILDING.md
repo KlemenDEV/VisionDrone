@@ -110,6 +110,11 @@ Run catkin_make in the workspace
 
 Based on https://thepi.io/how-to-use-your-raspberry-pi-as-a-wireless-access-point/
 
+```
+sudo systemctl unmask hostapd
+sudo systemctl enable hostapd
+sudo systemctl start hostapd
+```
 
 ```
 /etc/dhcpcd.conf
