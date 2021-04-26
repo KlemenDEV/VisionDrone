@@ -42,5 +42,7 @@
     </node>
 
     <!-- GENERATE ROSBAG -->
+    <node pkg="rosbag" type="record" name="data_capture"
+       args="$(eval 'record -o ~/rosbag_rec/' + input('Enter rec file name:') + '.bag /rosout_agg')"/>
 
 </launch>
