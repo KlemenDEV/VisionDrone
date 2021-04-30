@@ -30,7 +30,7 @@
         <arg name="tgt_component" value="1"/>
         <arg name="log_output" value="screen"/>
         <arg name="fcu_protocol" value="v1.0"/>
-        <arg name="respawn_mavros" value="true"/>
     </include>
-    <node pkg="rosservice" type="rosservice" name="mavros_stream_rate" args="call /mavros/set_stream_rate 0 10 1" />
+    <node pkg="rosservice" type="rosservice" name="mavros_stream_rate" args="call /mavros/set_stream_rate 0 10 1"
+          launch-prefix="bash -c 'sleep 6; $0 $@' "/>
 </launch>
