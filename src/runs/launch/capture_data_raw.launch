@@ -42,11 +42,8 @@
        args="$(eval 'record --lz4 -O /media/usb/rosbags/' + raw_input('Enter rec file name: ') + '.bag
           /rosout_agg
 
-          /camera/accel/sample
-          /camera/gyro/sample
-
+          /camera/imu
           /camera/color/image_raw
-          /camera/color/camera_info
 
           /pi_camera/image_raw
           /pi_camera/camera_info
