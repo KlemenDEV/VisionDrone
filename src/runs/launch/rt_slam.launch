@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+    <!-- START SENSORS -->
+    <include file="$(find runs)/launch/sensors.launch"/>
+
+    <!-- MAP GPS LOCATION TO LOCAL -->
+    <include file="$(find gps_data_fusion)/launch/gps_to_local.launch"/>
+</launch>

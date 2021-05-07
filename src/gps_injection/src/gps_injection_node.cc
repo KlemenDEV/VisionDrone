@@ -6,6 +6,10 @@
 
 #include <sensor_msgs/NavSatFix.h>
 #include <geometry_msgs/TwistWithCovarianceStamped.h>
+#include <geographic_msgs/GeoPose.h>
+#include <geographic_msgs/GeoPoint.h>
+
+#include <navsat_transform.h>
 
 #include <mavros_msgs/RCIn.h>
 
@@ -20,6 +24,9 @@ GPSData gps_pos_predicted;
 
 // if true, predicted position is injected instead of GPS pass-through
 volatile bool inject_data = false;
+
+// if true, home position has been set (happens when 3D fix is obtained)
+bool home_set = false;
 
 void rcInCallback(const mavros_msgs::RCIn::ConstPtr &msg) {
     // switch depending on the Channel 8 value (> 1500 -> inject data)
@@ -60,6 +67,9 @@ int main(int argc, char **argv) {
     ros::Subscriber mavlinkrc_sub = nh.subscribe<mavros_msgs::RCIn>
             ("/mavros/rc/in", 1, rcInCallback);
 
+    // Set datum service client
+    ros::ServiceClient set_datum_client = n.serviceClient<robot_localization::SetDatum>("set_datum");
+
     UBXSender ubxSender;
     uint32_t gps_time = 0;
 
@@ -79,6 +89,27 @@ int main(int argc, char **argv) {
             ubxSender.sendData(&gps_pos_antenna);
 
             gps_pos_antenna.markDirty(); // mark data dirty so we do not re-send same data
+        }
+
+        if (!home_set && gps_pos_antenna.isComplete() && gps_pos_antenna.has3DLock()) {
+            geographic_msgs::GeoPoint datumPosition;
+            datumPosition.latitude = gps_pos_antenna.latitude * 1e-7; // deg
+            datumPosition.longitude = gps_pos_antenna.longitude * 1e-7; // deg
+            datumPosition.altitude = gps_pos_antenna.altitude_msl * 1e-3; // m
+
+            geographic_msgs::GeoPose datumPose;
+            datumLocation.position = datumPosition;
+            // TODO: set orientation
+
+            if (set_datum_client.call(datumPose)) {
+                ROS_INFO("GLOBAL GPS HOME LOCATION (DATUM) set and propagated to other services");
+                ROS_INFO("DATUM: lat: %f, lon: %f, alt: %f", datumPosition.latitude, datumPosition.longitude,
+                         datumPosition.altitude);
+            } else {
+                ROS_ERROR("FAILED TO PROPAGATE GLOBAL GPS HOME LOCATION (DATUM)");
+            }
+
+            home_set = true;
         }
 
         // increment GPS time for 20ms (50Hz loop)
