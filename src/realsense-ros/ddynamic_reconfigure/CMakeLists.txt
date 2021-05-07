@@ -16,7 +16,7 @@ catkin_package(
 )
 
 include_directories(
-  include
+        include
 )
 include_directories(
   SYSTEM 
@@ -61,7 +61,7 @@ if (CATKIN_ENABLE_TESTING)
     endif()
     
     add_executable(ddynamic_reconfigure_auto_update_test
-        test/ddynamic_reconfigure_auto_update_test.cpp)
+            test/ddynamic_reconfigure_auto_update_test.cpp)
     target_link_libraries(ddynamic_reconfigure_auto_update_test ${PROJECT_NAME}
         ${catkin_LIBRARIES})
 
