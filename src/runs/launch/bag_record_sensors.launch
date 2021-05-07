@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+    <!-- START SENSORS -->
+    <include file="$(find runs)/launch/sensors.launch"/>
+
+    <!-- RECORD ROSBAG -->
+    <node pkg="rosbag" type="record" name="data_capture"
+       args="$(eval 'record --lz4 -O /media/usb/rosbags/' + raw_input('Enter rec file name: ') + '.bag
+          /rosout_agg
+
+          /camera/imu
+          /camera/color/image_raw
+
+          /pi_camera/image_raw
+          /pi_camera/camera_info
+
+          /ublox/fix
+          /ublox/fix_velocity
+          /ublox/navsol
+          /ublox/navposllh
+          /ublox/navvelned
+
+          /mavros/global_position/compass_hdg
+          /mavros/global_position/rel_alt
+          /mavros/imu/static_pressure
+          /mavros/rc/in
+       ')"/>
+
+</launch>
