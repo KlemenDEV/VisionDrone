@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>gps_injection</name>
+  <name>gps_data_fusion</name>
   <version>0.0.0</version>
   <description>The gps_data_fusion package</description>
 
