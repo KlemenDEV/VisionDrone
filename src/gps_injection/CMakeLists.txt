@@ -8,6 +8,8 @@ find_package(catkin REQUIRED COMPONENTS
         sensor_msgs
         geometry_msgs
         mavros_msgs
+        geographic_msgs
+        robot_localization
         )
 
 catkin_package()

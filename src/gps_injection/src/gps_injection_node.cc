@@ -5,13 +5,16 @@
 #include <ublox_msgs/NavSOL.h>
 
 #include <sensor_msgs/NavSatFix.h>
+#include <sensor_msgs/Imu.h>
+
 #include <geometry_msgs/TwistWithCovarianceStamped.h>
+
 #include <geographic_msgs/GeoPose.h>
 #include <geographic_msgs/GeoPoint.h>
 
-#include <navsat_transform.h>
-
 #include <mavros_msgs/RCIn.h>
+
+#include <navsat_transform.h>
 
 #include "UBXSender.h"
 #include "GPSData.h"
@@ -28,6 +31,9 @@ volatile bool inject_data = false;
 // if true, home position has been set (happens when 3D fix is obtained)
 bool home_set = false;
 
+ros::Subscriber imuorient_sub;
+geometry_msgs::Quaternion orientation_last;
+
 void rcInCallback(const mavros_msgs::RCIn::ConstPtr &msg) {
     // switch depending on the Channel 8 value (> 1500 -> inject data)
     bool set_value = msg->channels[7] > 1800;
@@ -41,6 +47,10 @@ void rcInCallback(const mavros_msgs::RCIn::ConstPtr &msg) {
             ROS_INFO("GPS injection system source: UBLOX ANTENNA");
         }
     }
+}
+
+void imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg) {
+    orientation_last = msg->orientation;
 }
 
 int main(int argc, char **argv) {
@@ -62,6 +72,10 @@ int main(int argc, char **argv) {
             ("/visionpos/pose", 1, &GPSData::consume, &gps_pos_predicted);
     ros::Subscriber predictvel_sub = nh.subscribe<geometry_msgs::TwistWithCovarianceStamped>
             ("/visionpos/velocity", 1, &GPSData::consume, &gps_pos_predicted);
+
+    // IMU orientation (for initial pose)
+    imuorient_sub = nh.subscribe<sensor_msgs::Imu>
+            ("/mavros/imu/data", 1, imuDataCallback);
 
     // Set inject_data depending on mavlink RC messages
     ros::Subscriber mavlinkrc_sub = nh.subscribe<mavros_msgs::RCIn>
@@ -99,7 +113,7 @@ int main(int argc, char **argv) {
 
             geographic_msgs::GeoPose datumPose;
             datumLocation.position = datumPosition;
-            // TODO: set orientation
+            datumLocation.orientation = orientation_last;
 
             if (set_datum_client.call(datumPose)) {
                 ROS_INFO("GLOBAL GPS HOME LOCATION (DATUM) set and propagated to other services");
@@ -108,6 +122,9 @@ int main(int argc, char **argv) {
             } else {
                 ROS_ERROR("FAILED TO PROPAGATE GLOBAL GPS HOME LOCATION (DATUM)");
             }
+
+            // we no longer need imu data, unsubscribe
+            imuorient_sub.shutdown();
 
             home_set = true;
         }

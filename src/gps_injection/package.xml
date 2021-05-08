@@ -24,6 +24,7 @@
   <depend>geometry_msgs</depend>
   <depend>mavros_msgs</depend>
   <depend>robot_localization</depend>
+  <depend>geographic_msgs</depend>
 
   <export>
   </export>
