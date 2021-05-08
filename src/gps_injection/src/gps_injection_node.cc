@@ -14,7 +14,7 @@
 
 #include <mavros_msgs/RCIn.h>
 
-#include <navsat_transform.h>
+#include <robot_localization/navsat_transform.h>
 
 #include "UBXSender.h"
 #include "GPSData.h"
@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
             ("/mavros/rc/in", 1, rcInCallback);
 
     // Set datum service client
-    ros::ServiceClient set_datum_client = n.serviceClient<robot_localization::SetDatum>("set_datum");
+    ros::ServiceClient set_datum_client = nh.serviceClient<robot_localization::SetDatum>("set_datum");
 
     UBXSender ubxSender;
     uint32_t gps_time = 0;
@@ -112,10 +112,13 @@ int main(int argc, char **argv) {
             datumPosition.altitude = gps_pos_antenna.altitude_msl * 1e-3; // m
 
             geographic_msgs::GeoPose datumPose;
-            datumLocation.position = datumPosition;
-            datumLocation.orientation = orientation_last;
+            datumPose.position = datumPosition;
+            datumPose.orientation = orientation_last;
 
-            if (set_datum_client.call(datumPose)) {
+            robot_localization::SetDatum setDatum;
+            setDatum.request.geo_pose = datumPose;
+
+            if (set_datum_client.call(setDatum)) {
                 ROS_INFO("GLOBAL GPS HOME LOCATION (DATUM) set and propagated to other services");
                 ROS_INFO("DATUM: lat: %f, lon: %f, alt: %f", datumPosition.latitude, datumPosition.longitude,
                          datumPosition.altitude);
