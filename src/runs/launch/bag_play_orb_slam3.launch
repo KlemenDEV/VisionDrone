@@ -2,7 +2,7 @@
 
 <launch>
     <!-- PLAY ROSBAG -->
-    <node pkg="rosbag" type="play" name="data_loader" args="/home/pylo/Desktop/groundwalk1.bag" required="true"/>
+    <node pkg="rosbag" type="play" name="data_loader" args="/home/pylo/Desktop/test.bag" required="true"/>
 
     <node pkg="tf"
           type="static_transform_publisher"
@@ -12,7 +12,7 @@
     <remap from="/camera/image_raw" to="/camera/color/image_raw"/>
     <remap from="/imu" to="/camera/imu"/>
 
-    <node name="Mono" pkg="orb_slam3" type="Mono" output="screen"
+    <node name="Mono" pkg="orb_slam3" type="Mono_Inertial2" output="screen"
           args="$(dirname)/../../../non_ros/orb_slam3/Vocabulary/ORBvoc.txt $(dirname)/../../orb_slam3/launch/orb_slam3.yaml" />
 
 </launch>
