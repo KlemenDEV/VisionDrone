@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+    <!-- REALSENSE CAMERA -->
+    <include file="$(find runs)/launch/subsystems/rs_d435i_rgbdi.launch"/>
+
+    <!-- RECORD ROSBAG -->
+    <node pkg="rosbag" type="record" name="data_capture"
+          args="$(eval 'record --tcpnodelay --buffsize 0 -O /media/usb/rosbags/' + raw_input('Enter rec file name: ') + '.bag
+          /camera/imu
+
+          /camera/color/image_raw
+          /camera/color/camera_info
+
+          /camera/depth/camera_info
+          /camera/aligned_depth_to_color/image_raw
+       ')"/>
+
+</launch>

@@ -2,11 +2,11 @@
 
 <launch>
     <!-- REALSENSE CAMERA -->
-    <include file="$(find realsense2_camera)/launch/rs_d435i_custom.launch"/>
+    <include file="$(find runs)/launch/subsystems/rs_d435i_rgbi.launch"/>
 
     <!-- RECORD ROSBAG -->
     <node pkg="rosbag" type="record" name="data_capture"
-          args="$(eval 'record --tcpnodelay --chunksize=4096 --buffsize 0 -O /media/usb/rosbags/' + raw_input('Enter rec file name: ') + '.bag
+          args="$(eval 'record --tcpnodelay --buffsize 0 -O /media/usb/rosbags/' + raw_input('Enter rec file name: ') + '.bag
           /camera/imu
           /camera/color/image_raw
        ')"/>

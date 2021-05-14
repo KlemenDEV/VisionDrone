@@ -4,14 +4,12 @@
     <!-- START SENSORS -->
     <include file="$(find runs)/launch/subsystems/sensors.launch"/>
 
-    <!-- GPS injector so APM navigation works -->
-    <node pkg="gps_injection" type="gps_injection_node" name="gps" output="screen" required="true"/>
+    <!-- REALSENSE CAMERA -->
+    <include file="$(find runs)/launch/subsystems/rs_d435i_rgbi.launch"/>
 
     <!-- RECORD ROSBAG -->
     <node pkg="rosbag" type="record" name="data_capture"
-       args="$(eval 'record --udp -b 0 --chunksize=4096 -O /media/usb/rosbags/' + raw_input('Enter rec file name: ') + '.bag
-          /rosout_agg
-
+          args="$(eval 'record --tcpnodelay --buffsize 0 -O /media/usb/rosbags/' + raw_input('Enter rec file name: ') + '.bag
           /camera/imu
           /camera/color/image_raw
 
