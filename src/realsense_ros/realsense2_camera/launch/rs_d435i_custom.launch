@@ -3,14 +3,18 @@
     <arg name="color_height"        default="480"/>
     <arg name="enable_color"        default="true"/>
     <arg name="color_fps"           default="15"/>
-    <arg name="gyro_fps"            default="200"/> <!-- 400 -->
-    <arg name="accel_fps"           default="63"/> <!-- 250 -->
+    <arg name="gyro_fps"            default="400"/> <!-- 400 -->
+    <arg name="accel_fps"           default="250"/> <!-- 250 -->
     <arg name="enable_gyro"         default="true"/>
     <arg name="enable_accel"        default="true"/>
-    <arg name="enable_sync"         default="true"/>
     <arg name="initial_reset"       default="true"/> <!-- should be more reliable this way -->
     <arg name="unite_imu_method"    default="linear_interpolation"/>
 
+    <rosparam>
+        /camera/stereo_module/emitter_enabled: false
+    </rosparam>
+
+    <arg name="enable_sync"               default="false"/>
     <arg name="serial_no"                 default=""/>
     <arg name="json_file_path"            default=""/>
     <arg name="camera"                    default="camera"/>

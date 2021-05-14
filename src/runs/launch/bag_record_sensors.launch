@@ -9,7 +9,7 @@
 
     <!-- RECORD ROSBAG -->
     <node pkg="rosbag" type="record" name="data_capture"
-       args="$(eval 'record --lz4 -O /media/usb/rosbags/' + raw_input('Enter rec file name: ') + '.bag
+       args="$(eval 'record --udp -b 0 --chunksize=4096 -O /media/usb/rosbags/' + raw_input('Enter rec file name: ') + '.bag
           /rosout_agg
 
           /camera/imu
@@ -20,15 +20,11 @@
 
           /ublox/fix
           /ublox/fix_velocity
-          /ublox/navsol
-          /ublox/navposllh
-          /ublox/navvelned
 
           /mavros/global_position/compass_hdg
           /mavros/global_position/rel_alt
-          /mavros/imu/data
           /mavros/imu/static_pressure
-          /mavros/rc/in
+          /mavros/imu/data
        ')"/>
 
 </launch>
