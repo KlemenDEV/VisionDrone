@@ -11,6 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
         sensor_msgs
         image_transport
         cv_bridge
+        nav_msgs
+        geometry_msgs
         )
 
 find_package(Eigen3 3.1.0 REQUIRED)
@@ -100,16 +102,6 @@ add_executable(Mono_Inertial2
         )
 
 target_link_libraries(Mono_Inertial2
-        ${LIBS}
-        ${catkin_LIBRARIES}
-        )
-
-# Node for monocular-inertial3 camera
-add_executable(Mono_Inertial3
-        src/ros_mono_inertial3.cc
-        )
-
-target_link_libraries(Mono_Inertial3
         ${LIBS}
         ${catkin_LIBRARIES}
         )

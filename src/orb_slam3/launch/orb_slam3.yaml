@@ -27,27 +27,26 @@ Camera.fps: 15.0
 # Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
 Camera.RGB: 0
 
-# Transformation from camera 0 to body-frame (imu)
 # Should be proper D345I
-#Tbc: !!opencv-matrix
-#   rows: 4
-#   cols: 4
-#   dt: f
-#   data: [0.99996271,  0.00171691, -0.0084639,  -0.02663461,
-#         -0.00181009,  0.9999377,  -0.01101452, -0.00839444,
-#         0.00844446,  0.01102943,  0.99990352,  0.01254843,
-#          0.0, 0.0, 0.0, 1.0]
-
-#D455
-#https://github.com/UZ-SLAMLab/ORB_SLAM3/issues/28#issuecomment-830994065
 Tbc: !!opencv-matrix
    rows: 4
    cols: 4
    dt: f
-   data: [0.99996271,  -0.00171691, 0.0084639,   0.02663461,
-          0.00181009,  0.9999377,   0.01101452,  0.00839444,
-         -0.00844446, -0.01102943,  0.99990352, -0.01254843,
+   data: [0.99996271,  0.00171691, -0.0084639,  -0.02663461,
+         -0.00181009,  0.9999377,  -0.01101452, -0.00839444,
+         0.00844446,  0.01102943,  0.99990352,  0.01254843,
           0.0, 0.0, 0.0, 1.0]
+
+#D455
+#https://github.com/UZ-SLAMLab/ORB_SLAM3/issues/28#issuecomment-830994065
+#Tbc: !!opencv-matrix
+#   rows: 4
+#   cols: 4
+#   dt: f
+#   data: [0.99996271,  -0.00171691, 0.0084639,   0.02663461,
+#          0.00181009,  0.9999377,   0.01101452,  0.00839444,
+#         -0.00844446, -0.01102943,  0.99990352, -0.01254843,
+#          0.0, 0.0, 0.0, 1.0]
 
 # Another variant ()
 #Tbc: !!opencv-matrix
@@ -61,6 +60,7 @@ Tbc: !!opencv-matrix
 
 #Tbc: !!opencv-matrix
 # STOCK?
+#Tbc: !!opencv-matrix
 #   rows: 4
 #   cols: 4
 #   dt: f
