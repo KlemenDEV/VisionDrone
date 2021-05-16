@@ -104,7 +104,7 @@ sudo make install
 
 ## 5. Build the custom workspace
 
-Run catkin_make in the workspace
+Run `catkin_make` in the workspace. For release, use `catkin_make -DCMAKE_BUILD_TYPE=Release`
 
 # WiFi configuration
 
