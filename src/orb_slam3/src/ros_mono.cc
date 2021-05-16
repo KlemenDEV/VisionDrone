@@ -57,7 +57,6 @@ int main(int argc, char **argv) {
 }
 
 void ImageGrabber::GrabImage(const sensor_msgs::ImageConstPtr &msg) {
-    // Copy the ros image message to cv::Mat.
     cv_bridge::CvImageConstPtr cv_ptr;
     try {
         cv_ptr = cv_bridge::toCvShare(msg);
@@ -70,32 +69,28 @@ void ImageGrabber::GrabImage(const sensor_msgs::ImageConstPtr &msg) {
     cv::Mat Tcw = mpSLAM->TrackMonocular(cv_ptr->image, cv_ptr->header.stamp.toSec());
 
     if (Tcw.rows == 4 && Tcw.cols == 4) { // valid data
-        std::cout << "data" << std::endl;
+        cv::Mat Twc(4, 4, CV_32F);
+        cv::invert(Tcw, Twc);
 
         nav_msgs::Odometry odom;
-
         geometry_msgs::PoseWithCovariance posevc;
-
         geometry_msgs::Pose pose;
-
         geometry_msgs::Point pt;
-        pt.x = Tcw.at<double>(0,3);
-        pt.y = Tcw.at<double>(1,3);
-        pt.z = Tcw.at<double>(2,3);
-
+        pt.x = Twc.at<float>(0, 3);
+        pt.y = Twc.at<float>(1, 3);
+        pt.z = Twc.at<float>(2, 3);
         pose.position = pt;
-
         posevc.pose = pose;
-
         odom.pose = posevc;
         odom.header.seq = 1;
         odom.header.stamp = ros::Time::now();
         odom.header.frame_id = "map";
         odom.child_frame_id = "map";
-
         point_pub.publish(odom);
 
-        std::cout << Tcw.at<double>(0,3) << " : " << Tcw.at<double>(1,3) << " : " << Tcw.at<double>(2,3) << std::endl;
+        std::cout << std::to_string(Twc.at<float>(0, 3)) << ", "
+                  << std::to_string(Twc.at<float>(1, 3)) << ", "
+                  << std::to_string(Twc.at<float>(2, 3)) << std::endl;
     }
 }
 

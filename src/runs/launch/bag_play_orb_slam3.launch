@@ -2,7 +2,7 @@
 
 <launch>
     <!-- PLAY ROSBAG -->
-    <node pkg="rosbag" type="play" name="data_loader" args="/home/pylo/Desktop/walk2.bag" required="true"/>
+    <node pkg="rosbag" type="play" name="data_loader" args="/home/pylo/Desktop/kalibr.bag" required="true"/>
 
     <node pkg="tf"
           type="static_transform_publisher"
