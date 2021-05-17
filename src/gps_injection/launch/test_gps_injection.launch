@@ -12,12 +12,7 @@
     </node>
 
     <!-- GPS injector serial messages generator and switcher -->
-    <node pkg="gps_injection" type="gps_injection_node" name="gps"
-          output="screen"
-          clear_params="false"
-          respawn="true"
-          respawn_delay="30">
-    </node>
+    <node pkg="gps_injection" type="gps_injection_node" name="gps" output="screen"/>
 
     <!-- Mavlink driver to listen to switch for GPS source switching -->
     <include file="$(find gps_injection)/launch/mavros.launch">

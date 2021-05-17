@@ -8,13 +8,17 @@
     <arg name="enable_gyro"         default="true"/>
     <arg name="enable_accel"        default="true"/>
     <arg name="enable_sync"         default="true"/>
-    <arg name="initial_reset"       default="true"/> <!-- should be more reliable this way -->
+    <arg name="initial_reset"       default="true"/>
     <arg name="unite_imu_method"    default="linear_interpolation"/>
     <arg name="depth_width"         default="640"/>
     <arg name="depth_height"        default="480"/>
     <arg name="enable_depth"        default="true"/>
     <arg name="depth_fps"           default="15"/>
     <arg name="align_depth"         default="true"/>
+
+    <rosparam>
+        /camera/rgb_camera/auto_exposure_priority: false
+    </rosparam>
 
     <arg name="serial_no"                 default=""/>
     <arg name="json_file_path"            default=""/>

@@ -4,25 +4,27 @@
     <!-- START SENSORS -->
     <include file="$(find runs)/launch/subsystems/sensors.launch"/>
 
-    <!-- REALSENSE CAMERA -->
-    <include file="$(find runs)/launch/subsystems/rs_d435i_rgbi.launch"/>
+    <!-- START REALSENSE CAMERA -->
+    <include file="$(find runs)/launch/subsystems/rs_d435i_iri.launch"/>
+
+    <!-- START PI CAMERA MODULE -->
+    <include file="$(find runs)/launch/subsystems/pi_camera.launch"/>
+
+    <!-- START GPS injector (so we can get 3D fix while flying) -->
+    <node pkg="gps_injection" type="gps_injection_node" name="gps" output="screen"/>
 
     <!-- RECORD ROSBAG -->
     <node pkg="rosbag" type="record" name="data_capture"
           args="$(eval 'record --tcpnodelay --buffsize 0 -O /media/usb/rosbags/' + raw_input('Enter rec file name: ') + '.bag
           /camera/imu
-          /camera/color/image_raw
-
-          /pi_camera/image_raw
-          /pi_camera/camera_info
+          /camera/infra1/image_rect_raw
+          /camera/orthogonal
 
           /ublox/fix
           /ublox/fix_velocity
 
           /mavros/global_position/compass_hdg
           /mavros/global_position/rel_alt
-          /mavros/imu/static_pressure
           /mavros/imu/data
        ')"/>
-
 </launch>
