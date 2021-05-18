@@ -1,0 +1,4 @@
+./kalibr_calibrate_cameras --bag ~/Desktop/kalibr_ir_1.bag --topics /camera/infra1/image_rect_raw --models pinhole-radtan --target ~/Desktop/target.yaml
+
+./kalibr_calibrate_imu_camera --bag ~/Desktop/kalibr_ir_1.bag --target ~/Desktop/target.yaml --imu ~/Desktop/imu.yaml --cam ~/Desktop/camera.yaml
+

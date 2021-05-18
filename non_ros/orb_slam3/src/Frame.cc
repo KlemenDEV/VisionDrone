@@ -310,6 +310,7 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extra
     mTimeORB_Ext = std::chrono::duration_cast<std::chrono::duration<double,std::milli> >(time_EndExtORB - time_StartExtORB).count();
 #endif
 
+    mpMutexImu = new std::mutex();
 
     N = mvKeys.size();
     if(mvKeys.empty())
@@ -372,8 +373,6 @@ Frame::Frame(const cv::Mat &imGray, const double &timeStamp, ORBextractor* extra
     {
         mVw = cv::Mat::zeros(3,1,CV_32F);
     }
-
-    mpMutexImu = new std::mutex();
 }
 
 

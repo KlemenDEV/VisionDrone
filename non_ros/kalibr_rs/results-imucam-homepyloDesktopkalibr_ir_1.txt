@@ -1,0 +1,60 @@
+Calibration results
+===================
+Reprojection error squarred (cam0):  mean 0.00604823522536, median 0.00415193624225, std: 0.00564218248418
+Gyro error squarred (imu0):          mean 0.00460494821337, median 0.0033569652924, std: 0.00440681592367
+Accelerometer error squarred (imu0): mean 0.00370061358056, median 0.0029203823773, std: 0.00314509656257
+
+Transformation (cam0):
+-----------------------
+T_ci:  (imu to cam0): [m]
+[[ 0.98856493 -0.08776766 -0.12262226 -0.02289943]
+ [ 0.10716952  0.98097964  0.16184451  0.07584752]
+ [ 0.10608522 -0.17313518  0.97916808 -0.08063525]
+ [ 0.          0.          0.          1.        ]]
+
+T_ic:  (cam0 to imu): [m]
+[[ 0.98856493  0.10716952  0.10608522  0.02306324]
+ [-0.08776766  0.98097964 -0.17313518 -0.0903755 ]
+ [-0.12262226  0.16184451  0.97916808  0.06387198]
+ [ 0.          0.          0.          1.        ]]
+
+timeshift cam0 to imu0: [s] (t_imu = t_cam + shift)
+0.0
+
+
+Gravity vector in target coords: : [m/s^2]
+[ 0.55884517  9.67682505  1.51091003]
+
+
+Calibration configuration
+=========================
+
+cam0
+-----
+  Camera model: pinhole
+  Focal length: [313.9608717237686, 314.7159482738245]
+  Principal point: [319.54194041339355, 239.52890435530736]
+  Distortion model: radtan
+  Distortion coefficients: [0.014400789164928342, -0.012762199416532739, -0.002900600108966052, -0.0007248022988113009]
+  Type: checkerboard
+  Rows
+    Count: 7
+    Distance: 0.02 [m]
+  Cols
+    Count: 9
+    Distance: 0.02 [m]
+
+
+
+IMU configuration
+=================
+
+  Update rate: 400.0
+  Accelerometer:
+    Noise density: 0.0196977343753 
+    Noise density (discrete): 0.393954687506 
+    Random walk: 0.000827382177682
+  Gyroscope:
+    Noise density: 0.0017633550954
+    Noise density (discrete): 0.035267101908 
+    Random walk: 1.71512255197e-05

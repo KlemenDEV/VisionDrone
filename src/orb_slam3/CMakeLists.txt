@@ -53,21 +53,9 @@ set(LIBS
         -lboost_system
         )
 
-catkin_package(
-        #  INCLUDE_DIRS include
-        #  LIBRARIES orb_slam3
-        #  CATKIN_DEPENDS roscpp rospy tf
-        #  DEPENDS system_lib
-)
+catkin_package()
 
-###########
-## Build ##
-###########
-
-## Specify additional locations of header files
-## Your package locations should be listed before other locations
 include_directories(
-        # include
         ${catkin_INCLUDE_DIRS}
         ${PROJECT_SOURCE_DIR}
         ${PROJECT_SOURCE_DIR}/../../non_ros/orb_slam3/
@@ -92,16 +80,6 @@ add_executable(Mono_Inertial
         )
 
 target_link_libraries(Mono_Inertial
-        ${LIBS}
-        ${catkin_LIBRARIES}
-        )
-
-# Node for monocular-inertial2 camera
-add_executable(Mono_Inertial2
-        src/ros_mono_inertial2.cc
-        )
-
-target_link_libraries(Mono_Inertial2
         ${LIBS}
         ${catkin_LIBRARIES}
         )
