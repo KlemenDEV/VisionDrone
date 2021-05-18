@@ -56,6 +56,7 @@ set(LIBS
 catkin_package()
 
 include_directories(
+        include
         ${catkin_INCLUDE_DIRS}
         ${PROJECT_SOURCE_DIR}
         ${PROJECT_SOURCE_DIR}/../../non_ros/orb_slam3/
@@ -64,22 +65,12 @@ include_directories(
         ${Pangolin_INCLUDE_DIRS}
 )
 
-# Node for monocular camera
-add_executable(Mono
-        src/ros_mono.cc
-        )
-
-target_link_libraries(Mono
-        ${LIBS}
-        ${catkin_LIBRARIES}
-        )
-
-# Node for monocular-inertial camera
-add_executable(Mono_Inertial
+add_executable(ORBSLAM3
         src/ros_mono_inertial.cc
+        src/Fusion.cc
         )
 
-target_link_libraries(Mono_Inertial
+target_link_libraries(ORBSLAM3
         ${LIBS}
         ${catkin_LIBRARIES}
         )

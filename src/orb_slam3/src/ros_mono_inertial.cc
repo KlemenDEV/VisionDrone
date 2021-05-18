@@ -14,7 +14,11 @@
 #include "System.h"
 #include "ImuTypes.h"
 
+#include "Fusion.h"
+
 using namespace std;
+
+Fusion *fusion;
 
 class ImuGrabber {
 public:
@@ -45,8 +49,10 @@ public:
 
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "Mono_Inertial");
+    ros::init(argc, argv, "ORBSLAM3");
     ros::NodeHandle nh("~");
+
+    fusion = new Fusion(&nh);
 
     ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
 
@@ -138,7 +144,9 @@ void ImageGrabber::SyncWithImu() {
             }
             mpImuGb->mBufMutex.unlock();
 
-            mpSLAM->TrackMonocular(im, tIm, vImuMeas);
+            cv::Mat Tcw = mpSLAM->TrackMonocular(im, tIm, vImuMeas);
+
+            fusion->dataSLAM(Tcw);
         }
 
         std::chrono::milliseconds tSleep(1);

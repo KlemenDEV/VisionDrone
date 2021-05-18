@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <launch>
+    <node pkg="v4l2-ctl" type="v4l2-ctl" name="picamera_params"
+          args="-d /dev/video6 --set-ctrl=scene_mode=11"/>
+
     <node type="usb_cam_node" pkg="usb_cam" name="pi_camera" output="screen" required="true">
         <param name="video_device" value="/dev/video6"/>
         <param name="image_width" value="1280"/>

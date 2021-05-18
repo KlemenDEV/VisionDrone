@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>runs</name>
+  <name>visiondrone</name>
   <version>0.0.0</version>
-  <description>The runs package</description>
+  <description>The visiondrone package</description>
 
   <maintainer email="pylo@todo.todo">pylo</maintainer>
 

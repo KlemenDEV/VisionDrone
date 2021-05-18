@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+    <!-- PLAY ROSBAG -->
+    <node pkg="rosbag" type="play" name="data_loader" args="/home/pylo/Desktop/walk4.bag" required="true"/>
+
+    <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster"
+          args="0 0 0 0 0 0 map base_link 50"/>
+
+    <node name="Mono" pkg="orb_slam3" type="ORBSLAM3" output="screen">
+        <param name="topic_imu" value="/camera/imu"/>
+        <param name="topic_img" value="/camera/infra1/image_rect_raw"/>
+        <param name="path_to_vocabulary" value="$(dirname)/../../../non_ros/orb_slam3/Vocabulary/ORBvoc.txt"/>
+        <param name="path_to_settings" value="$(dirname)/../../orb_slam3/orb_slam3.yaml"/>
+    </node>
+
+</launch>

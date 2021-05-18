@@ -2,7 +2,7 @@
 
 <launch>
     <!-- START SENSORS -->
-    <include file="$(find runs)/launch/subsystems/sensors.launch"/>
+    <include file="$(find visiondrone)/launch/subsystems/sensors.launch"/>
 
     <!-- GPS injector and switcher -->
     <node pkg="gps_injection" type="gps_injection_node" name="gps" output="screen" required="true"/>
