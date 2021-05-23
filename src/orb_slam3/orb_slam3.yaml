@@ -2,14 +2,14 @@
 
 # Camera model
 Camera.type: "PinHole"
-Camera.fx: 313.9608717237686
-Camera.fy: 314.7159482738245
-Camera.cx: 319.54194041339355
-Camera.cy: 239.52890435530736
-Camera.k1: 0.014400789164928342
-Camera.k2: -0.012762199416532739
-Camera.p1: -0.002900600108966052
-Camera.p2: -0.0007248022988113009
+Camera.fx: 381.2969779674194
+Camera.fy: 383.0543728967688
+Camera.cx: 320.09008913240496
+Camera.cy: 235.07108556891325
+Camera.k1: 0.008451748536780433
+Camera.k2: -0.008405841316301182
+Camera.p1: -0.001996018371668259
+Camera.p2: 0.00035084324295129416
 
 # Camera resolution
 Camera.width: 640
@@ -31,11 +31,11 @@ Tbc: !!opencv-matrix
          0.0, 0.0, 0.0, 1.0]
 
 # IMU noise
-IMU.Frequency: 400
-IMU.NoiseAcc: 1.9697734375312265e-02
-IMU.AccWalk: 8.2738217768213147e-04
-IMU.NoiseGyro: 1.7633550954006261e-03
-IMU.GyroWalk: 1.7151225519702968e-05
+IMU.Frequency: 200
+IMU.NoiseAcc: 0.0173244
+IMU.AccWalk: 0.00064540166
+IMU.NoiseGyro: 0.00202674666
+IMU.GyroWalk: 0.0000059667
 
 #--------------------------------------------------------------------------------------------
 # ORB Parameters

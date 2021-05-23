@@ -130,7 +130,7 @@ void ImageGrabber::SyncWithImu() {
                 // Load imu measurements from buffer
                 vImuMeas.clear();
                 while (!mpImuGb->imuBuf.empty() &&
-                       mpImuGb->imuBuf.front()->header.stamp.toSec() <= tIm + 0.035) {
+                       mpImuGb->imuBuf.front()->header.stamp.toSec() <= tIm) {
                     double t = mpImuGb->imuBuf.front()->header.stamp.toSec();
                     cv::Point3f acc((float) mpImuGb->imuBuf.front()->linear_acceleration.x,
                                     (float) mpImuGb->imuBuf.front()->linear_acceleration.y,

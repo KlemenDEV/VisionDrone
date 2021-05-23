@@ -1,0 +1,106 @@
+gyr x  numData 859223
+gyr x  start_t 1.62129e+09
+gyr x  end_t 1.6213e+09
+gyr x dt 
+-------------7140.8 s
+-------------119.013 min
+-------------1.98356 h
+gyr x  freq 120.326
+gyr x  period 0.00831077
+gyr y  numData 859223
+gyr y  start_t 1.62129e+09
+gyr y  end_t 1.6213e+09
+gyr y dt 
+-------------7140.8 s
+-------------119.013 min
+-------------1.98356 h
+gyr y  freq 120.326
+gyr y  period 0.00831077
+gyr z  numData 859223
+gyr z  start_t 1.62129e+09
+gyr z  end_t 1.6213e+09
+gyr z dt 
+-------------7140.8 s
+-------------119.013 min
+-------------1.98356 h
+gyr z  freq 120.326
+gyr z  period 0.00831077
+Gyro X 
+C   0.328245      36.98   0.825315  0.0223938 0.00554054
+ Bias Instability 3.81441e-08 rad/s
+ Bias Instability 2.22925e-05 rad/s, at 136.172 s
+ White Noise 7.38051 rad/s
+ White Noise 0.00205087 rad/s
+  bias -0.387937 degree/s
+-------------------
+Gyro y 
+C  -0.816609    52.8956   -7.38815    1.72422 -0.0198931
+ Bias Instability 3.41518e-06 rad/s
+ Bias Instability 4.7743e-05 rad/s, at 43.8061 s
+ White Noise 8.95806 rad/s
+ White Noise 0.00248979 rad/s
+  bias 0.040984 degree/s
+-------------------
+Gyro z 
+C   0.899601    26.0798    2.05168 -0.0445619  0.0029824
+ Bias Instability 1.44468e-05 rad/s
+ Bias Instability 1.782e-05 rad/s, at 175.199 s
+ White Noise 5.51413 rad/s
+ White Noise 0.00153958 rad/s
+  bias 0.0932413 degree/s
+-------------------
+
+gyro avg data:
+- noise: 0.00202674666
+- bias instability: 0.0000059667
+
+==============================================
+==============================================
+acc x  numData 859223
+acc x  start_t 1.62129e+09
+acc x  end_t 1.6213e+09
+acc x dt 
+-------------7140.8 s
+-------------119.013 min
+-------------1.98356 h
+acc x  freq 120.326
+acc x  period 0.00831077
+acc y  numData 859223
+acc y  start_t 1.62129e+09
+acc y  end_t 1.6213e+09
+acc y dt 
+-------------7140.8 s
+-------------119.013 min
+-------------1.98356 h
+acc y  freq 120.326
+acc y  period 0.00831077
+acc z  numData 859223
+acc z  start_t 1.62129e+09
+acc z  end_t 1.6213e+09
+acc z dt 
+-------------7140.8 s
+-------------119.013 min
+-------------1.98356 h
+acc z  freq 120.326
+acc z  period 0.00831077
+acc X 
+C -5.16303e-05   0.00181591 -0.000646763  0.000178216 -2.10418e-06
+ Bias Instability 0.000529668 m/s^2
+ White Noise 0.0161236 m/s^2
+-------------------
+acc y 
+C -8.59072e-05   0.00204908  -0.00119954  0.000376099 -3.91766e-06
+ Bias Instability 0.000744201 m/s^2
+ White Noise 0.0168804 m/s^2
+-------------------
+acc z 
+C  -5.7565e-05   0.00207688 -0.000637389  0.000209838 -6.23875e-07
+ Bias Instability 0.000662336 m/s^2
+ White Noise 0.0189692 m/s^2
+-------------------
+
+acc avg data:
+- noise: 0.0173244
+- bias instability: 0.00064540166
+
+
