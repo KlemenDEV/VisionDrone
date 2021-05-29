@@ -1,8 +1,6 @@
 #include <ros/ros.h>
 
-#include <ublox_msgs/NavPOSLLH.h>
-#include <ublox_msgs/NavVELNED.h>
-#include <ublox_msgs/NavSOL.h>
+#include <ublox_msgs/NavPVT7.h>
 
 #include <sensor_msgs/NavSatFix.h>
 #include <sensor_msgs/Imu.h>
@@ -59,13 +57,9 @@ int main(int argc, char **argv) {
 
     ros::Rate loop_rate(50); // GPS has 4/5Hz, use 10Hz to fulfill Shannon's requirement
 
-    // UBLOX antenna/module subscribers
-    ros::Subscriber navposllh_sub = nh.subscribe<ublox_msgs::NavPOSLLH>
-            ("/ublox/navposllh", 1, &GPSData::consume, &gps_pos_antenna);
-    ros::Subscriber navvelned_sub = nh.subscribe<ublox_msgs::NavVELNED>
-            ("/ublox/navvelned", 1, &GPSData::consume, &gps_pos_antenna);
-    ros::Subscriber navsol_sub = nh.subscribe<ublox_msgs::NavSOL>
-            ("/ublox/navsol", 1, &GPSData::consume, &gps_pos_antenna);
+    // UBLOX antenna/module subscriber
+    ros::Subscriber navpvt_sub = nh.subscribe<ublox_msgs::NavPVT7>
+            ("/ublox/navpvt", 1, &GPSData::consume, &gps_pos_antenna);
 
     // Position prediction subscribers
     ros::Subscriber predictpose_sub = nh.subscribe<sensor_msgs::NavSatFix>
