@@ -2,9 +2,7 @@
 
 #include <math.h>
 
-#include <ublox_msgs/NavPOSLLH.h>
-#include <ublox_msgs/NavVELNED.h>
-#include <ublox_msgs/NavSOL.h>
+#include <ublox_msgs/NavPVT7.h>
 
 #include <sensor_msgs/NavSatFix.h>
 #include <geometry_msgs/TwistWithCovarianceStamped.h>
@@ -43,10 +41,8 @@ public:
     void setTime(uint32_t time);
     void markDirty();
 
-    // Set of 3 consumers to assemble GPSData from UBLOX messages
-    void consume(const ublox_msgs::NavPOSLLH::ConstPtr &msg);
-    void consume(const ublox_msgs::NavVELNED::ConstPtr &msg);
-    void consume(const ublox_msgs::NavSOL::ConstPtr &msg);
+    // Consumer to assemble GPSData from UBLOX messages
+    void consume(const ublox_msgs::NavPVT7::ConstPtr &msg);
 
     // Set of 2 consumers to assemble GPSData from location predictions
     void consume(const sensor_msgs::NavSatFix::ConstPtr &msg);
