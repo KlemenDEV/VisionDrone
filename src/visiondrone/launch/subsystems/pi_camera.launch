@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <launch>
-    <node pkg="v4l2-ctl" type="v4l2-ctl" name="picamera_params"
-          args="-d /dev/video6 --set-ctrl=scene_mode=11"/>
+    <node pkg="visiondrone" type="pi_camera.sh" name="picamera_params"/>
 
     <node type="usb_cam_node" pkg="usb_cam" name="pi_camera" output="screen" required="true">
         <param name="video_device" value="/dev/video6"/>
@@ -12,11 +11,11 @@
         <param name="framerate" value="2"/>
         <param name="focus" value="0"/>
 
-        <param name="camera_info_url" value="package://runs/camera_info/camerav2_1280x720.yaml"/>
+        <param name="camera_info_url" value="package://visiondrone/camera_info/camerav2_1280x720.yaml"/>
         <param name="camera_name" value="camerav2_1280x720"/>
     </node>
 
-    <node type="color2gray" pkg="runs" name="pi_camera_grayer" output="screen" required="true">
+    <node type="color2gray" pkg="visiondrone" name="pi_camera_grayer" output="screen" required="true">
         <param name="in" value="/pi_camera/image_raw"/>
         <param name="out" value="/camera/orthogonal"/>
     </node>

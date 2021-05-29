@@ -5,7 +5,7 @@
           output="screen"
           clear_params="false"
           respawn="true"
-          respawn_delay="30">
+          respawn_delay="0">
         <param name="device" type="string" value="/dev/ttyAMA4"/>
         <rosparam command="load" file="$(find gps_injection)/config/gps_config.yaml"/>
     </node>
