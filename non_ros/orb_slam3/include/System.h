@@ -95,6 +95,11 @@ public:
         BINARY_FILE=1,
     };
 
+// Tracker. It receives a frame and computes the associated camera pose.
+// It also decides when to insert a new keyframe, create some new MapPoints and
+// performs relocalization if tracking fails.
+Tracking* mpTracker;
+
 public:
 
     // Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
@@ -193,12 +198,7 @@ private:
     // Atlas structure that stores the pointers to all KeyFrames and MapPoints.
     Atlas* mpAtlas;
 
-    // Tracker. It receives a frame and computes the associated camera pose.
-    // It also decides when to insert a new keyframe, create some new MapPoints and
-    // performs relocalization if tracking fails.
-    Tracking* mpTracker;
-
-    // Local Mapper. It manages the local map and performs local bundle adjustment.
+        // Local Mapper. It manages the local map and performs local bundle adjustment.
     LocalMapping* mpLocalMapper;
 
     // Loop Closer. It searches loops with every new keyframe. If there is a loop it performs

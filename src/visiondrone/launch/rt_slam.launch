@@ -7,6 +7,6 @@
     <!-- GPS injector and switcher -->
     <node pkg="gps_injection" type="gps_injection_node" name="gps" output="screen" required="true"/>
 
-    <!-- MAP GPS LOCATION TO LOCAL -->
-    <include file="$(find gps_data_fusion)/launch/gps_to_local.launch"/>
+    <!-- ORB_SLAM3 -->
+    <include file="$(find visiondrone)/launch/localizers/3d_slam.launch"/>
 </launch>

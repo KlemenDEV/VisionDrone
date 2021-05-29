@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
         cv_bridge
         nav_msgs
         geometry_msgs
+        geographic_msgs
         )
 
 find_package(Eigen3 3.1.0 REQUIRED)

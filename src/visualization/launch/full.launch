@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<launch>
-
-    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find visualization)/rviz/config_file.rviz"/>
-
-</launch>

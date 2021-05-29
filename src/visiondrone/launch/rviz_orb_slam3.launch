@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+    <!-- PLAY ROSBAG -->
+    <node pkg="rosbag" type="play" name="data_loader" args="/home/pylo/Desktop/polet_niz.bag"
+          launch-prefix="bash -c 'sleep 10; $0 $@'"/>
+
+    <!-- ORB_SLAM3 -->
+    <include file="$(find visiondrone)/launch/localizers/3d_slam.launch">
+        <arg name="visualize" value="true" />
+    </include>
+
+    <!-- Path display -->
+    <node type="pose2path.py" name="path_direct_gen" pkg="visiondrone">
+        <param name="pose" value="/orbslam3/pose_direct"/>
+        <param name="path" value="/orbslam3/path_direct"/>
+    </node>
+
+    <node type="pose2path.py" name="path_rel_gen" pkg="visiondrone">
+        <param name="pose" value="/orbslam3/pose_rel"/>
+        <param name="path" value="/orbslam3/path_rel"/>
+    </node>
+
+    <node type="odom2path.py" name="path_gps_gen" pkg="visiondrone">
+        <param name="odom" value="/ublox/fix/local"/>
+        <param name="path" value="/ublox/fix/path"/>
+    </node>
+
+    <!-- Open RVIZ to show results -->
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find visiondrone)/rviz/orbslam.rviz" required="true"/>
+</launch>

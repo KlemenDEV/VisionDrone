@@ -62,6 +62,7 @@
   <depend>cv_bridge</depend>
   <depend>nav_msgs</depend>
   <depend>geometry_msgs</depend>
+  <depend>geographic_msgs</depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

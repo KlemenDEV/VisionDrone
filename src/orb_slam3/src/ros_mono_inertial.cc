@@ -18,8 +18,6 @@
 
 using namespace std;
 
-Fusion *fusion;
-
 class ImuGrabber {
 public:
     ImuGrabber() = default;
@@ -47,6 +45,9 @@ public:
     ImuGrabber *mpImuGb;
 };
 
+Fusion *fusion;
+
+bool visualize;
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "ORBSLAM3");
@@ -56,13 +57,15 @@ int main(int argc, char **argv) {
 
     ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
 
+    nh.param<bool>("visualize", visualize, true);
+
     std::string path_to_vocabulary;
     nh.param<std::string>("path_to_vocabulary", path_to_vocabulary,
                           "/home/pylo/drone_ws/non_ros/orb_slam3/Vocabulary/ORBvoc.txt");
     std::string path_to_settings;
     nh.param<std::string>("path_to_settings", path_to_settings,
-                          "/home/pylo/drone_ws/src/orb_slam3/launch/orb_slam3.yaml");
-    ORB_SLAM3::System SLAM(path_to_vocabulary, path_to_settings, ORB_SLAM3::System::IMU_MONOCULAR, true);
+                          "/home/pylo/drone_ws/src/orb_slam3/orb_slam3.yaml");
+    ORB_SLAM3::System SLAM(path_to_vocabulary, path_to_settings, ORB_SLAM3::System::IMU_MONOCULAR, visualize);
 
     ImuGrabber imugb;
     ImageGrabber igb(&SLAM, &imugb);
@@ -146,7 +149,9 @@ void ImageGrabber::SyncWithImu() {
 
             cv::Mat Tcw = mpSLAM->TrackMonocular(im, tIm, vImuMeas);
 
-            fusion->dataSLAM(Tcw);
+            fusion->dataSLAM(mpSLAM, Tcw);
+
+            // TODO: if visualisation, publish point cloud from atlas -> maps -> map points
         }
 
         std::chrono::milliseconds tSleep(1);
