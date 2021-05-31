@@ -1,33 +1,8 @@
-/* 
-
-Copyright (c) 2017, Brian Bingham
-All rights reserved
-    <depend>robot_localization</depend>
-
-This file is part of the geonav_transform package.
-
-Geonav_transform is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-Geonav_transform is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
-
-*/
-
 #include "geonav_transform/geonav_transform.h"
 #include "geonav_transform/navsat_conversions.h"
 #include "geonav_transform/geonav_utilities.h"
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-
-#include <XmlRpcException.h>
 
 #include <string>
 #include <robot_localization/SetDatum.h>
@@ -35,8 +10,6 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 namespace GeonavTransform {
     GeonavTransform::GeonavTransform() :
     // Initialize attributes
-            broadcast_utm2odom_transform_(true),
-            broadcast_odom2base_transform_(true),
             nav_frame_id_(""),
             zero_altitude_(true),
             utm_frame_id_("utm"),
@@ -56,8 +29,7 @@ namespace GeonavTransform {
 
     void GeonavTransform::run() {
 
-        double frequency = 10.0;
-        double delay = 0.0;
+        double frequency = 4.;
 
         ros::NodeHandle nh;
         ros::NodeHandle nh_priv("~");
@@ -66,10 +38,6 @@ namespace GeonavTransform {
 
         // Load ROS parameters
         nh_priv.param("frequency", frequency, 4.);
-        nh_priv.param("orientation_ned", orientation_ned_, false);
-
-        nh_priv.param("broadcast_utm2odom_transform", broadcast_utm2odom_transform_, true);
-        nh_priv.param("broadcast_odom2base_transform", broadcast_odom2base_transform_, true);
         nh_priv.param("zero_altitude", zero_altitude_, false);
         nh_priv.param<std::string>("base_link_frame_id", base_link_frame_id_, "base_link");
         nh_priv.param<std::string>("odom_frame_id", odom_frame_id_, "odom");
@@ -77,10 +45,8 @@ namespace GeonavTransform {
 
         // Setup transforms and messages 
         nav_in_odom_.header.frame_id = odom_frame_id_;
-        nav_in_odom_.child_frame_id = base_link_frame_id_;
         nav_in_odom_.header.seq = 0;
         nav_in_utm_.header.frame_id = utm_frame_id_;
-        nav_in_utm_.child_frame_id = base_link_frame_id_;
         nav_in_utm_.header.seq = 0;
         transform_msg_utm2odom_.header.frame_id = utm_frame_id_;
         transform_msg_utm2odom_.child_frame_id = odom_frame_id_;
@@ -91,11 +57,11 @@ namespace GeonavTransform {
 
         std::string topic_pub_odom;
         nh_priv.param<std::string>("pub_odom", topic_pub_odom, "geonav_odom");
-        odom_pub_ = nh.advertise<nav_msgs::Odometry>(topic_pub_odom, 10);
+        odom_pub_ = nh.advertise<geometry_msgs::PoseStamped>(topic_pub_odom, 5);
 
         std::string topic_pub_utm;
         nh_priv.param<std::string>("pub_utm", topic_pub_utm, "geonav_utm");
-        utm_pub_ = nh.advertise<nav_msgs::Odometry>(topic_pub_utm, 10);
+        utm_pub_ = nh.advertise<geometry_msgs::PoseStamped>(topic_pub_utm, 5);
 
         std::string topic_sub_fix;
         nh_priv.param<std::string>("sub_fix", topic_sub_fix, "nav_fix");
@@ -183,11 +149,11 @@ namespace GeonavTransform {
         //tf2::toMsg(transform_utm2nav_, nav_in_utm_.pose.pose);
         tf2::Vector3 tmp;
         tmp = transform_utm2nav_.getOrigin();
-        nav_in_utm_.pose.pose.position.x = tmp[0];
-        nav_in_utm_.pose.pose.position.y = tmp[1];
-        nav_in_utm_.pose.pose.position.z = tmp[2];
+        nav_in_utm_.pose.position.x = tmp[0];
+        nav_in_utm_.pose.position.y = tmp[1];
+        nav_in_utm_.pose.position.z = tmp[2];
 
-        nav_in_utm_.pose.pose.position.z = (zero_altitude_ ? 0.0 : nav_in_utm_.pose.pose.position.z);
+        nav_in_utm_.pose.position.z = (zero_altitude_ ? 0.0 : nav_in_utm_.pose.position.z);
 
         // Publish
         // utm_pub_.publish(nav_in_utm_);
@@ -202,8 +168,8 @@ namespace GeonavTransform {
         nav_in_odom_.header.seq++;
 
         // Position from transform
-        tf2::toMsg(transform_odom2base_, nav_in_odom_.pose.pose);
-        nav_in_odom_.pose.pose.position.z = (zero_altitude_ ? 0.0 : nav_in_odom_.pose.pose.position.z);
+        tf2::toMsg(transform_odom2base_, nav_in_odom_.pose);
+        nav_in_odom_.pose.position.z = (zero_altitude_ ? 0.0 : nav_in_odom_.pose.position.z);
 
         odom_pub_.publish(nav_in_odom_);
     }  // navOdomCallback
@@ -218,7 +184,6 @@ namespace GeonavTransform {
 
         return true;
     }
-
 
 } // namespace GeonavTransform
 

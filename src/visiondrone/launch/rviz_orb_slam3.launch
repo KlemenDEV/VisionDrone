@@ -21,8 +21,8 @@
         <param name="path" value="/orbslam3/path_rel"/>
     </node>
 
-    <node type="odom2path.py" name="path_gps_gen" pkg="visiondrone">
-        <param name="odom" value="/ublox/fix/local"/>
+    <node type="pose2path.py" name="path_gps_gen" pkg="visiondrone">
+        <param name="pose" value="/ublox/fix/local"/>
         <param name="path" value="/ublox/fix/path"/>
     </node>
 

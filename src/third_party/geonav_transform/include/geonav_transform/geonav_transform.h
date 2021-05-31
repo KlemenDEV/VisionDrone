@@ -40,6 +40,8 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <robot_localization/SetDatum.h>
 
+#include <geometry_msgs/PoseStamped.h>
+
 namespace GeonavTransform {
 
     class GeonavTransform {
@@ -57,28 +59,11 @@ namespace GeonavTransform {
         void run();
 
     private:
-        //! @brief Computes the transform from the UTM frame to the odom frame
-        //!
-        void computeTransformOdom2Utm();
 
         //! @brief Sets datum values
         //! yaw is ENU
         //!
         bool setDatum(double lat, double lon, double alt, tf2::Quaternion q);
-
-        //! @brief Given the pose of the navsat sensor in the UTM frame, removes the offset from the vehicle's centroid
-        //! and returns the UTM-frame pose of said centroid.
-        //!
-        void getRobotOriginUtmPose(const tf2::Transform &gps_utm_pose,
-                                   tf2::Transform &robot_utm_pose,
-                                   const ros::Time &transform_time);
-
-        //! @brief Given the pose of the navsat sensor in the world frame, removes the offset from the vehicle's centroid
-        //! and returns the world-frame pose of said centroid.
-        //!
-        void getRobotOriginWorldPose(const tf2::Transform &gps_odom_pose,
-                                     tf2::Transform &robot_odom_pose,
-                                     const ros::Time &transform_time);
 
 
         //! @brief Callback for the geo nav odom data
@@ -87,7 +72,7 @@ namespace GeonavTransform {
         void navOdomCallback(const sensor_msgs::NavSatFix::ConstPtr &msg);
 
         //! @brief Sends transform
-        void broadcastTf(void);
+        void broadcastTf();
 
         bool datumCallback(robot_localization::SetDatum::Request& request,
                                             robot_localization::SetDatum::Response&);
@@ -111,10 +96,6 @@ namespace GeonavTransform {
         //! @brief Whether or not we broadcast the odom->base_link transform
         //!
         bool broadcast_odom2base_transform_;
-
-        //! @brief Whether or not convert from NED to ENU
-        //!
-        bool orientation_ned_;
 
         //! @brief The frame_id of the NAV message (specifies mounting location)
         //!
@@ -157,7 +138,7 @@ namespace GeonavTransform {
         tf2::Transform transform_utm2odom_inverse_;
         //! @brief Message
         geometry_msgs::TransformStamped transform_msg_utm2odom_;
-        nav_msgs::Odometry nav_in_odom_;
+        geometry_msgs::PoseStamped nav_in_odom_;
 
         //! @brief Holds the odom->base transform
         //!
@@ -165,7 +146,7 @@ namespace GeonavTransform {
         tf2::Transform transform_odom2base_inverse_;
         //! @brief Messages
         geometry_msgs::TransformStamped transform_msg_odom2base_;
-        nav_msgs::Odometry nav_in_utm_;
+        geometry_msgs::PoseStamped nav_in_utm_;
 
         //! @brief UTM zone as determined after transforming GPS message
         //!
