@@ -43,310 +43,340 @@
 #include <mutex>
 #include <unordered_set>
 
-namespace ORB_SLAM3
-{
+namespace ORB_SLAM3 {
 
-class Viewer;
-class FrameDrawer;
-class Atlas;
-class LocalMapping;
-class LoopClosing;
-class System;
+    class Viewer;
 
-class Tracking
-{  
+    class FrameDrawer;
 
-public:
-    Tracking(System* pSys, ORBVocabulary* pVoc, FrameDrawer* pFrameDrawer, MapDrawer* pMapDrawer, Atlas* pAtlas,
-             KeyFrameDatabase* pKFDB, const string &strSettingPath, const int sensor, const string &_nameSeq=std::string());
+    class Atlas;
 
-    ~Tracking();
+    class LocalMapping;
 
-    // Parse the config file
-    bool ParseCamParamFile(cv::FileStorage &fSettings);
-    bool ParseORBParamFile(cv::FileStorage &fSettings);
-    bool ParseIMUParamFile(cv::FileStorage &fSettings);
+    class LoopClosing;
 
-    // Preprocess the input and call Track(). Extract features and performs stereo matching.
-    cv::Mat GrabImageStereo(const cv::Mat &imRectLeft,const cv::Mat &imRectRight, const double &timestamp, string filename);
-    cv::Mat GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const double &timestamp, string filename);
-    cv::Mat GrabImageMonocular(const cv::Mat &im, const double &timestamp, string filename);
-    // cv::Mat GrabImageImuMonocular(const cv::Mat &im, const double &timestamp);
+    class System;
 
-    void GrabImuData(const IMU::Point &imuMeasurement);
+    class Tracking {
 
-    void SetLocalMapper(LocalMapping* pLocalMapper);
-    void SetLoopClosing(LoopClosing* pLoopClosing);
-    void SetViewer(Viewer* pViewer);
-    void SetStepByStep(bool bSet);
+    public:
+        Tracking(System *pSys, ORBVocabulary *pVoc, FrameDrawer *pFrameDrawer, MapDrawer *pMapDrawer, Atlas *pAtlas,
+                 KeyFrameDatabase *pKFDB, const string &strSettingPath, const int sensor,
+                 const string &_nameSeq = std::string());
 
-    // Load new settings
-    // The focal lenght should be similar or scale prediction will fail when projecting points
-    void ChangeCalibration(const string &strSettingPath);
+        ~Tracking();
 
-    // Use this function if you have deactivated local mapping and you only want to localize the camera.
-    void InformOnlyTracking(const bool &flag);
+        // Parse the config file
+        bool ParseCamParamFile(cv::FileStorage &fSettings);
 
-    void UpdateFrameIMU(const float s, const IMU::Bias &b, KeyFrame* pCurrentKeyFrame);
-    KeyFrame* GetLastKeyFrame()
-    {
-        return mpLastKeyFrame;
-    }
+        bool ParseORBParamFile(cv::FileStorage &fSettings);
 
-    void CreateMapInAtlas();
-    std::mutex mMutexTracks;
+        bool ParseIMUParamFile(cv::FileStorage &fSettings);
 
-    //--
-    void NewDataset();
-    int GetNumberDataset();
-    int GetMatchesInliers();
-public:
+        // Preprocess the input and call Track(). Extract features and performs stereo matching.
+        cv::Mat GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat &imRectRight, const double &timestamp,
+                                string filename);
 
-    // Tracking states
-    enum eTrackingState{
-        SYSTEM_NOT_READY=-1,
-        NO_IMAGES_YET=0,
-        NOT_INITIALIZED=1,
-        OK=2,
-        RECENTLY_LOST=3,
-        LOST=4,
-        OK_KLT=5
-    };
+        cv::Mat GrabImageRGBD(const cv::Mat &imRGB, const cv::Mat &imD, const double &timestamp, string filename);
 
-    eTrackingState mState;
-    eTrackingState mLastProcessedState;
+        cv::Mat GrabImageMonocular(const cv::Mat &im, const double &timestamp, string filename);
+        // cv::Mat GrabImageImuMonocular(const cv::Mat &im, const double &timestamp);
 
-    // Input sensor
-    int mSensor;
+        void GrabImuData(const IMU::Point &imuMeasurement);
 
-    // Current Frame
-    Frame mCurrentFrame;
-    Frame mLastFrame;
+        void SetLocalMapper(LocalMapping *pLocalMapper);
 
-    cv::Mat mImGray;
+        void SetLoopClosing(LoopClosing *pLoopClosing);
 
-    // Initialization Variables (Monocular)
-    std::vector<int> mvIniLastMatches;
-    std::vector<int> mvIniMatches;
-    std::vector<cv::Point2f> mvbPrevMatched;
-    std::vector<cv::Point3f> mvIniP3D;
-    Frame mInitialFrame;
+        void SetViewer(Viewer *pViewer);
 
-    // Lists used to recover the full camera trajectory at the end of the execution.
-    // Basically we store the reference keyframe for each frame and its relative transformation
-    list<cv::Mat> mlRelativeFramePoses;
-    list<KeyFrame*> mlpReferences;
-    list<double> mlFrameTimes;
-    list<bool> mlbLost;
+        void SetStepByStep(bool bSet);
 
-    // frames with estimated pose
-    int mTrackedFr;
-    bool mbStep;
+        // Load new settings
+        // The focal lenght should be similar or scale prediction will fail when projecting points
+        void ChangeCalibration(const string &strSettingPath);
 
-    // True if local mapping is deactivated and we are performing only localization
-    bool mbOnlyTracking;
+        // Use this function if you have deactivated local mapping and you only want to localize the camera.
+        void InformOnlyTracking(const bool &flag);
 
-    void Reset(bool bLocMap = false);
-    void ResetActiveMap(bool bLocMap = false);
+        void UpdateFrameIMU(const float s, const IMU::Bias &b, KeyFrame *pCurrentKeyFrame);
 
-    float mMeanTrack;
-    bool mbInitWith3KFs;
-    double t0; // time-stamp of first read frame
-    double t0vis; // time-stamp of first inserted keyframe
-    double t0IMU; // time-stamp of IMU initialization
+        KeyFrame *GetLastKeyFrame() {
+            return mpLastKeyFrame;
+        }
+
+        void CreateMapInAtlas();
+
+        std::mutex mMutexTracks;
+
+        //--
+        void NewDataset();
+
+        int GetNumberDataset();
+
+        int GetMatchesInliers();
+
+    public:
+
+        // Tracking states
+        enum eTrackingState {
+            SYSTEM_NOT_READY = -1,
+            NO_IMAGES_YET = 0,
+            NOT_INITIALIZED = 1,
+            OK = 2,
+            RECENTLY_LOST = 3,
+            LOST = 4,
+            OK_KLT = 5
+        };
+
+        eTrackingState mState;
+        eTrackingState mLastProcessedState;
+
+        // Input sensor
+        int mSensor;
+
+        // Current Frame
+        Frame mCurrentFrame;
+        Frame mLastFrame;
+
+        cv::Mat mImGray;
+
+        // Initialization Variables (Monocular)
+        std::vector<int> mvIniLastMatches;
+        std::vector<int> mvIniMatches;
+        std::vector<cv::Point2f> mvbPrevMatched;
+        std::vector<cv::Point3f> mvIniP3D;
+        Frame mInitialFrame;
+
+        // Lists used to recover the full camera trajectory at the end of the execution.
+        // Basically we store the reference keyframe for each frame and its relative transformation
+        list<cv::Mat> mlRelativeFramePoses;
+        list<KeyFrame *> mlpReferences;
+        list<double> mlFrameTimes;
+        list<bool> mlbLost;
+
+        // frames with estimated pose
+        int mTrackedFr;
+        bool mbStep;
+
+        // True if local mapping is deactivated and we are performing only localization
+        bool mbOnlyTracking;
+
+        void Reset(bool bLocMap = false);
+
+        void ResetActiveMap(bool bLocMap = false);
+
+        float mMeanTrack;
+        bool mbInitWith3KFs;
+        double t0; // time-stamp of first read frame
+        double t0vis; // time-stamp of first inserted keyframe
+        double t0IMU; // time-stamp of IMU initialization
 
 
-    vector<MapPoint*> GetLocalMapMPS();
+        vector<MapPoint *> GetLocalMapMPS();
 
-    bool mbWriteStats;
+        bool mbWriteStats;
 
 #ifdef REGISTER_TIMES
-    void LocalMapStats2File();
-    void TrackStats2File();
-    void PrintTimeStats();
+        void LocalMapStats2File();
+        void TrackStats2File();
+        void PrintTimeStats();
 
-    vector<double> vdRectStereo_ms;
-    vector<double> vdORBExtract_ms;
-    vector<double> vdStereoMatch_ms;
-    vector<double> vdIMUInteg_ms;
-    vector<double> vdPosePred_ms;
-    vector<double> vdLMTrack_ms;
-    vector<double> vdNewKF_ms;
-    vector<double> vdTrackTotal_ms;
+        vector<double> vdRectStereo_ms;
+        vector<double> vdORBExtract_ms;
+        vector<double> vdStereoMatch_ms;
+        vector<double> vdIMUInteg_ms;
+        vector<double> vdPosePred_ms;
+        vector<double> vdLMTrack_ms;
+        vector<double> vdNewKF_ms;
+        vector<double> vdTrackTotal_ms;
 
-    vector<double> vdUpdatedLM_ms;
-    vector<double> vdSearchLP_ms;
-    vector<double> vdPoseOpt_ms;
+        vector<double> vdUpdatedLM_ms;
+        vector<double> vdSearchLP_ms;
+        vector<double> vdPoseOpt_ms;
 #endif
 
-    vector<int> vnKeyFramesLM;
-    vector<int> vnMapPointsLM;
+        vector<int> vnKeyFramesLM;
+        vector<int> vnMapPointsLM;
 
-protected:
+    protected:
 
-    // Main tracking function. It is independent of the input sensor.
-    void Track();
+        // Main tracking function. It is independent of the input sensor.
+        void Track();
 
-    // Map initialization for stereo and RGB-D
-    void StereoInitialization();
+        // Map initialization for stereo and RGB-D
+        void StereoInitialization();
 
-    // Map initialization for monocular
-    void MonocularInitialization();
-    void CreateNewMapPoints();
-    cv::Mat ComputeF12(KeyFrame *&pKF1, KeyFrame *&pKF2);
-    void CreateInitialMapMonocular();
+        // Map initialization for monocular
+        void MonocularInitialization();
 
-    void CheckReplacedInLastFrame();
-    bool TrackReferenceKeyFrame();
-    void UpdateLastFrame();
-    bool TrackWithMotionModel();
-    bool PredictStateIMU();
+        void CreateNewMapPoints();
 
-    bool Relocalization();
+        cv::Mat ComputeF12(KeyFrame *&pKF1, KeyFrame *&pKF2);
 
-    void UpdateLocalMap();
-    void UpdateLocalPoints();
-    void UpdateLocalKeyFrames();
+        void CreateInitialMapMonocular();
 
-    bool TrackLocalMap();
-    bool TrackLocalMap_old();
-    void SearchLocalPoints();
+        void CheckReplacedInLastFrame();
 
-    bool NeedNewKeyFrame();
-    void CreateNewKeyFrame();
+        bool TrackReferenceKeyFrame();
 
-    // Perform preintegration from last frame
-    void PreintegrateIMU();
+        void UpdateLastFrame();
 
-    // Reset IMU biases and compute frame velocity
-    void ComputeGyroBias(const vector<Frame*> &vpFs, float &bwx,  float &bwy, float &bwz);
-    void ComputeVelocitiesAccBias(const vector<Frame*> &vpFs, float &bax,  float &bay, float &baz);
+        bool TrackWithMotionModel();
 
+        bool PredictStateIMU();
 
-    bool mbMapUpdated;
+        bool Relocalization();
 
-    // Imu preintegration from last frame
-    IMU::Preintegrated *mpImuPreintegratedFromLastKF;
+        void UpdateLocalMap();
 
-    // Queue of IMU measurements between frames
-    std::list<IMU::Point> mlQueueImuData;
+        void UpdateLocalPoints();
 
-    // Vector of IMU measurements from previous to current frame (to be filled by PreintegrateIMU)
-    std::vector<IMU::Point> mvImuFromLastFrame;
-    std::mutex mMutexImuQueue;
+        void UpdateLocalKeyFrames();
 
-    // Imu calibration parameters
-    IMU::Calib *mpImuCalib;
+        bool TrackLocalMap();
 
-    // Last Bias Estimation (at keyframe creation)
-    IMU::Bias mLastBias;
+        bool TrackLocalMap_old();
 
-    // In case of performing only localization, this flag is true when there are no matches to
-    // points in the map. Still tracking will continue if there are enough matches with temporal points.
-    // In that case we are doing visual odometry. The system will try to do relocalization to recover
-    // "zero-drift" localization to the map.
-    bool mbVO;
+        void SearchLocalPoints();
 
-    //Other Thread Pointers
-    LocalMapping* mpLocalMapper;
-    LoopClosing* mpLoopClosing;
+        bool NeedNewKeyFrame();
 
-    //ORB
-    ORBextractor* mpORBextractorLeft, *mpORBextractorRight;
-    ORBextractor* mpIniORBextractor;
+        void CreateNewKeyFrame();
 
-    //BoW
-    ORBVocabulary* mpORBVocabulary;
-    KeyFrameDatabase* mpKeyFrameDB;
+        // Perform preintegration from last frame
+        void PreintegrateIMU();
 
-    // Initalization (only for monocular)
-    Initializer* mpInitializer;
-    bool mbSetInit;
+        // Reset IMU biases and compute frame velocity
+        void ComputeGyroBias(const vector<Frame *> &vpFs, float &bwx, float &bwy, float &bwz);
 
-    //Local Map
-    KeyFrame* mpReferenceKF;
-    std::vector<KeyFrame*> mvpLocalKeyFrames;
-    std::vector<MapPoint*> mvpLocalMapPoints;
-    
-    // System
-    System* mpSystem;
-    
-    //Drawers
-    Viewer* mpViewer;
-    FrameDrawer* mpFrameDrawer;
-    MapDrawer* mpMapDrawer;
-    bool bStepByStep;
-
-    //Atlas
-    Atlas* mpAtlas;
-
-    //Calibration matrix
-    cv::Mat mK;
-    cv::Mat mDistCoef;
-    float mbf;
-
-    //New KeyFrame rules (according to fps)
-    int mMinFrames;
-    int mMaxFrames;
-
-    int mnFirstImuFrameId;
-    int mnFramesToResetIMU;
-
-    // Threshold close/far points
-    // Points seen as close by the stereo/RGBD sensor are considered reliable
-    // and inserted from just one frame. Far points requiere a match in two keyframes.
-    float mThDepth;
-
-    // For RGB-D inputs only. For some datasets (e.g. TUM) the depthmap values are scaled.
-    float mDepthMapFactor;
-
-    //Current matches in frame
-    int mnMatchesInliers;
-
-    //Last Frame, KeyFrame and Relocalisation Info
-    KeyFrame* mpLastKeyFrame;
-    unsigned int mnLastKeyFrameId;
-    unsigned int mnLastRelocFrameId;
-    double mTimeStampLost;
-    double time_recently_lost;
-    double time_recently_lost_visual;
-
-    unsigned int mnFirstFrameId;
-    unsigned int mnInitialFrameId;
-    unsigned int mnLastInitFrameId;
-
-    bool mbCreatedMap;
+        void ComputeVelocitiesAccBias(const vector<Frame *> &vpFs, float &bax, float &bay, float &baz);
 
 
-    //Motion Model
-    cv::Mat mVelocity;
+        bool mbMapUpdated;
 
-    //Color order (true RGB, false BGR, ignored if grayscale)
-    bool mbRGB;
+        // Imu preintegration from last frame
+        IMU::Preintegrated *mpImuPreintegratedFromLastKF;
 
-    list<MapPoint*> mlpTemporalPoints;
+        // Queue of IMU measurements between frames
+        std::list<IMU::Point> mlQueueImuData;
 
-    //int nMapChangeIndex;
+        // Vector of IMU measurements from previous to current frame (to be filled by PreintegrateIMU)
+        std::vector<IMU::Point> mvImuFromLastFrame;
+        std::mutex mMutexImuQueue;
 
-    int mnNumDataset;
+        // Imu calibration parameters
+        IMU::Calib *mpImuCalib;
 
-    ofstream f_track_stats;
+        // Last Bias Estimation (at keyframe creation)
+        IMU::Bias mLastBias;
 
-    ofstream f_track_times;
-    double mTime_PreIntIMU;
-    double mTime_PosePred;
-    double mTime_LocalMapTrack;
-    double mTime_NewKF_Dec;
+        // In case of performing only localization, this flag is true when there are no matches to
+        // points in the map. Still tracking will continue if there are enough matches with temporal points.
+        // In that case we are doing visual odometry. The system will try to do relocalization to recover
+        // "zero-drift" localization to the map.
+        bool mbVO;
 
-    GeometricCamera* mpCamera, *mpCamera2;
+        //Other Thread Pointers
+        LocalMapping *mpLocalMapper;
+        LoopClosing *mpLoopClosing;
 
-    int initID, lastID;
+        //ORB
+        ORBextractor *mpORBextractorLeft, *mpORBextractorRight;
+        ORBextractor *mpIniORBextractor;
 
-    cv::Mat mTlr;
+        //BoW
+        ORBVocabulary *mpORBVocabulary;
+        KeyFrameDatabase *mpKeyFrameDB;
 
-public:
-    cv::Mat mImRight;
-};
+        // Initalization (only for monocular)
+        Initializer *mpInitializer;
+        bool mbSetInit;
+
+        //Local Map
+        KeyFrame *mpReferenceKF;
+        std::vector<KeyFrame *> mvpLocalKeyFrames;
+        std::vector<MapPoint *> mvpLocalMapPoints;
+
+        // System
+        System *mpSystem;
+
+        //Drawers
+        Viewer *mpViewer;
+        FrameDrawer *mpFrameDrawer;
+        MapDrawer *mpMapDrawer;
+        bool bStepByStep;
+
+        //Calibration matrix
+        cv::Mat mK;
+        cv::Mat mDistCoef;
+        float mbf;
+
+        //New KeyFrame rules (according to fps)
+        int mMinFrames;
+        int mMaxFrames;
+
+        int mnFirstImuFrameId;
+        int mnFramesToResetIMU;
+
+        // Threshold close/far points
+        // Points seen as close by the stereo/RGBD sensor are considered reliable
+        // and inserted from just one frame. Far points requiere a match in two keyframes.
+        float mThDepth;
+
+        // For RGB-D inputs only. For some datasets (e.g. TUM) the depthmap values are scaled.
+        float mDepthMapFactor;
+
+        //Current matches in frame
+        int mnMatchesInliers;
+
+        //Last Frame, KeyFrame and Relocalisation Info
+        KeyFrame *mpLastKeyFrame;
+        unsigned int mnLastKeyFrameId;
+        unsigned int mnLastRelocFrameId;
+        double mTimeStampLost;
+        double time_recently_lost;
+        double time_recently_lost_visual;
+
+        unsigned int mnFirstFrameId;
+        unsigned int mnInitialFrameId;
+        unsigned int mnLastInitFrameId;
+
+        bool mbCreatedMap;
+
+
+        //Motion Model
+        cv::Mat mVelocity;
+
+        //Color order (true RGB, false BGR, ignored if grayscale)
+        bool mbRGB;
+
+        list<MapPoint *> mlpTemporalPoints;
+
+        //int nMapChangeIndex;
+
+        int mnNumDataset;
+
+        ofstream f_track_stats;
+
+        ofstream f_track_times;
+        double mTime_PreIntIMU;
+        double mTime_PosePred;
+        double mTime_LocalMapTrack;
+        double mTime_NewKF_Dec;
+
+        GeometricCamera *mpCamera, *mpCamera2;
+
+        int initID, lastID;
+
+        cv::Mat mTlr;
+
+    public:
+        cv::Mat mImRight;
+
+        //Atlas
+        Atlas *mpAtlas;
+    };
 
 } //namespace ORB_SLAM
 

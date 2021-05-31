@@ -4,16 +4,11 @@
     <!-- http://docs.ros.org/en/kinetic/api/robot_localization/html/integrating_gps.html -->
     <!-- https://www.ros.org/reps/rep-0105.html -->
 
-    <node pkg="robot_localization" type="navsat_transform_node" name="gt_to_local" required="true">
-        <param name="frequency" value="5"/>
-        <param name="delay" value="0"/>
-        <param name="magnetic_declination_radians" value="0.0750"/>
-        <param name="yaw_offset" value="1.5707963"/>
-        <param name="wait_for_datum" value="true"/>
-
-        <remap from="/gps/fix" to="/ublox/fix"/>
-
-        <remap from="/ublox/fix/local" to="/odometry/gps"/>
+    <node pkg="geonav_transform" type="geonav_transform_node" name="gt_to_local" required="true">
+        <param name="pub_odom" value="/ublox/fix/local"/>
+        <param name="pub_utm" value="/ublox/fix/utm"/>
+        <param name="sub_fix" value="/ublox/fix"/>
+        <param name="odom_frame_id" value="map"/>
     </node>
 
 </launch>

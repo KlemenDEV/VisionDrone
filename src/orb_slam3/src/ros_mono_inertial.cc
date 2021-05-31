@@ -151,7 +151,9 @@ void ImageGrabber::SyncWithImu() {
 
             fusion->dataSLAM(mpSLAM, Tcw);
 
-            // TODO: if visualisation, publish point cloud from atlas -> maps -> map points
+            if (visualize) {
+                // TODO: publish point cloud from atlas -> maps -> map points
+            }
         }
 
         std::chrono::milliseconds tSleep(1);
