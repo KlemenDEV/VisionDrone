@@ -58,11 +58,19 @@ Visualization Manager:
         All Enabled: true
         base_link:
           Value: true
+        camera_imu_optical_frame:
+          Value: true
+        fcu_imu:
+          Value: true
         gps:
+          Value: true
+        gps_ant:
           Value: true
         map:
           Value: true
-      Marker Scale: 1
+        orthogonal_camera:
+          Value: true
+      Marker Scale: 0.15000000596046448
       Name: TF
       Show Arrows: true
       Show Axes: true
@@ -70,7 +78,14 @@ Visualization Manager:
       Tree:
         map:
           base_link:
-            {}
+            camera_imu_optical_frame:
+              {}
+            fcu_imu:
+              {}
+            gps_ant:
+              {}
+            orthogonal_camera:
+              {}
           gps:
             {}
       Update Interval: 0
@@ -124,25 +139,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.0978708267211914
+      Distance: 0.5421879887580872
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.14000603556632996
-        Y: 0.23134727776050568
-        Z: 0.836735188961029
+        X: -0.014252107590436935
+        Y: -0.009186397306621075
+        Z: 1.0327143669128418
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.3997962176799774
+      Pitch: 0.08979599177837372
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.7449217438697815
+      Yaw: 1.1299229860305786
     Saved: ~
 Window Geometry:
   Displays:
