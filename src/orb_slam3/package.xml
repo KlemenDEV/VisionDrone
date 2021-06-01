@@ -63,6 +63,7 @@
   <depend>nav_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>geographic_msgs</depend>
+  <depend>pcl_ros</depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(geonav_transform)
 
-## Find catkin macros and libraries
+## Find catkin macros and librariesEigen
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
@@ -19,7 +19,7 @@ find_package(catkin REQUIRED COMPONENTS
 # Attempt to find Eigen using its own CMake module.
 # If that fails, fall back to cmake_modules package.
 #find_package(Eigen3)
-find_package(Eigen)
+find_package(Eigen3)
 set(EIGEN_PACKAGE EIGEN3)
 if(NOT EIGEN3_FOUND)
   find_package(cmake_modules REQUIRED)
