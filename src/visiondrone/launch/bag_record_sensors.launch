@@ -10,9 +10,6 @@
     <!-- START PI CAMERA MODULE -->
     <include file="$(find visiondrone)/launch/subsystems/pi_camera.launch"/>
 
-    <!-- START GPS injector (so we can get 3D fix while flying) -->
-    <node pkg="gps_injection" type="gps_injection_node" name="gps" output="screen"/>
-
     <!-- RECORD ROSBAG -->
     <node pkg="rosbag" type="record" name="data_capture"
           args="$(eval 'record --tcpnodelay --buffsize 0 -O /media/usb/rosbags/' + raw_input('Enter rec file name: ') + '.bag
