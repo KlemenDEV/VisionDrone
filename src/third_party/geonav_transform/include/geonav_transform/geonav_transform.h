@@ -77,6 +77,10 @@ namespace GeonavTransform {
         bool datumCallback(robot_localization::SetDatum::Request& request,
                                             robot_localization::SetDatum::Response&);
 
+        void imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg);
+
+        geometry_msgs::Quaternion orientation_last;
+
         //! @brief Frame ID of the robot's body frame
         //!
         std::string base_link_frame_id_;

@@ -48,9 +48,11 @@ namespace GeonavTransform {
         nav_in_odom_.header.seq = 0;
         nav_in_utm_.header.frame_id = utm_frame_id_;
         nav_in_utm_.header.seq = 0;
+
         transform_msg_utm2odom_.header.frame_id = utm_frame_id_;
         transform_msg_utm2odom_.child_frame_id = odom_frame_id_;
         transform_msg_utm2odom_.header.seq = 0;
+
         transform_msg_odom2base_.header.frame_id = odom_frame_id_;
         transform_msg_odom2base_.child_frame_id = base_link_frame_id_;
         transform_msg_odom2base_.header.seq = 0;
@@ -66,6 +68,9 @@ namespace GeonavTransform {
         std::string topic_sub_fix;
         nh_priv.param<std::string>("sub_fix", topic_sub_fix, "nav_fix");
         ros::Subscriber odom_sub = nh.subscribe(topic_sub_fix, 1, &GeonavTransform::navOdomCallback, this);
+
+        ros::Subscriber imuorient_sub = nh.subscribe<sensor_msgs::Imu>("/mavros/imu/data", 1,
+                                                                       &GeonavTransform::imuDataCallback, this);
 
         // Subscribe to the messages and services we need
         ros::ServiceServer datum_srv = nh.advertiseService("datum", &GeonavTransform::datumCallback, this);
@@ -100,7 +105,10 @@ namespace GeonavTransform {
 
         // Set the transform utm->odom
         transform_utm2odom_.setOrigin(tf2::Vector3(utm_x, utm_y, alt));
-        transform_utm2odom_.setRotation(q);
+
+        //transform_utm2odom_.setRotation(q);
+        transform_utm2odom_.setRotation(tf2::Quaternion::getIdentity());
+
         transform_utm2odom_inverse_ = transform_utm2odom_.inverse();
 
         // Convert quaternion to RPY - to double check and display
@@ -116,7 +124,7 @@ namespace GeonavTransform {
         transform_msg_utm2odom_.transform = tf2::toMsg(transform_utm2odom_);
         transform_msg_utm2odom_.transform.translation.z = (zero_altitude_ ? 0.0
                                                                           : transform_msg_utm2odom_.transform.translation.z);
-        utm_broadcaster_.sendTransform(transform_msg_utm2odom_);
+        //utm_broadcaster_.sendTransform(transform_msg_utm2odom_);
 
         datum_set = true;
     } // end setDatum
@@ -138,7 +146,11 @@ namespace GeonavTransform {
         // For now the 'nav' frame is that same as the 'base_link' frame
         transform_utm2nav_.setOrigin(tf2::Vector3(utmX, utmY,
                                                   msg->altitude));
-        transform_utm2nav_.setRotation(tf2::Quaternion::getIdentity());
+
+        tf2::Quaternion quat_orientation_last;
+        tf2::convert(orientation_last, quat_orientation_last);
+        transform_utm2nav_.setRotation(quat_orientation_last);
+
         transform_utm2nav_inverse_ = transform_utm2nav_.inverse();
 
         // Publish Nav/Base Odometry in UTM frame - note frames are set in ::run()
@@ -173,6 +185,10 @@ namespace GeonavTransform {
 
         odom_pub_.publish(nav_in_odom_);
     }  // navOdomCallback
+
+    void GeonavTransform::imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg) {
+        orientation_last = msg->orientation;
+    }
 
     bool GeonavTransform::datumCallback(robot_localization::SetDatum::Request &request,
                                         robot_localization::SetDatum::Response &) {
