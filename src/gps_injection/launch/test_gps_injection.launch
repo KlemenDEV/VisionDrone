@@ -15,9 +15,9 @@
     <node pkg="gps_injection" type="gps_injection_node" name="gps" output="screen"/>
 
     <!-- Mavlink driver to listen to switch for GPS source switching -->
-    <include file="$(find gps_injection)/launch/mavros.launch">
-        <arg name="pluginlists_yaml" value="$(find gps_injection)/launch/apm_pluginlists.yaml"/>
-        <arg name="config_yaml" value="$(find gps_injection)/launch/apm_config.yaml"/>
+    <include file="$(find visiondrone)/launch/subsystems/mavros.launch">
+        <arg name="pluginlists_yaml" value="$(find visiondrone)/launch/subsystems/apm_pluginlists.yaml"/>
+        <arg name="config_yaml" value="$(find visiondrone)/launch/subsystems/apm_config.yaml"/>
 
         <arg name="fcu_url" value="/dev/ttyAMA1:57600"/>
         <arg name="gcs_url" value=""/>

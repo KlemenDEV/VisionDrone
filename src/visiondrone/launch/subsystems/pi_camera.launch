@@ -10,6 +10,7 @@
         <param name="pixel_format" value="yuyv" />
         <param name="framerate" value="2"/>
         <param name="focus" value="0"/>
+        <param name="camera_frame_id" value="orthogonal_camera"/>
 
         <param name="camera_info_url" value="package://visiondrone/camera_info/camerav2_1280x720.yaml"/>
         <param name="camera_name" value="camerav2_1280x720"/>

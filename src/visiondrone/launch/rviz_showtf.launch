@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+    <!-- Drone model -->
+    <param name="robot_description" textfile="$(find visiondrone)/rviz/drone.urdf" />
+
+    <!-- Open RVIZ to show results -->
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find visiondrone)/rviz/orbslam.rviz" required="true"/>
+</launch>

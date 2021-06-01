@@ -185,7 +185,7 @@ void ImageGrabber::SyncWithImu() {
                         points.push_back(pt);
 
                         int rgb = 0xffffff;
-                        values.push_back(*reinterpret_cast<float*>(&rgb));
+                        values.push_back(*reinterpret_cast<float *>(&rgb));
                     }
 
                     break; // only use first map for now
