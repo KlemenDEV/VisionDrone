@@ -24,6 +24,46 @@ void GPSData::consume(const ublox_msgs::NavPVT7::ConstPtr &msg) {
     this->hasSOLUTION = true;
 }
 
+void GPSData::consume(const ublox_msgs::NavPOSLLH::ConstPtr &msg) {
+    if (this->isComplete()) // if we consume on complete data, we re-initialize the data
+        this->markDirty();
+
+    // https://github.com/KumarRobotics/ublox/blob/master/ublox_msgs/msg/NavPOSLLH.msg
+    this->longitude = msg->lon; // [deg / 1e-7]
+    this->latitude = msg->lat; // [deg / 1e-7]
+    this->altitude_msl = msg->hMSL; // Height above mean sea level [mm]
+
+    this->hasPOSLLH = true;
+}
+
+void GPSData::consume(const ublox_msgs::NavVELNED::ConstPtr &msg) {
+    if (this->isComplete()) // if we consume on complete data, we re-initialize the data
+        this->markDirty();
+
+    // https://github.com/KumarRobotics/ublox/blob/master/ublox_msgs/msg/NavVELNED.msg
+    this->ned_north = msg->velN; // NED north velocity [cm/s]
+    this->ned_east = msg->velE; // NED east velocity [cm/s]
+    this->ned_down = msg->velD; // NED down velocity [cm/s]
+    this->speed_2d = msg->gSpeed; // Ground Speed (2-D) [cm/s]
+    this->heading_2d = msg->heading; // Heading of motion 2-D [deg / 1e-5]
+
+    this->hasVELNED = true;
+}
+
+void GPSData::consume(const ublox_msgs::NavSOL::ConstPtr &msg) {
+    if (this->isComplete()) // if we consume on complete data, we re-initialize the data
+        this->markDirty();
+
+    // https://github.com/KumarRobotics/ublox/blob/master/ublox_msgs/msg/NavSOL.msg
+    this->fix_type = msg->gpsFix;
+    this->fix_status = msg->flags;
+    this->position_DOP = msg->pDOP; // [1 / 0.01]
+    this->satellites = msg->numSV;
+    this->week = 1721;
+
+    this->hasSOLUTION = true;
+}
+
 void GPSData::consume(const sensor_msgs::NavSatFix::ConstPtr &msg) {
     this->longitude = round(msg->latitude * 1e7); // [deg / 1e-7]
     this->latitude = round(msg->latitude * 1e7); // [deg / 1e-7]

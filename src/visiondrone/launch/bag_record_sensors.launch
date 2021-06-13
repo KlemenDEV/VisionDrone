@@ -20,9 +20,7 @@
           /ublox/fix
           /ublox/fix_velocity
 
-          /mavros/global_position/compass_hdg
-          /mavros/global_position/rel_alt
           /mavros/imu/data
-          /mavros/imu/atm_pressure
+          /mavros/imu/diff_pressure
        ')"/>
 </launch>

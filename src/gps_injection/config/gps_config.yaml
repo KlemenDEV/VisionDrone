@@ -1,20 +1,12 @@
 device: /dev/ttyAMA4
+
 uart1:
-  baudrate: 57600
+  baudrate: 115200
 
-debug: 1
-frame_id: gps
-rate: 4
-nav_rate: 4
-dynamic_model: portable
-#fix_mode: auto
-
-gnss:
-  sbas: true
-sbas:
-  max: 3
-  usage: 3 # ranging source + corrections
+config_on_startup: false
 
 publish:
   nav:
     pvt: true
+
+frame_id: gps
