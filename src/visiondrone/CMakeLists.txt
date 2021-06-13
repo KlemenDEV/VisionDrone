@@ -24,10 +24,10 @@ target_link_libraries(color2gray
         ${catkin_LIBRARIES}
         )
 
-catkin_install_python(PROGRAMS script/odom2path.py
+catkin_install_python(PROGRAMS script/pose2path.py
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
         )
 
-catkin_install_python(PROGRAMS script/pose2path.py
+catkin_install_python(PROGRAMS script/pose2matlab.py
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
         )

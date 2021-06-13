@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+    <node pkg="tf" type="static_transform_publisher" name="link2_broadcaster" args="0 0 1 0 0 0 map base_link 1"/>
+
+    <!-- Drone TFs -->
+    <include file="$(find visiondrone)/launch/processing/tf.launch"/>
+
+    <!-- Drone model -->
+    <param name="robot_description" textfile="$(find visiondrone)/rviz/drone.urdf" />
+
+    <!-- Open RVIZ to show results -->
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find visiondrone)/rviz/tfdisplay.rviz" required="true"/>
+</launch>

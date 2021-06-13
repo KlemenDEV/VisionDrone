@@ -1,9 +1,9 @@
 <robot name="drone">
     <link name="base_link">
         <visual>
-            <origin rpy="1.57 0 -1.57" xyz="0.15 0 0.35"/>
+            <origin rpy="1.57 0 -1.57" xyz="0 0 0"/>
             <geometry>
-                <mesh filename="package://visiondrone/rviz/drone.stl" scale="0.01 0.01 0.01"/>
+                <mesh filename="package://visiondrone/rviz/drone.stl" scale="0.001 0.001 0.001"/>
             </geometry>
             <material name="blue">
                 <color rgba=".2 .2 .2 1"/>

@@ -7,7 +7,7 @@
 
     <!-- ORB_SLAM3 -->
     <include file="$(find visiondrone)/launch/localizers/3d_slam.launch">
-        <arg name="visualize" value="true" />
+        <arg name="visualize" value="true"/>
     </include>
 
     <!-- Path display -->
@@ -15,19 +15,31 @@
         <param name="pose" value="/orbslam3/pose_direct"/>
         <param name="path" value="/orbslam3/path_direct"/>
     </node>
-
     <node type="pose2path.py" name="path_rel_gen" pkg="visiondrone">
         <param name="pose" value="/orbslam3/pose_rel"/>
         <param name="path" value="/orbslam3/path_rel"/>
     </node>
-
     <node type="pose2path.py" name="path_gps_gen" pkg="visiondrone">
         <param name="pose" value="/ublox/fix/local"/>
         <param name="path" value="/ublox/fix/path"/>
     </node>
 
-    <!-- Drone model -->
-    <param name="robot_description" textfile="$(find visiondrone)/rviz/drone.urdf" />
+    <!-- Pose to matlab -->
+    <node type="pose2matlab.py" name="gps_pose_slam_direct" pkg="visiondrone">
+        <param name="pose" value="/orbslam3/pose_direct"/>
+        <param name="outfile" value="pose_slam_direct.mat"/>
+    </node>
+    <node type="pose2matlab.py" name="gps_pose_slam_rel" pkg="visiondrone">
+        <param name="pose" value="/orbslam3/pose_rel"/>
+        <param name="outfile" value="pose_slam_rel.mat"/>
+    </node>
+    <node type="pose2matlab.py" name="gps_pose_mat" pkg="visiondrone">
+        <param name="pose" value="/ublox/fix/local"/>
+        <param name="outfile" value="pose_gps.mat"/>
+    </node>
+
+    <!-- Quadcopter model -->
+    <param name="robot_description" textfile="$(find visiondrone)/rviz/drone.urdf"/>
 
     <!-- Open RVIZ to show results -->
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find visiondrone)/rviz/orbslam.rviz" required="true"/>
