@@ -9,8 +9,6 @@
 
 namespace GeonavTransform {
     GeonavTransform::GeonavTransform() :
-    // Initialize attributes
-            nav_frame_id_(""),
             zero_altitude_(true),
             utm_frame_id_("utm"),
             odom_frame_id_("odom"),
@@ -24,8 +22,7 @@ namespace GeonavTransform {
         transform_utm2odom_inverse_ = tf2::Transform(tf2::Transform::getIdentity());
     }
 
-    GeonavTransform::~GeonavTransform() {
-    }
+    GeonavTransform::~GeonavTransform() = default;
 
     void GeonavTransform::run() {
 
@@ -43,7 +40,7 @@ namespace GeonavTransform {
         nh_priv.param<std::string>("odom_frame_id", odom_frame_id_, "odom");
         nh_priv.param<std::string>("utm_frame_id", utm_frame_id_, "utm");
 
-        // Setup transforms and messages 
+        // Setup transforms and messages
         nav_in_odom_.header.frame_id = odom_frame_id_;
         nav_in_odom_.header.seq = 0;
         nav_in_utm_.header.frame_id = utm_frame_id_;
@@ -106,8 +103,10 @@ namespace GeonavTransform {
         // Set the transform utm->odom
         transform_utm2odom_.setOrigin(tf2::Vector3(utm_x, utm_y, alt));
 
-        //transform_utm2odom_.setRotation(q);
-        transform_utm2odom_.setRotation(tf2::Quaternion::getIdentity());
+        tf2::Quaternion quat_orientation;
+        quat_orientation.setRPY(0, 0, -1.5707);
+        quat_orientation = quat_orientation.normalize();
+        transform_utm2odom_.setRotation(quat_orientation * q);
 
         transform_utm2odom_inverse_ = transform_utm2odom_.inverse();
 
@@ -130,8 +129,6 @@ namespace GeonavTransform {
     } // end setDatum
 
     void GeonavTransform::navOdomCallback(const sensor_msgs::NavSatFix::ConstPtr &msg) {
-        nav_frame_id_ = msg->header.frame_id;
-
         if (!datum_set)
             return;
 
@@ -140,12 +137,10 @@ namespace GeonavTransform {
         double utmX = 0;
         double utmY = 0;
         std::string utm_zone_tmp;
-        NavsatConversions::LLtoUTM(msg->latitude, msg->longitude,
-                                   utmY, utmX, utm_zone_tmp);
+        NavsatConversions::LLtoUTM(msg->latitude, msg->longitude, utmY, utmX, utm_zone_tmp);
 
         // For now the 'nav' frame is that same as the 'base_link' frame
-        transform_utm2nav_.setOrigin(tf2::Vector3(utmX, utmY,
-                                                  msg->altitude));
+        transform_utm2nav_.setOrigin(tf2::Vector3(utmX, utmY, msg->altitude));
 
         tf2::Quaternion quat_orientation_last;
         tf2::convert(orientation_last, quat_orientation_last);
@@ -182,6 +177,10 @@ namespace GeonavTransform {
         // Position from transform
         tf2::toMsg(transform_odom2base_, nav_in_odom_.pose);
         nav_in_odom_.pose.position.z = (zero_altitude_ ? 0.0 : nav_in_odom_.pose.position.z);
+
+        //double oldX = nav_in_odom_.pose.position.x;
+        //nav_in_odom_.pose.position.x = -nav_in_odom_.pose.position.y;
+        //nav_in_odom_.pose.position.y = oldX;
 
         odom_pub_.publish(nav_in_odom_);
     }  // navOdomCallback

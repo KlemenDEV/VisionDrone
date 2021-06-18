@@ -24,7 +24,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: PointCloud
+    SyncSource: ""
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
@@ -57,9 +57,17 @@ Visualization Manager:
         All Enabled: true
         base_link:
           Value: true
+        camera_imu_optical_frame:
+          Value: true
+        fcu_imu:
+          Value: true
         gps:
           Value: true
+        gps_ant:
+          Value: true
         map:
+          Value: true
+        orthogonal_camera:
           Value: true
       Marker Scale: 10
       Name: TF
@@ -69,33 +77,17 @@ Visualization Manager:
       Tree:
         map:
           base_link:
-            {}
+            camera_imu_optical_frame:
+              {}
+            fcu_imu:
+              {}
+            gps_ant:
+              {}
+            orthogonal_camera:
+              {}
           gps:
             {}
       Update Interval: 0
-      Value: true
-    - Alpha: 1
-      Buffer Length: 1
-      Class: rviz/Path
-      Color: 255; 25; 0
-      Enabled: true
-      Head Diameter: 0.30000001192092896
-      Head Length: 0.20000000298023224
-      Length: 0.30000001192092896
-      Line Style: Lines
-      Line Width: 0.029999999329447746
-      Name: Abs. SLAM path
-      Offset:
-        X: 0
-        Y: 0
-        Z: 0
-      Pose Color: 255; 85; 255
-      Pose Style: None
-      Radius: 0.029999999329447746
-      Shaft Diameter: 0.10000000149011612
-      Shaft Length: 0.10000000149011612
-      Topic: /orbslam3/path_direct
-      Unreliable: false
       Value: true
     - Alpha: 1
       Buffer Length: 1
@@ -117,7 +109,7 @@ Visualization Manager:
       Radius: 0.029999999329447746
       Shaft Diameter: 0.10000000149011612
       Shaft Length: 0.10000000149011612
-      Topic: /orbslam3/path_rel
+      Topic: /orbslam3/path
       Unreliable: false
       Value: true
     - Alpha: 1

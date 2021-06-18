@@ -20,7 +20,7 @@ def shutdown():
     global data
     path = os.path.abspath(rospy.get_param("~outfile"))
     rospy.logwarn("Writing matlab file " + path + ", " + str(data.size) + " entries")
-    io.savemat(path, mdict={'exon': data})
+    io.savemat(path, mdict={rospy.get_param("~pose").replace("/", "_"): data})
 
 
 if __name__ == '__main__':

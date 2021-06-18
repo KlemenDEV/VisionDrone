@@ -54,6 +54,7 @@ public:
 Fusion *fusion;
 
 bool visualize;
+bool publish_point_cloud;
 
 ros::Publisher pc_pub;
 
@@ -66,6 +67,7 @@ int main(int argc, char **argv) {
     ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
 
     nh.param<bool>("visualize", visualize, true);
+    nh.param<bool>("publish_point_cloud", publish_point_cloud, false);
 
     std::string path_to_vocabulary;
     nh.param<std::string>("path_to_vocabulary", path_to_vocabulary,
@@ -163,7 +165,7 @@ void ImageGrabber::SyncWithImu() {
 
             fusion->dataSLAM(mpSLAM, Tcw);
 
-            if (visualize) {
+            if (publish_point_cloud) {
                 sensor_msgs::PointCloud pc;
                 vector<geometry_msgs::Point32> points;
                 vector<float> values;

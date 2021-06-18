@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "gps_injection_node");
     ros::NodeHandle nh;
 
-    ros::Rate loop_rate(50); // GPS has 4/5Hz, use 10Hz to fulfill Shannon's requirement
+    ros::Rate loop_rate(10); // GPS has 4/5Hz, use 10Hz to fulfill Shannon's requirement
 
     // UBLOX 6 antenna/module subscribers
     ros::Subscriber navposllh_sub = nh.subscribe<ublox_msgs::NavPOSLLH>
