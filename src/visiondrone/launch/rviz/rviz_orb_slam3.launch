@@ -2,22 +2,19 @@
 
 <launch>
     <!-- PLAY ROSBAG -->
-    <node pkg="rosbag" type="play" name="data_loader" args="/home/pylo/Desktop/niz_04.bag"
+    <node pkg="rosbag" type="play" name="data_loader" args="/home/pylo/Desktop/sobniz01.bag"
           launch-prefix="bash -c 'sleep 10; $0 $@'"/>
 
     <!-- ORB_SLAM3 -->
     <include file="$(find visiondrone)/launch/localizers/3d_slam.launch">
         <arg name="visualize" value="true"/>
+        <arg name="publish_point_cloud" value="false"/>
     </include>
 
     <!-- Path display -->
-    <node type="pose2path.py" name="path_direct_gen" pkg="visiondrone">
-        <param name="pose" value="/orbslam3/pose_direct"/>
-        <param name="path" value="/orbslam3/path_direct"/>
-    </node>
-    <node type="pose2path.py" name="path_rel_gen" pkg="visiondrone">
-        <param name="pose" value="/orbslam3/pose_rel"/>
-        <param name="path" value="/orbslam3/path_rel"/>
+    <node type="pose2path.py" name="path_estimate_gen" pkg="visiondrone">
+        <param name="pose" value="/orbslam3/pose"/>
+        <param name="path" value="/orbslam3/path"/>
     </node>
     <node type="pose2path.py" name="path_gps_gen" pkg="visiondrone">
         <param name="pose" value="/ublox/fix/local"/>
@@ -25,13 +22,9 @@
     </node>
 
     <!-- Pose to matlab -->
-    <node type="pose2matlab.py" name="gps_pose_slam_direct" pkg="visiondrone">
-        <param name="pose" value="/orbslam3/pose_direct"/>
-        <param name="outfile" value="pose_slam_direct.mat"/>
-    </node>
-    <node type="pose2matlab.py" name="gps_pose_slam_rel" pkg="visiondrone">
-        <param name="pose" value="/orbslam3/pose_rel"/>
-        <param name="outfile" value="pose_slam_rel.mat"/>
+    <node type="pose2matlab.py" name="gps_pose_slam" pkg="visiondrone">
+        <param name="pose" value="/orbslam3/pose"/>
+        <param name="outfile" value="pose_slam.mat"/>
     </node>
     <node type="pose2matlab.py" name="gps_pose_mat" pkg="visiondrone">
         <param name="pose" value="/ublox/fix/local"/>
