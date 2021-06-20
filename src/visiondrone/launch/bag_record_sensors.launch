@@ -21,6 +21,6 @@
           /ublox/fix_velocity
 
           /mavros/imu/data
-          /mavros/imu/diff_pressure
+          /mavros/imu/static_pressure
        ')"/>
 </launch>
