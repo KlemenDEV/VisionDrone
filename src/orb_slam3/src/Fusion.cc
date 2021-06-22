@@ -82,11 +82,11 @@ void Fusion::dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw) {
             double roll2, pitch2, yaw2;
             tf2_rot.getRPY(roll2, pitch2, yaw2, 1);
 
-            yaw_corr += (float) wpi(wpi(yaw) - wpi(yaw2) - M_PI / 2 + 0.075921822 * 5);
+            yaw_corr += (float) wpi(wpi(yaw) - wpi(yaw2) + M_PI / 2.0 - 0.075921822);
 
             avgcounter++;
-            if(avgcounter == 50) {
-                yaw_corr /= 50.;
+            if (avgcounter == 6) {
+                yaw_corr /= (float) avgcounter;
 
                 setGPSDatum();
 

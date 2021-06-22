@@ -3,17 +3,31 @@
 #include <sensor_msgs/FluidPressure.h>
 #include <std_msgs/Float64.h>
 
+#define P0 101200
+
+using namespace std;
+
 ros::Publisher height_pub;
 
-bool init = false;
-double pressure_int = 0;
+int avgcounter = 0;
+float h_init = 0;
 
 void baroCallback(const sensor_msgs::FluidPressure::ConstPtr &msg) {
-    if (!init) {
-        pressure_int = msg->fluid_pressure;
-        init = true;
-    } else {
+    float h_curr = (float) (44330 * (1 - pow(msg->fluid_pressure / P0, 1 / 5.255)));
 
+    if (avgcounter == 5) {
+        h_init /= (float) avgcounter;
+        avgcounter++;
+        cout << "Baro init height:" << h_curr << " m" << endl;
+    }
+
+    if (avgcounter >= 5) {
+        std_msgs::Float64 fmsg;
+        fmsg.data = h_curr - h_init;
+        height_pub.publish(fmsg);
+    } else {
+        avgcounter++;
+        h_init += h_curr;
     }
 }
 
@@ -22,9 +36,9 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
 
     ros::Subscriber baro_sub = nh.subscribe<sensor_msgs::FluidPressure>
-            ("/mavros/imu/diff_pressure", 1, baroCallback);
+            ("/mavros/imu/static_pressure", 5, baroCallback);
 
-    height_pub = nh.advertise<std_msgs::Float64>("/drone/height_estimate", 1);
+    height_pub = nh.advertise<std_msgs::Float64>("/drone/height_estimate", 5);
 
     ros::spin();
     ros::shutdown();
