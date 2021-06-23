@@ -163,7 +163,7 @@ void ImageGrabber::SyncWithImu() {
 
             cv::Mat Tcw = mpSLAM->TrackMonocular(im, tIm, vImuMeas);
 
-            fusion->dataSLAM(mpSLAM, Tcw);
+            fusion->dataSLAM(mpSLAM, Tcw, vImuMeas);
 
             if (publish_point_cloud) {
                 sensor_msgs::PointCloud pc;

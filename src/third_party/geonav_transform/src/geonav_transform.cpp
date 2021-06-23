@@ -104,9 +104,12 @@ namespace GeonavTransform {
         transform_utm2odom_.setOrigin(tf2::Vector3(utm_x, utm_y, alt));
 
         tf2::Quaternion quat_orientation;
-        quat_orientation.setRPY(0, 0, -1.5707);
+        // quat_orientation.setRPY(0, 0, -1.5707);
+        quat_orientation.setRPY(0, 0, 0);
         quat_orientation = quat_orientation.normalize();
-        transform_utm2odom_.setRotation(quat_orientation * q);
+        // transform_utm2odom_.setRotation(quat_orientation * q);
+
+        transform_utm2odom_.setRotation(quat_orientation);
 
         transform_utm2odom_inverse_ = transform_utm2odom_.inverse();
 

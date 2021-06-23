@@ -3,7 +3,8 @@ Panels:
     Help Height: 78
     Name: Displays
     Property Tree Widget:
-      Expanded: ~
+      Expanded:
+        - /TF1/Frames1
       Splitter Ratio: 0.5235294103622437
     Tree Height: 781
   - Class: rviz/Selection
@@ -54,21 +55,21 @@ Visualization Manager:
       Enabled: true
       Frame Timeout: 15
       Frames:
-        All Enabled: true
+        All Enabled: false
         base_link:
           Value: true
         camera_imu_optical_frame:
-          Value: true
+          Value: false
         fcu_imu:
-          Value: true
+          Value: false
         gps:
-          Value: true
+          Value: false
         gps_ant:
-          Value: true
+          Value: false
         map:
           Value: true
         orthogonal_camera:
-          Value: true
+          Value: false
       Marker Scale: 10
       Name: TF
       Show Arrows: true
@@ -142,7 +143,7 @@ Visualization Manager:
       Enabled: true
       Name: AerialMapDisplay
       Object URI: https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/256/{z}/{x}/{y}?access_token=pk.eyJ1Ijoia2xlbWVuNjMiLCJhIjoiY2twYTg5YjN5MHE0czJyb2c5Z2x0YjRmdSJ9.m5V1rMbGCykrJ2f0OMOuWA
-      Topic: /ublox/fix
+      Topic: /ublox/fix_tracking
       Value: true
       Zoom: 16
     - Alpha: 1
@@ -219,25 +220,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 270.0456237792969
+      Distance: 211.60475158691406
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 25.301353454589844
-        Y: 51.96262741088867
-        Z: 38.168392181396484
+        X: 19.381174087524414
+        Y: 62.11991882324219
+        Z: 22.240358352661133
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.13479574024677277
+      Pitch: 0.18979591131210327
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 2.5349245071411133
+      Yaw: 4.0099263191223145
     Saved: ~
 Window Geometry:
   Displays:

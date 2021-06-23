@@ -2,14 +2,22 @@
 
 <launch>
     <!-- PLAY ROSBAG -->
-    <node pkg="rosbag" type="play" name="data_loader" args="/home/pylo/Desktop/magniz04.bag"
-          launch-prefix="bash -c 'sleep 10; $0 $@'"/>
+    <node pkg="rosbag" type="play" name="data_loader" args="/home/pylo/Desktop/sreniz02.bag"
+          launch-prefix="bash -c 'sleep 11; $0 $@'"/>
 
     <!-- ORB_SLAM3 -->
     <include file="$(find visiondrone)/launch/localizers/3d_slam.launch">
         <arg name="visualize" value="true"/>
         <arg name="publish_point_cloud" value="false"/>
     </include>
+
+    <!-- MAP GPS LOCATION TO LOCAL -->
+    <node pkg="geonav_transform" type="geonav_transform_node" name="gt_to_local" required="true">
+        <param name="pub_odom" value="/ublox/fix/local"/>
+        <param name="pub_utm" value="/ublox/fix/utm"/>
+        <param name="sub_fix" value="/ublox/fix_tracking"/>
+        <param name="odom_frame_id" value="map"/>
+    </node>
 
     <!-- Path display -->
     <node type="pose2path.py" name="path_estimate_gen" pkg="visiondrone">

@@ -17,7 +17,7 @@ catkin_package()
 include_directories(${catkin_INCLUDE_DIRS} include)
 
 # Node for GPS generator
-add_executable(height_estimation_node src/height_estimation_node.cc)
+add_executable(height_estimation_node src/height_estimation_node.cc src/algebra.cc src/altitude.cc src/filters.cc)
 
 add_dependencies(height_estimation_node ${catkin_EXPORTED_TARGETS})
 target_link_libraries(height_estimation_node ${catkin_LIBRARIES})

@@ -4,9 +4,6 @@
     <arg name="visualize" default="false"/>
     <arg name="publish_point_cloud" default="false"/>
 
-    <!-- MAP GPS LOCATION TO LOCAL -->
-    <include file="$(find visiondrone)/launch/processing/gps_to_local.launch"/>
-
     <!-- Drone TFs -->
     <include file="$(find visiondrone)/launch/processing/tf.launch"/>
 
