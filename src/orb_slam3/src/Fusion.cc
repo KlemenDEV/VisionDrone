@@ -15,6 +15,17 @@ Fusion::Fusion(ros::NodeHandle *nh) {
     gpsfix_sub = nh->subscribe<sensor_msgs::NavSatFix>("/ublox/fix", 1, &Fusion::gpsDataCallback, this);
 
     set_datum_client = nh->serviceClient<robot_localization::SetDatum>("/datum");
+
+    // pre-init states
+    velocity = Eigen::Vector3f::Zero();
+    orientation = Eigen::Quaternionf::Identity();
+
+    gravity(0) = 0.0;
+    gravity(1) = 9.81;
+    gravity(2) = 0.0;
+
+    aBias = Eigen::Vector3f(0.03285804018378258, -0.12473473697900772, 0.2566709816455841);
+    gBias = Eigen::Vector3f(-0.00011866784916492179, 6.184831363498233e-06, 2.998005766130518e-05);
 }
 
 void Fusion::imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg) {
@@ -28,6 +39,7 @@ void Fusion::gpsDataCallback(const sensor_msgs::NavSatFix::ConstPtr &msg) {
 }
 
 void Fusion::heightCallback(const std_msgs::Float64::ConstPtr &msg) {
+    height_pre_last = height_last;
     height_last = (float) msg->data;
 }
 
@@ -73,11 +85,65 @@ void Fusion::publishData() {
     }
 }
 
-void Fusion::deadReckoning(vector<ORB_SLAM3::IMU::Point> vImuMeas) {
-    ROS_WARN("Dead reckoning");
+void Fusion::makeQuaternionFromVector(Eigen::Vector3f &inVec, Eigen::Quaternionf &outQuat) {
+    float phi = inVec.norm();
+    Eigen::Vector3f u = inVec / phi;
+
+    outQuat.vec() = u * (float) sin(phi / 2.0);
+    outQuat.w() = (float) cos(phi / 2.0);
 }
 
-void Fusion::dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw, vector<ORB_SLAM3::IMU::Point> vImuMeas) {
+void Fusion::deadReckoning(const vector<ORB_SLAM3::IMU::Point> &vImuMeas) {
+    if (!dead_reckoning) {
+        velocity = Eigen::Vector3f::Zero();
+        dead_reckoning = true;
+        ROS_WARN("(Re)Initiating dead reckoning");
+    }
+
+    ROS_WARN_THROTTLE(1, "Dead reckoning");
+
+    Eigen::Vector3f pos_change = Eigen::Vector3f::Zero();
+
+    double t_last = -1;
+    for (const auto &pt : vImuMeas) {
+        double delT = 1. / 200.;
+        if (t_last != -1)
+            delT = pt.t - t_last;
+
+        Eigen::Matrix3f R = orientation.toRotationMatrix();
+        Eigen::Vector3f aBiasCorrected = Eigen::Vector3f(pt.a.x, pt.a.y, pt.a.z) - aBias;
+        Eigen::Vector3f gBiasCorrected = (Eigen::Vector3f(pt.w.x, pt.w.y, pt.w.z) - gBias) * delT;
+
+        pos_change += velocity * delT + 0.5 * (R * aBiasCorrected + gravity) * delT * delT;
+        velocity += (R * aBiasCorrected + gravity) * delT;
+
+        Eigen::Quaternionf Q;
+        makeQuaternionFromVector(gBiasCorrected, Q);
+        orientation = orientation * Q;
+
+        t_last = pt.t;
+    }
+
+    float chg = sqrt(((float) pos_change.x() * (float) pos_change.x())
+                     + ((float) pos_change.z() * (float) pos_change.z()));
+    tf2::Quaternion quat_gps_rot;
+    tf2::fromMsg(orientation_last, quat_gps_rot);
+    tf2::Matrix3x3 gps_tf2_rot(quat_gps_rot);
+    double roll, pitch, yaw;
+    gps_tf2_rot.getRPY(roll, pitch, yaw, 1);
+
+    odx = (float) (chg * cos((float) wpi(yaw - yaw_corr)));
+    ody = (float) (chg * sin((float) wpi(yaw - yaw_corr)));
+
+    cout << vImuMeas.size() << " : " << chg << endl;
+
+    px += odx;
+    py += ody;
+
+    this->publishData();
+}
+
+void Fusion::dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw, vector<ORB_SLAM3::IMU::Point> &vImuMeas) {
     if (Tcw.rows == 4 && Tcw.cols == 4) { // valid data
         cv::Mat Twc(4, 4, CV_32F);
         cv::invert(Tcw, Twc);
@@ -85,33 +151,37 @@ void Fusion::dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw, vector<ORB_
         float x = Twc.at<float>(0, 3);
         float y = Twc.at<float>(1, 3);
 
+        tf2::Matrix3x3 tf2_rot(Twc.at<double>(0, 0), Twc.at<double>(0, 1), Twc.at<double>(0, 2),
+                               Twc.at<double>(1, 0), Twc.at<double>(1, 1), Twc.at<double>(1, 2),
+                               Twc.at<double>(2, 0), Twc.at<double>(2, 1), Twc.at<double>(2, 2));
+
+
+        double roll2, pitch2, yaw2;
+        tf2_rot.getRPY(roll2, pitch2, yaw2, 1);
+
+        if (!dead_reckoning)
+            orientation = Eigen::AngleAxisf((float) roll2, Eigen::Vector3f::UnitX())
+                          * Eigen::AngleAxisf((float) pitch2, Eigen::Vector3f::UnitY())
+                          * Eigen::AngleAxisf((float) yaw2, Eigen::Vector3f::UnitZ());
+
         if (mpSLAM->GetTimeFromIMUInit() <= 0 || mpSLAM->mpTracker->mState != ORB_SLAM3::Tracking::OK) {
-            if (tracking_started) {
-                this->deadReckoning(vImuMeas);
-            }
+            this->deadReckoning(vImuMeas);
             avgcounter = 0;
             return;
         }
 
         if (!tracking_started) {
-            tf2::Matrix3x3 tf2_rot(Twc.at<float>(0, 0), Twc.at<float>(0, 1), Twc.at<float>(0, 2),
-                                   Twc.at<float>(1, 0), Twc.at<float>(1, 1), Twc.at<float>(1, 2),
-                                   Twc.at<float>(2, 0), Twc.at<float>(2, 1), Twc.at<float>(2, 2));
-
-
             tf2::Quaternion quat_gps_rot;
             tf2::fromMsg(orientation_last, quat_gps_rot);
             tf2::Matrix3x3 gps_tf2_rot(quat_gps_rot);
 
             double roll, pitch, yaw;
             gps_tf2_rot.getRPY(roll, pitch, yaw, 1);
-            double roll2, pitch2, yaw2;
-            tf2_rot.getRPY(roll2, pitch2, yaw2, 1);
 
-            yaw_corr += (float) wpi(wpi(yaw) - wpi(yaw2) - M_PI / 2.0);
+            yaw_corr += (float) wpi(wpi(yaw) - wpi(yaw2));
 
             avgcounter++;
-            if (avgcounter == 3) {
+            if (avgcounter == 2) {
                 yaw_corr /= (float) avgcounter;
 
                 setGPSDatum();
@@ -119,21 +189,29 @@ void Fusion::dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw, vector<ORB_
                 ox = x;
                 oy = y;
 
+                time_last = std::chrono::high_resolution_clock::now();
+
                 // initialize height so 0 is at current point
                 pz -= height_last;
 
                 tracking_started = true;
                 ROS_WARN("Tracking started");
             }
-        } else {
+        } else if (!dead_reckoning) {
             float dx = x - ox;
             float dy = y - oy;
 
+            std::chrono::time_point<std::chrono::high_resolution_clock> new_time = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<float> dt = new_time - time_last;
+            //velocity = Eigen::Vector3f(dx / dt.count(),
+            //                           (height_last - height_pre_last) / dt.count(),
+            //                           dy / dt.count());
+            time_last = new_time;
+
             // filter out big jumps (eg. due to map re-alignments)
-            if (sqrt(dx * dx + dy * dy) > 3) {
-                dx = odx;
-                dy = ody;
-                ROS_WARN("Large jump detected! Smoothing it out.");
+            if (sqrt(dx * dx + dy * dy) > 25) {
+                this->deadReckoning(vImuMeas);
+                ROS_WARN("Large jump detected! Switching to dead reckoning");
             }
 
             px += dx;
@@ -143,6 +221,10 @@ void Fusion::dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw, vector<ORB_
             ody = dy;
 
             this->publishData();
+        } else {
+            time_last = std::chrono::high_resolution_clock::now();
+            dead_reckoning = false;
+            ROS_WARN("Back to SLAM");
         }
 
         ox = x;

@@ -10,7 +10,7 @@
 #include "altitude.h"
 
 #define P0 101200
-#define G 9.80665
+#define G 9.81
 
 using namespace std;
 
@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
     ros::Subscriber baro_sub = nh.subscribe<sensor_msgs::FluidPressure>
             ("/mavros/imu/static_pressure", 5, baroCallback);
 
-    ros::Subscriber sub_imu = nh.subscribe("/camera/imu", 15, imuCallback);
+    ros::Subscriber sub_imu = nh.subscribe("/camera/imu", 20, imuCallback);
 
     height_pub = nh.advertise<std_msgs::Float64>("/drone/height_estimate", 5);
 

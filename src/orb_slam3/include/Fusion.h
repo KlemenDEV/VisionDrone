@@ -21,6 +21,8 @@
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
+#include <chrono>
+
 #include "System.h"
 
 #define wpi(x) atan2(sin(x), cos(x))
@@ -33,12 +35,22 @@ private:
     ros::Publisher point_pub;
     ros::Publisher gps_pub;
 
+    // old state data
     float ox = 0, oy = 0;
     float odx = 0, ody = 0;
 
+    // states
     float px = 0, py = 0, pz = 0;
+    Eigen::Quaternionf orientation;
+    Eigen::Vector3f velocity;
+
+    Eigen::Vector3f gravity;
+    Eigen::Vector3f aBias;
+    Eigen::Vector3f gBias;
 
     bool tracking_started = false;
+
+    bool dead_reckoning = false;
 
     ros::ServiceClient set_datum_client;
 
@@ -50,16 +62,21 @@ private:
 
     ros::Subscriber height_sub;
     float height_last = 0;
+    float height_pre_last = 0;
 
     float yaw_corr = 0;
     int avgcounter = 0;
 
+    std::chrono::time_point<std::chrono::high_resolution_clock> time_last;
+
 public:
     explicit Fusion(ros::NodeHandle *nh);
 
-    void dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw, vector<ORB_SLAM3::IMU::Point> vImuMeas);
+    static void makeQuaternionFromVector(Eigen::Vector3f &inVec, Eigen::Quaternionf &outQuat);
 
-    void deadReckoning(vector<ORB_SLAM3::IMU::Point> vImuMeas);
+    void dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw, vector<ORB_SLAM3::IMU::Point>& vImuMeas);
+
+    void deadReckoning(const vector<ORB_SLAM3::IMU::Point>& vImuMeas);
 
     void setGPSDatum();
 
