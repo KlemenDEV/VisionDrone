@@ -96,6 +96,7 @@ void Fusion::makeQuaternionFromVector(Eigen::Vector3f &inVec, Eigen::Quaternionf
 void Fusion::deadReckoning(const vector<ORB_SLAM3::IMU::Point> &vImuMeas) {
     if (!dead_reckoning) {
         velocity = Eigen::Vector3f::Zero();
+        orientation = Eigen::Quaternionf::Identity();
         dead_reckoning = true;
         ROS_WARN("(Re)Initiating dead reckoning");
     }
@@ -159,17 +160,6 @@ void Fusion::dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw, vector<ORB_
         double roll2, pitch2, yaw2;
         tf2_rot.getRPY(roll2, pitch2, yaw2, 1);
 
-        if (!dead_reckoning)
-            orientation = Eigen::AngleAxisf((float) roll2, Eigen::Vector3f::UnitX())
-                          * Eigen::AngleAxisf((float) pitch2, Eigen::Vector3f::UnitY())
-                          * Eigen::AngleAxisf((float) yaw2, Eigen::Vector3f::UnitZ());
-
-        if (mpSLAM->GetTimeFromIMUInit() <= 0 || mpSLAM->mpTracker->mState != ORB_SLAM3::Tracking::OK) {
-            this->deadReckoning(vImuMeas);
-            avgcounter = 0;
-            return;
-        }
-
         if (!tracking_started) {
             tf2::Quaternion quat_gps_rot;
             tf2::fromMsg(orientation_last, quat_gps_rot);
@@ -181,50 +171,59 @@ void Fusion::dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw, vector<ORB_
             yaw_corr += (float) wpi(wpi(yaw) - wpi(yaw2));
 
             avgcounter++;
-            if (avgcounter == 2) {
+            if (avgcounter == 5) {
                 yaw_corr /= (float) avgcounter;
 
                 setGPSDatum();
-
-                ox = x;
-                oy = y;
-
-                time_last = std::chrono::high_resolution_clock::now();
-
-                // initialize height so 0 is at current point
                 pz -= height_last;
 
                 tracking_started = true;
                 ROS_WARN("Tracking started");
             }
         } else if (!dead_reckoning) {
+            //orientation = Eigen::AngleAxisf((float) roll2, Eigen::Vector3f::UnitX())
+            //              * Eigen::AngleAxisf((float) pitch2, Eigen::Vector3f::UnitY())
+            //              * Eigen::AngleAxisf((float) yaw2, Eigen::Vector3f::UnitZ());
+
+            if (mpSLAM->GetTimeFromIMUInit() <= 0 || mpSLAM->mpTracker->mState != ORB_SLAM3::Tracking::OK) {
+                this->deadReckoning(vImuMeas);
+                return;
+            }
+
             float dx = x - ox;
             float dy = y - oy;
 
-            std::chrono::time_point<std::chrono::high_resolution_clock> new_time = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<float> dt = new_time - time_last;
-            //velocity = Eigen::Vector3f(dx / dt.count(),
-            //                           (height_last - height_pre_last) / dt.count(),
-            //                           dy / dt.count());
-            time_last = new_time;
-
             // filter out big jumps (eg. due to map re-alignments)
             if (sqrt(dx * dx + dy * dy) > 25) {
-                this->deadReckoning(vImuMeas);
                 ROS_WARN("Large jump detected! Switching to dead reckoning");
+                this->deadReckoning(vImuMeas);
+                return;
             }
 
-            px += dx;
-            py += dy;
+            ROS_WARN_THROTTLE(1, "SLAM");
+
+            float chg = sqrt(dx*dx + dy*dy);
+            tf2::Quaternion quat_gps_rot;
+            tf2::fromMsg(orientation_last, quat_gps_rot);
+            tf2::Matrix3x3 gps_tf2_rot(quat_gps_rot);
+            double roll, pitch, yaw;
+            gps_tf2_rot.getRPY(roll, pitch, yaw, 1);
+            px += (float) (chg * cos((float) wpi(yaw - yaw_corr)));
+            py += (float) (chg * sin((float) wpi(yaw - yaw_corr)));
+
+            //px += dx;
+            //py += dy;
 
             odx = dx;
             ody = dy;
 
             this->publishData();
-        } else {
-            time_last = std::chrono::high_resolution_clock::now();
+        } else if (mpSLAM->GetTimeFromIMUInit() > 0 && mpSLAM->mpTracker->mState == ORB_SLAM3::Tracking::OK) {
             dead_reckoning = false;
             ROS_WARN("Back to SLAM");
+        } else {
+            this->deadReckoning(vImuMeas);
+            return;
         }
 
         ox = x;
