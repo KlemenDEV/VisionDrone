@@ -66,23 +66,19 @@ void Fusion::setGPSDatum() {
 }
 
 void Fusion::publishData() {
-    if (tracking_started) {
-        geometry_msgs::PoseStamped posest;
-        geometry_msgs::Pose pose;
-        geometry_msgs::Point pt;
+    geometry_msgs::PoseStamped posest;
+    geometry_msgs::Pose pose;
+    geometry_msgs::Point pt;
 
-        float s = sin(yaw_corr);
-        float c = cos(yaw_corr);
-        pt.x = c * px - s * py;
-        pt.y = s * px + c * py;
-        pt.z = pz + height_last;
+    pt.x = px;
+    pt.y = py;
+    pt.z = pz + height_last;
 
-        pose.position = pt;
-        posest.pose = pose;
-        posest.header.stamp = ros::Time::now();
-        posest.header.frame_id = "map";
-        this->point_pub.publish(posest);
-    }
+    pose.position = pt;
+    posest.pose = pose;
+    posest.header.stamp = ros::Time::now();
+    posest.header.frame_id = "map";
+    this->point_pub.publish(posest);
 }
 
 void Fusion::makeQuaternionFromVector(Eigen::Vector3f &inVec, Eigen::Quaternionf &outQuat) {
@@ -125,21 +121,27 @@ void Fusion::deadReckoning(const vector<ORB_SLAM3::IMU::Point> &vImuMeas) {
         t_last = pt.t;
     }
 
-    float chg = sqrt(((float) pos_change.x() * (float) pos_change.x())
-                     + ((float) pos_change.z() * (float) pos_change.z()));
+    double chg = sqrt((pos_change.x() * pos_change.x())
+                      + (pos_change.z() * pos_change.z()));
+
+    if (vImuMeas.empty()) {
+        chg = ochg;
+        ROS_ERROR("Missing IMU data, blind dead reckoning!");
+    }
+
     tf2::Quaternion quat_gps_rot;
     tf2::fromMsg(orientation_last, quat_gps_rot);
     tf2::Matrix3x3 gps_tf2_rot(quat_gps_rot);
     double roll, pitch, yaw;
     gps_tf2_rot.getRPY(roll, pitch, yaw, 1);
 
-    odx = (float) (chg * cos((float) wpi(yaw - yaw_corr)));
-    ody = (float) (chg * sin((float) wpi(yaw - yaw_corr)));
-
-    cout << vImuMeas.size() << " : " << chg << endl;
+    odx = (float) (chg * cos(yaw));
+    ody = (float) (chg * sin(yaw));
 
     px += odx;
     py += ody;
+
+    ochg = chg;
 
     this->publishData();
 }
@@ -152,39 +154,13 @@ void Fusion::dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw, vector<ORB_
         float x = Twc.at<float>(0, 3);
         float y = Twc.at<float>(1, 3);
 
-        tf2::Matrix3x3 tf2_rot(Twc.at<double>(0, 0), Twc.at<double>(0, 1), Twc.at<double>(0, 2),
-                               Twc.at<double>(1, 0), Twc.at<double>(1, 1), Twc.at<double>(1, 2),
-                               Twc.at<double>(2, 0), Twc.at<double>(2, 1), Twc.at<double>(2, 2));
-
-
-        double roll2, pitch2, yaw2;
-        tf2_rot.getRPY(roll2, pitch2, yaw2, 1);
-
         if (!tracking_started) {
-            tf2::Quaternion quat_gps_rot;
-            tf2::fromMsg(orientation_last, quat_gps_rot);
-            tf2::Matrix3x3 gps_tf2_rot(quat_gps_rot);
+            setGPSDatum();
+            pz -= height_last;
 
-            double roll, pitch, yaw;
-            gps_tf2_rot.getRPY(roll, pitch, yaw, 1);
-
-            yaw_corr += (float) wpi(wpi(yaw) - wpi(yaw2));
-
-            avgcounter++;
-            if (avgcounter == 5) {
-                yaw_corr /= (float) avgcounter;
-
-                setGPSDatum();
-                pz -= height_last;
-
-                tracking_started = true;
-                ROS_WARN("Tracking started");
-            }
+            tracking_started = true;
+            ROS_WARN("Tracking started");
         } else if (!dead_reckoning) {
-            //orientation = Eigen::AngleAxisf((float) roll2, Eigen::Vector3f::UnitX())
-            //              * Eigen::AngleAxisf((float) pitch2, Eigen::Vector3f::UnitY())
-            //              * Eigen::AngleAxisf((float) yaw2, Eigen::Vector3f::UnitZ());
-
             if (mpSLAM->GetTimeFromIMUInit() <= 0 || mpSLAM->mpTracker->mState != ORB_SLAM3::Tracking::OK) {
                 this->deadReckoning(vImuMeas);
                 return;
@@ -193,8 +169,10 @@ void Fusion::dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw, vector<ORB_
             float dx = x - ox;
             float dy = y - oy;
 
+            float dxy = sqrt(dx * dx + dy * dy);
+
             // filter out big jumps (eg. due to map re-alignments)
-            if (sqrt(dx * dx + dy * dy) > 25) {
+            if (dxy > 4) {
                 ROS_WARN("Large jump detected! Switching to dead reckoning");
                 this->deadReckoning(vImuMeas);
                 return;
@@ -202,31 +180,33 @@ void Fusion::dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw, vector<ORB_
 
             ROS_WARN_THROTTLE(1, "SLAM");
 
-            float chg = sqrt(dx*dx + dy*dy);
             tf2::Quaternion quat_gps_rot;
             tf2::fromMsg(orientation_last, quat_gps_rot);
             tf2::Matrix3x3 gps_tf2_rot(quat_gps_rot);
             double roll, pitch, yaw;
             gps_tf2_rot.getRPY(roll, pitch, yaw, 1);
-            px += (float) (chg * cos((float) wpi(yaw - yaw_corr)));
-            py += (float) (chg * sin((float) wpi(yaw - yaw_corr)));
 
-            //px += dx;
-            //py += dy;
+            px += (float) (dxy * cos(yaw));
+            py += (float) (dxy * sin(yaw));
 
             odx = dx;
             ody = dy;
 
+            ox = x;
+            oy = y;
+
             this->publishData();
         } else if (mpSLAM->GetTimeFromIMUInit() > 0 && mpSLAM->mpTracker->mState == ORB_SLAM3::Tracking::OK) {
+            this->deadReckoning(vImuMeas);
             dead_reckoning = false;
+
+            ox = x;
+            oy = y;
+
             ROS_WARN("Back to SLAM");
         } else {
             this->deadReckoning(vImuMeas);
             return;
         }
-
-        ox = x;
-        oy = y;
     }
 }

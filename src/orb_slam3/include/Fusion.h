@@ -64,6 +64,8 @@ private:
     float height_last = 0;
     float height_pre_last = 0;
 
+    double ochg;
+
     float yaw_corr = 0;
     int avgcounter = 0;
 
