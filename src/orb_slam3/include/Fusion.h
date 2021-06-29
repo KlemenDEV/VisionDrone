@@ -22,10 +22,9 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 #include <chrono>
+#include <thread>
 
 #include "System.h"
-
-#define wpi(x) atan2(sin(x), cos(x))
 
 using namespace std;
 
@@ -36,7 +35,7 @@ private:
     ros::Publisher gps_pub;
 
     // old state data
-    float ox = 0, oy = 0;
+    float slam_ox = 0, slam_oy = 0;
     float odx = 0, ody = 0;
 
     // states
@@ -64,21 +63,26 @@ private:
     float height_last = 0;
     float height_pre_last = 0;
 
-    double ochg;
+    float ochg;
 
-    float yaw_corr = 0;
-    int avgcounter = 0;
+    float yaw_init_mag;
+    float yaw_init_slam;
+
+    queue<sensor_msgs::ImuConstPtr> imuBuffer;
+    std::mutex imuMutex;
 
     std::chrono::time_point<std::chrono::high_resolution_clock> time_last;
+
+    std::thread tracker;
 
 public:
     explicit Fusion(ros::NodeHandle *nh);
 
     static void makeQuaternionFromVector(Eigen::Vector3f &inVec, Eigen::Quaternionf &outQuat);
 
-    void dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw, vector<ORB_SLAM3::IMU::Point>& vImuMeas);
+    void dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw, vector<ORB_SLAM3::IMU::Point> &vImuMeas);
 
-    void deadReckoning(const vector<ORB_SLAM3::IMU::Point>& vImuMeas);
+    void deadReckoning(const vector<ORB_SLAM3::IMU::Point> &vImuMeas);
 
     void setGPSDatum();
 
@@ -90,4 +94,7 @@ public:
 
     void publishData();
 
+    void tracking();
+
+    void addIMUMeasurement(const sensor_msgs::ImuConstPtr &imu_msg);
 };
