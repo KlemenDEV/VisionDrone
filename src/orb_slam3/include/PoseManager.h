@@ -52,6 +52,7 @@ public:
     bool datum_set = false;
 
     float yaw_mag_init = 0;
+    float yaw_mag_curr = 0;
 
     geometry_msgs::Quaternion orientation_last;
 

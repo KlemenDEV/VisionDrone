@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
         nav_msgs
         geometry_msgs
         geographic_msgs
+        eigen_conversions
         )
 
 find_package(Eigen3 3.1.0 REQUIRED)

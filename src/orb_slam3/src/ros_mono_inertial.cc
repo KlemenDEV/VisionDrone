@@ -111,8 +111,6 @@ void ImuGrabber::GrabImu(const sensor_msgs::ImuConstPtr &imu_msg) {
     mBufMutex.lock();
     imuBuf.push(imu_msg);
     mBufMutex.unlock();
-
-    fusion->addIMUMeasurement(imu_msg);
 }
 
 cv::Mat ImageGrabber::GetImage(const sensor_msgs::ImageConstPtr &img_msg) {

@@ -25,6 +25,8 @@ void PoseManager::imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg) {
     double r, p, yaw_mag;
     gps_tf2_rot.getRPY(r, p, yaw_mag, 1);
 
+    yaw_mag_curr = (float) yaw_mag;
+
     if (imuDataCount > 30 && !datum_set && height_measurements >= 50) {
         yaw_mag_init /= 30.0f;
         height_init = height_last;
