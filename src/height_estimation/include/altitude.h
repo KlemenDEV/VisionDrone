@@ -23,7 +23,6 @@ private:
     float g = 9.81;
     // For computing the sampling period
     // required filters for altitude and vertical velocity estimation
-    KalmanFilter kalman;
     ComplementaryFilter complementary;
     // Estimated past vertical acceleration
     float pastVerticalAccel = 0;
@@ -36,6 +35,7 @@ private:
     float estimatedVelocity = 0;
 
 public:
+    KalmanFilter kalman;
 
     AltitudeEstimator(float sigmaAccel, float sigmaGyro, float sigmaBaro,
                       float ca, float accelThreshold);

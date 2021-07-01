@@ -12,7 +12,6 @@
 
 class KalmanFilter {
 private:
-    float currentState[3] = {0, 0, 1};
     float currErrorCovariance[3][3] = {{100, 0,   0},
                                        {0,   100, 0},
                                        {0,   0,   100}};
@@ -39,6 +38,7 @@ private:
     void updateErrorCovariance(float covariance[3][3], float errorCovariance[3][3], float gain[3][3]);
 
 public:
+    float currentState[3] = {0, 0, 1};
 
     KalmanFilter(float ca, float sigmaGyro, float sigmaAccel);
 

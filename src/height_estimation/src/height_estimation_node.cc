@@ -50,14 +50,24 @@ void baroCallback(const sensor_msgs::FluidPressure::ConstPtr &msg) {
     updateData();
 }
 
-void imuCallback(const sensor_msgs::ImuConstPtr &imu_msg) {
-    accel[0] = (float) (imu_msg->linear_acceleration.x / G);
-    accel[1] = (float) (imu_msg->linear_acceleration.y / G);
-    accel[2] = (float) (imu_msg->linear_acceleration.z / G);
+#define ACC_B_X 0.03285804018378258
+#define ACC_B_Y -0.12473473697900772
+#define ACC_B_Z 0.2566709816455841
 
-    gyro[0] = (float) imu_msg->angular_velocity.x;
-    gyro[1] = (float) imu_msg->angular_velocity.y;
-    gyro[2] = (float) imu_msg->angular_velocity.z;
+#define GYR_B_X -0.00011866784916492179
+#define GYR_B_Y 6.184831363498233e-06
+#define GYR_B_Z 2.998005766130518e-05
+
+void imuCallback(const sensor_msgs::ImuConstPtr &imu_msg) {
+    // convert to earth-centered inertial coordinate system
+
+    accel[0] = (float) ((imu_msg->linear_acceleration.z - ACC_B_Z) / G); // x
+    accel[1] = (float) (-(imu_msg->linear_acceleration.x - ACC_B_X) / G); // y
+    accel[2] = (float) (-(imu_msg->linear_acceleration.y - ACC_B_Y) / G); // z
+
+    gyro[0] = (float) (imu_msg->angular_velocity.z - GYR_B_Z); // x
+    gyro[1] = (float) -(imu_msg->angular_velocity.x - GYR_B_X); // y
+    gyro[2] = (float) -(imu_msg->angular_velocity.y - GYR_B_Y); // z
 
     imu_data = true;
     updateData();

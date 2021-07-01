@@ -71,6 +71,7 @@ include_directories(
 add_executable(ORBSLAM3
         src/ros_mono_inertial.cc
         src/Fusion.cc
+        src/PoseManager.cc
         )
 
 target_link_libraries(ORBSLAM3
