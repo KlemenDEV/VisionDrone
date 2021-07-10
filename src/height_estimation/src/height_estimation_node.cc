@@ -27,7 +27,7 @@ float accel[3] = {};
 float gyro[3] = {};
 bool imu_data = false;
 
-bool relative;
+bool relative = true;
 float altInit;
 int initCounter = 0;
 const int counterMax = 10;
@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
                                                          0.5);    // accelThreshold
     altitude = &altitude_local;
 
-    n.param<bool>("relative", relative, false);
+    n.param<bool>("relative", relative, true);
 
 
     ros::Rate loop_rate(15);

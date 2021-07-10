@@ -43,8 +43,6 @@ private:
 
     ros::Subscriber height_sub;
     float height_last = 0;
-    float height_init = 0;
-    int height_measurements = 0;
 
 public:
     bool datum_set = false;

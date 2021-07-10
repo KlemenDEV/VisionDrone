@@ -27,12 +27,10 @@ void PoseManager::imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg) {
 
     yaw_mag_curr = (float) yaw_mag;
 
-    if (imuDataCount > 30 && !datum_set && height_measurements >= 50) {
+    if (imuDataCount > 30 && !datum_set) {
         yaw_mag_init /= 30.0f;
-        height_init = height_last;
 
         ROS_WARN("Initial yaw pose: %f deg", yaw_mag_init * 180 / M_PI);
-        ROS_WARN("Initial height: %f m", height_init);
 
         setGPSDatum();
     } else if (imuDataCount <= 30) {
@@ -48,9 +46,6 @@ void PoseManager::gpsDataCallback(const sensor_msgs::NavSatFix::ConstPtr &msg) {
 
 void PoseManager::heightCallback(const std_msgs::Float64::ConstPtr &msg) {
     height_last = (float) msg->data;
-
-    if (height_last > 0 && height_measurements < 50)
-        height_measurements++;
 }
 
 void PoseManager::publishData(float px, float py) {
@@ -60,7 +55,7 @@ void PoseManager::publishData(float px, float py) {
 
     pt.x = px;
     pt.y = py;
-    pt.z = height_last - height_init;
+    pt.z = height_last;
 
     pose.position = pt;
     posest.pose = pose;
