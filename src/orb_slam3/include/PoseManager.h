@@ -24,8 +24,6 @@
 #include <chrono>
 #include <thread>
 
-#include "System.h"
-
 using namespace std;
 
 class PoseManager {

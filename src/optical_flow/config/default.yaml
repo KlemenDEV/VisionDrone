@@ -1,0 +1,64 @@
+version: "0.0.5.0"
+
+gui: true
+debug: false
+silent_debug: false
+
+ang_rate_source: "imu"
+raw_output: false # should publish raw data?
+
+scale_rotation: false # Whether optical flow should be used to also estimate the vertical speed and yaw rate.
+scale_rot_magnitude: 49.9 # For retrieval of vert. speed and yaw rate based on polar-rectangular tranformation of the image and phase correlation of these.
+scale_rot_output: "velocity"
+
+store_video: false
+video_path: "/dev/null"
+video_fps: 30
+
+mrs_optic_flow:
+  long_range_mode: "always_off" # {always_off, always_on, height_based, takeoff_based}
+  takeoff_height: 1.0 # Takoff can be too diaonal - for successfull tracking we might need more range, so a different mode is used until we are sufficiently high above ground
+
+  shifted_pts_thr: 8
+
+  max_processing_rate: 500
+  method: 4
+  scan_radius: 21
+  step_size: 24
+  frame_size: 480
+  sample_point_size: 120
+  filter_method: "allsac"
+
+  apply_abs_bouding: true
+  apply_rel_bouding: false #were there problems with this?
+
+  scale_factor: 1.0 # 2 means 1/4 the image area
+
+  rotation_correction: true
+  tilt_correction: true
+  minimum_tilt_correction: 0.4 # rad - to suppress fidgeting at high altitudes due to IMU noise. Value should correspond ~to the standard dev. of the imu noise.
+
+  ransac:
+    num_of_chosen: 2
+    num_of_iter: 50
+    threshold_rad: 1.0
+
+  filtering:
+    analyze_duration: 1.0 # How long a sample (in seconds) should be analyzed for statistical data on precision estimates - for a posteriori filtering
+
+  calibration:
+    both_velocity_correction_ratio: 1
+    # x_velocity_correction_ratio: 0.973
+    # y_velocity_correction_ratio: 0.973
+
+constraints:
+  max_pixel_speed: 150
+
+  max_horizontal_speed: 7.5
+  max_horizontal_acceleration: 2
+
+  max_vertical_speed: 3.0
+
+  max_yaw_rate: 3.0
+
+  speed_noise: 1.5

@@ -27,8 +27,13 @@ float accel[3] = {};
 float gyro[3] = {};
 bool imu_data = false;
 
+bool relative;
+float altInit;
+int initCounter = 0;
+const int counterMax = 10;
+
 void updateData() {
-    if (h_baro == 0 || !imu_data)
+    if (h_baro == 0 || !imu_data || initCounter <= counterMax)
         return;
 
     if (!init) {
@@ -46,8 +51,24 @@ void updateData() {
 }
 
 void baroCallback(const sensor_msgs::FluidPressure::ConstPtr &msg) {
-    h_baro = (float) (44330 * (1 - pow(msg->fluid_pressure / P0, 1 / 5.255)));
-    updateData();
+    float abs_h_baro = (float) (44330 * (1 - pow(msg->fluid_pressure / P0, 1 / 5.255)));
+
+    if (relative) {
+        if (initCounter < counterMax) {
+            initCounter++;
+            altInit += abs_h_baro;
+        } else if (initCounter == counterMax) {
+            altInit /= (float) initCounter;
+            initCounter++;
+        } else {
+            h_baro = abs_h_baro - altInit;
+            updateData();
+        }
+    } else {
+        h_baro = abs_h_baro;
+        updateData();
+    }
+
 }
 
 #define ACC_B_X 0.03285804018378258
@@ -76,6 +97,7 @@ void imuCallback(const sensor_msgs::ImuConstPtr &imu_msg) {
 int main(int argc, char **argv) {
     ros::init(argc, argv, "height_estimation_node");
     ros::NodeHandle nh;
+    ros::NodeHandle n("~");
 
     ros::Subscriber baro_sub = nh.subscribe<sensor_msgs::FluidPressure>
             ("/mavros/imu/static_pressure", 5, baroCallback);
@@ -91,11 +113,17 @@ int main(int argc, char **argv) {
                                                          0.5);    // accelThreshold
     altitude = &altitude_local;
 
+    n.param<bool>("relative", relative, false);
+
+
     ros::Rate loop_rate(15);
     while (ros::ok()) {
-        std_msgs::Float64 fmsg;
-        fmsg.data = (float) altitude->getAltitude();
-        height_pub.publish(fmsg);
+        float alt = (float) altitude->getAltitude();
+        if (alt != 0) {
+            std_msgs::Float64 fmsg;
+            fmsg.data = alt;
+            height_pub.publish(fmsg);
+        }
 
         ros::spinOnce();
         loop_rate.sleep();

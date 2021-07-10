@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+    <node pkg="imu_complementary_filter" type="complementary_filter_node" name="orientation_estimation"
+          output="screen" required="true">
+        <param name="publish_tf" value="false"/>
+
+        <remap from="/imu/mag" to="/mavros/imu/mag"/>
+        <remap from="/imu/data_raw" to="/camera/imu"/>
+    </node>
+</launch>

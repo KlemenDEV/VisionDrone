@@ -4,7 +4,7 @@ Fusion::Fusion(ros::NodeHandle *nh) {
     poseManager = new PoseManager(nh);
 
     // IMU fused orientation
-    imuorient_sub = nh->subscribe<sensor_msgs::Imu>("/imu/data", 15, &Fusion::imuDataCallback, this);
+    imuorient_sub = nh->subscribe<sensor_msgs::Imu>("/camera/imu", 15, &Fusion::imuDataCallback, this);
 
     // pre-init states
     velocity = Eigen::Vector3d::Zero();
@@ -95,18 +95,21 @@ void Fusion::deadReckoning(const vector<sensor_msgs::ImuConstPtr> &imuBufferCurr
     ROS_WARN_THROTTLE(1, "Dead reckoning");
 
     Eigen::Vector3d position = Eigen::Vector3d::Zero();
-    Eigen::Quaterniond orientation;
+    //sensor_msgs::ImuConstPtr msgorient = nullptr;
 
     double t_last = -1;
     for (const auto &pt : imuBufferCurr) {
+        //if (msgorient == nullptr) msgorient = pt;
+
         double dt = 1. / 200.;
         if (t_last != -1) dt = pt->header.stamp.toSec() - t_last;
 
-        tf::quaternionMsgToEigen(pt->orientation, orientation);
+        Eigen::Quaterniond orientation;
+        tf::quaternionMsgToEigen(poseManager->orientation_last, orientation);
         Eigen::Vector3d aBiasCorrected = Eigen::Vector3d(
+                pt->linear_acceleration.z,
                 pt->linear_acceleration.x,
-                pt->linear_acceleration.y,
-                pt->linear_acceleration.z
+                pt->linear_acceleration.y + 9.81
         );
 
         velocity += (orientation * aBiasCorrected) * dt;
@@ -116,10 +119,15 @@ void Fusion::deadReckoning(const vector<sensor_msgs::ImuConstPtr> &imuBufferCurr
     }
     imuBuffer.clear();
 
-    float dr_yaw = (float) orientation.toRotationMatrix().eulerAngles(0, 1, 2)[2];
+    /*tf2::Quaternion quat_est_rot;
+    tf2::fromMsg(msgorient->orientation, quat_est_rot);
+    tf2::Matrix3x3 est_rot(quat_est_rot);
+    double r, p, yaw_est;
+    est_rot.getRPY(r, p, yaw_est, 1);
+    auto dr_yaw = (float) yaw_est;*/
 
     if (state == IDLE) {
-        yaw_offset = poseManager->yaw_mag_init - dr_yaw;
+        //yaw_offset = poseManager->yaw_mag_init - dr_yaw;
         state = DEAD_RECKONING;
     } else if (state == SLAM_TRACKING) {
         state = DEAD_RECKONING;
@@ -127,12 +135,12 @@ void Fusion::deadReckoning(const vector<sensor_msgs::ImuConstPtr> &imuBufferCurr
 
     auto s = (float) sin(yaw_offset);
     auto c = (float) cos(yaw_offset);
-    px += (float) position.x();//c * (float) pos_change.x() - s * (float) pos_change.z();
-    py += (float) position.z();//s * (float) pos_change.x() + c * (float) pos_change.z();
+    px += (float) position.y();//c * (float) pos_change.x() - s * (float) pos_change.z();
+    py += (float) position.x();//s * (float) pos_change.x() + c * (float) pos_change.z();
 
-    ROS_WARN("yaw diff: %f", dr_yaw - poseManager->yaw_mag_curr);
+    //ROS_WARN("yaw diff: %f", wpi((poseManager->yaw_mag_curr - dr_yaw)) * 180 / M_PI);
 
-    p_yaw = dr_yaw;
+    //p_yaw = dr_yaw;
 
     poseManager->publishData(px, py);
 }

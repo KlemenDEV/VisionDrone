@@ -12,7 +12,7 @@
           required="true"/>
 
     <!-- Orientation estimation -->
-    <include file="$(find visiondrone)/launch/subsystems/orientation_estimation.launch"/>
+    <include file="$(find visiondrone)/launch/processing/orientation_estimation.launch"/>
 
     <!-- ORB_SLAM3 -->
     <node name="Mono" pkg="orb_slam3" type="ORBSLAM3" output="screen">
