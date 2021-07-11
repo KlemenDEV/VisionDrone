@@ -4,33 +4,8 @@
     <!-- PLAY ROSBAG -->
     <node pkg="rosbag" type="play" name="data_loader" args="/home/pylo/Desktop/flow01.bag"/>
 
-    <!-- Drone TFs -->
-    <include file="$(find visiondrone)/launch/processing/tf.launch"/>
-
-    <!-- Height estimation -->
-    <node pkg="height_estimation" type="height_estimation_node" name="height_estimation" output="screen"
-          required="true">
-        <param name="relative" value="true"/>
-    </node>
-
-    <!-- Orientation estimation -->
-    <include file="$(find visiondrone)/launch/processing/orientation_estimation.launch"/>
-
-    <!-- Optical flow (image to velocity) -->
-    <node name="optic_flow" pkg="nodelet" type="nodelet" args="standalone mrs_optic_flow/OpticFlow" output="screen">
-        <rosparam file="$(find optical_flow)/config/default.yaml"/>
-
-        <param name="enable_profiler" value="false"/>
-
-        <param name="camera_frame" value="orthogonal_camera"/>
-        <param name="uav_frame" value="camera_imu_optical_frame"/>
-
-        <param name="FftCLFile" value="$(find optical_flow)/FftMethod.cl"/>
-        <param name="useOCL" value="false"/>
-    </node>
-
-    <!-- Velocity to position -->
-    <node pkg="optical_flow" type="velocity_integrator_node" name="optical_flow" required="true"/>
+    <!-- Optical flow -->
+    <include file="$(find visiondrone)/launch/localizers/optical_flow_1.launch"/>
 
     <!-- MAP GPS LOCATION TO LOCAL -->
     <node pkg="geonav_transform" type="geonav_transform_node" name="gt_to_local" required="true">
@@ -65,5 +40,4 @@
 
     <!-- Open RVIZ to show results -->
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find visiondrone)/rviz/orbslam.rviz" required="true"/>
-
 </launch>

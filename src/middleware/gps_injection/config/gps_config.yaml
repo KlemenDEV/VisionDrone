@@ -1,0 +1,12 @@
+device: /dev/ttyAMA4
+
+uart1:
+  baudrate: 115200
+
+config_on_startup: false
+
+publish:
+  nav:
+    pvt: true
+
+frame_id: gps
