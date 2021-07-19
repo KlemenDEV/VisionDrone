@@ -1,13 +1,10 @@
 #include <ros/ros.h>
 
-#include <ros/ros.h>
-
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Pose.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Quaternion.h>
-
-#include "geometry_msgs/TwistWithCovarianceStamped.h"
+#include <geometry_msgs/TwistWithCovarianceStamped.h>
 
 #include <PoseManager.h>
 

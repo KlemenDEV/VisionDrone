@@ -17,7 +17,6 @@
     <exec_depend>rospy</exec_depend>
 
     <depend>mrs_optic_flow</depend>
-    <depend>orb_slam3</depend>
 
     <export>
     </export>

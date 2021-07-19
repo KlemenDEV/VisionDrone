@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+    <!-- PLAY ROSBAG -->
+    <node pkg="rosbag" type="play" name="data_loader" args="/home/pylo/Desktop/flow02.bag"/>
+
+    <!-- Optical flow -->
+    <include file="$(find visiondrone)/launch/localizers/optical_flow_2.launch"/>
+
+    <!-- MAP GPS LOCATION TO LOCAL -->
+    <node pkg="geonav_transform" type="geonav_transform_node" name="gt_to_local" required="true">
+        <param name="pub_odom" value="/ublox/fix/local"/>
+        <param name="pub_utm" value="/ublox/fix/utm"/>
+        <param name="sub_fix" value="/ublox/fix_tracking"/>
+        <param name="odom_frame_id" value="map"/>
+    </node>
+
+    <!-- Path display -->
+    <node type="pose2path.py" name="path_estimate_gen" pkg="visiondrone">
+        <param name="pose" value="/orbslam3/pose"/>
+        <param name="path" value="/orbslam3/path"/>
+    </node>
+    <node type="pose2path.py" name="path_gps_gen" pkg="visiondrone">
+        <param name="pose" value="/ublox/fix/local"/>
+        <param name="path" value="/ublox/fix/path"/>
+    </node>
+
+    <!-- Pose to matlab -->
+    <node type="pose2matlab.py" name="gps_pose_slam" pkg="visiondrone">
+        <param name="pose" value="/orbslam3/pose"/>
+        <param name="outfile" value="pose_slam.mat"/>
+    </node>
+    <node type="pose2matlab.py" name="gps_pose_mat" pkg="visiondrone">
+        <param name="pose" value="/ublox/fix/local"/>
+        <param name="outfile" value="pose_gps.mat"/>
+    </node>
+
+    <!-- Quadcopter model -->
+    <param name="robot_description" textfile="$(find visiondrone)/rviz/drone.urdf"/>
+
+    <!-- Open RVIZ to show results -->
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find visiondrone)/rviz/orbslam.rviz" required="true"/>
+</launch>
