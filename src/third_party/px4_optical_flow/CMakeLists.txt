@@ -16,6 +16,8 @@ set(package-contact "christoph@px4.io")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpic")
 
+catkin_package()
+
 set(${PROJECT_NAME}_INCLUDE_DIRS
         ${PROJECT_SOURCE_DIR}/include
         CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE)
@@ -31,8 +33,8 @@ find_package(catkin REQUIRED COMPONENTS
         image_transport
         geometry_msgs
         mavros_msgs
-        geographic_msgs
-        mrs_optic_flow)
+        geographic_msgs)
+
 OPTION(OPENCV "ON for OpenCV" ON) # -DOPENCV=OFF
 
 add_subdirectory(external/klt_feature_tracker klt_feature_tracker)
@@ -60,27 +62,7 @@ target_link_libraries(px4_optical_flow
         ${klt_feature_tracker_LIBS}
         )
 
-catkin_package()
-
 target_include_directories(px4_optical_flow PUBLIC include)
-
-# INSTALL STEPS
-INSTALL(
-        TARGETS px4_optical_flow
-        RUNTIME DESTINATION lib
-        LIBRARY DESTINATION lib)
-
-INSTALL(
-        DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/external/klt_feature_tracker/include/
-        DESTINATION include)
-
-INSTALL(
-        DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/
-        DESTINATION include)
-
-INSTALL(
-        FILES ${CMAKE_CURRENT_BINARY_DIR}/Findpx4_optical_flow.cmake
-        DESTINATION ${CMAKE_INSTALL_PREFIX})
 
 # Node for optical flow
 add_executable(px4flow_node
