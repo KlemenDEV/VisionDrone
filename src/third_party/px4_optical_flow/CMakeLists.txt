@@ -23,7 +23,6 @@ set(${PROJECT_NAME}_INCLUDE_DIRS
         CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE)
 
 find_package(catkin REQUIRED COMPONENTS
-        OpenCV REQUIRED
         roscpp
         rospy
         orb_slam3
@@ -34,6 +33,8 @@ find_package(catkin REQUIRED COMPONENTS
         geometry_msgs
         mavros_msgs
         geographic_msgs)
+
+find_package(OpenCV 3.0 QUIET)
 
 OPTION(OPENCV "ON for OpenCV" ON) # -DOPENCV=OFF
 

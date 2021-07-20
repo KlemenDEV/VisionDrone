@@ -23,6 +23,8 @@
     <depend>cv_bridge</depend>
     <depend>image_transport</depend>
 
+    <depend>orb_slam3</depend>
+
     <!-- The export tag contains other, unspecified, tags -->
     <export>
         <!-- Other tools can request additional information be placed here -->
