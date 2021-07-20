@@ -54,7 +54,7 @@ cd ~/ros_catkin_ws
 rosinstall_generator ros_comm --rosdistro melodic --deps --wet-only --tar > melodic-ros_comm-wet.rosinstall
 wstool init src melodic-ros_comm-wet.rosinstall
 
-rosinstall_generator ros_comm robot_localization rtabmap_ros imu_filter_madgwick movie_publisher tf2_sensor_msgs dynamic_reconfigure message_runtime genmsg std_msgs usb_cam rosbag rostest ublox ublox_serialization message_generation roscpp_serialization diagnostic_updater tf ublox_msgs sensor_msgs geometry_msgs mavros_msgs diagnostic_updater nodelet mavros tf image_transport cv_bridge --rosdistro melodic --deps --wet-only --tar > melodic-custom_ros.rosinstall
+rosinstall_generator ros_comm robot_localization imu_filter_madgwick nav_msgs tf2_sensor_msgs dynamic_reconfigure message_runtime genmsg std_msgs usb_cam rosbag rostest ublox ublox_serialization message_generation roscpp_serialization diagnostic_updater tf ublox_msgs sensor_msgs geometry_msgs mavros_msgs nodelet mavros tf image_transport cv_bridge --rosdistro melodic --deps --wet-only --tar > melodic-custom_ros.rosinstall
 
 wstool merge -t src melodic-custom_ros.rosinstall
 wstool update -t src
