@@ -10,15 +10,11 @@
 #include <sensor_msgs/Imu.h>
 
 #include <sensor_msgs/PointCloud.h>
-#include <geometry_msgs/Point32.h>
-#include <sensor_msgs/ChannelFloat32.h>
 
 #include <opencv2/core/core.hpp>
 
 #include "System.h"
 #include "ImuTypes.h"
-#include "Map.h"
-#include "MapPoint.h"
 
 #include "Fusion.h"
 
@@ -54,9 +50,6 @@ public:
 Fusion *fusion;
 
 bool visualize;
-bool publish_point_cloud;
-
-ros::Publisher pc_pub;
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "ORBSLAM3");
@@ -67,7 +60,6 @@ int main(int argc, char **argv) {
     ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
 
     nh.param<bool>("visualize", visualize, true);
-    nh.param<bool>("publish_point_cloud", publish_point_cloud, false);
 
     std::string path_to_vocabulary;
     nh.param<std::string>("path_to_vocabulary", path_to_vocabulary,
@@ -87,10 +79,6 @@ int main(int argc, char **argv) {
     std::string topic_img;
     nh.param<std::string>("topic_img", topic_img, "/camera/infra1/image_rect_raw");
     ros::Subscriber sub_img = nh.subscribe(topic_img, 1, &ImageGrabber::GrabImage, &igb);
-
-    if (visualize) {
-        pc_pub = nh.advertise<sensor_msgs::PointCloud>("/orbslam3/point_cloud", 1);
-    }
 
     std::thread sync_thread(&ImageGrabber::SyncWithImu, &igb);
 
@@ -162,47 +150,6 @@ void ImageGrabber::SyncWithImu() {
             cv::Mat Tcw = mpSLAM->TrackMonocular(im, tIm, vImuMeas);
 
             fusion->dataSLAM(mpSLAM, Tcw, vImuMeas);
-
-            if (publish_point_cloud) {
-                sensor_msgs::PointCloud pc;
-                vector<geometry_msgs::Point32> points;
-                vector<float> values;
-                vector<ORB_SLAM3::Map *> maps = mpSLAM->mpTracker->mpAtlas->GetAllMaps();
-                for (auto map : maps) {
-                    if (map->IsBad() || !map->isImuInitialized())
-                        continue;
-
-                    std::vector<ORB_SLAM3::MapPoint *> pts = map->GetAllMapPoints();
-                    for (auto point : pts) {
-                        if (point->isBad())
-                            continue;
-
-                        cv::Matx31f ptcnv = point->GetWorldPos2();
-                        geometry_msgs::Point32 pt;
-                        pt.x = ptcnv(0);
-                        pt.y = ptcnv(1);
-                        pt.z = ptcnv(2);
-                        points.push_back(pt);
-
-                        int rgb = 0xffffff;
-                        values.push_back(*reinterpret_cast<float *>(&rgb));
-                    }
-
-                    break; // only use first map for now
-                }
-                pc.points = points;
-
-                vector<sensor_msgs::ChannelFloat32> channels;
-                sensor_msgs::ChannelFloat32 channel;
-                channel.name = "rgb";
-                channel.values = values;
-                channels.push_back(channel);
-                pc.channels = channels;
-
-                pc.header.stamp = ros::Time::now();
-                pc.header.frame_id = "map";
-                pc_pub.publish(pc);
-            }
         }
 
         std::chrono::milliseconds tSleep(1);

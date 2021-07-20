@@ -2,7 +2,6 @@
 
 <launch>
     <arg name="visualize" default="false"/>
-    <arg name="publish_point_cloud" default="false"/>
 
     <!-- Drone TFs -->
     <include file="$(find visiondrone)/launch/processing/tf.launch"/>
@@ -21,6 +20,5 @@
         <param name="path_to_vocabulary" value="$(dirname)/../../../../non_ros/orb_slam3/Vocabulary/ORBvoc.txt"/>
         <param name="path_to_settings" value="$(find orb_slam3)/orb_slam3.yaml"/>
         <param name="visualize" value="$(arg visualize)"/>
-        <param name="publish_point_cloud" value="$(arg publish_point_cloud)"/>
     </node>
 </launch>
