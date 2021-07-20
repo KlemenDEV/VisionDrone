@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
         nav_msgs
         geometry_msgs
         geographic_msgs
+        eigen_conversions
         )
 
 find_package(Eigen3 3.1.0 REQUIRED)
@@ -35,7 +36,7 @@ else ()
     message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif ()
 
-set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
 
 find_package(OpenCV 3.0 QUIET)
 if (NOT OpenCV_FOUND)
@@ -56,7 +57,11 @@ set(LIBS
         -lboost_system
         )
 
-catkin_package()
+catkin_package(
+        INCLUDE_DIRS include
+        LIBRARIES ${PROJECT_NAME}
+        CATKIN_DEPENDS roscpp
+)
 
 include_directories(
         include
@@ -71,9 +76,25 @@ include_directories(
 add_executable(ORBSLAM3
         src/ros_mono_inertial.cc
         src/Fusion.cc
+        src/PoseManager.cc
         )
 
 target_link_libraries(ORBSLAM3
         ${LIBS}
         ${catkin_LIBRARIES}
         )
+
+add_library(${PROJECT_NAME}
+        src/PoseManager.cc
+        )
+
+install(
+        TARGETS ${PROJECT_NAME}
+        ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+        LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+        RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+install(
+        DIRECTORY include
+        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+)

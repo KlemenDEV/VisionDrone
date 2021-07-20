@@ -82,11 +82,11 @@ int main(int argc, char **argv) {
 
     std::string topic_imu;
     nh.param<std::string>("topic_imu", topic_imu, "/camera/imu");
-    ros::Subscriber sub_imu = nh.subscribe(topic_imu, 30, &ImuGrabber::GrabImu, &imugb);
+    ros::Subscriber sub_imu = nh.subscribe(topic_imu, 15, &ImuGrabber::GrabImu, &imugb);
 
     std::string topic_img;
     nh.param<std::string>("topic_img", topic_img, "/camera/infra1/image_rect_raw");
-    ros::Subscriber sub_img = nh.subscribe(topic_img, 2, &ImageGrabber::GrabImage, &igb);
+    ros::Subscriber sub_img = nh.subscribe(topic_img, 1, &ImageGrabber::GrabImage, &igb);
 
     if (visualize) {
         pc_pub = nh.advertise<sensor_msgs::PointCloud>("/orbslam3/point_cloud", 1);
@@ -144,8 +144,6 @@ void ImageGrabber::SyncWithImu() {
             vector<ORB_SLAM3::IMU::Point> vImuMeas;
             mpImuGb->mBufMutex.lock();
             if (!mpImuGb->imuBuf.empty()) {
-                // Load imu measurements from buffer
-                //vImuMeas.clear();
                 while (!mpImuGb->imuBuf.empty() &&
                        mpImuGb->imuBuf.front()->header.stamp.toSec() <= tIm) {
                     double t = mpImuGb->imuBuf.front()->header.stamp.toSec();

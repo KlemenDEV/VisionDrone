@@ -20,74 +20,52 @@
 #include <robot_localization/navsat_transform.h>
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <eigen_conversions/eigen_msg.h>
 
 #include <chrono>
+#include <thread>
 
 #include "System.h"
 
-#define wpi(x) atan2(sin(x), cos(x))
+#include "PoseManager.h"
 
 using namespace std;
+
+enum TrackerState {
+    IDLE, SLAM_TRACKING, DEAD_RECKONING
+};
 
 class Fusion {
 
 private:
-    ros::Publisher point_pub;
-    ros::Publisher gps_pub;
+    float slam_ox = 0, slam_oy = 0;
+    float px = 0, py = 0, p_yaw = 0;
 
-    // old state data
-    float ox = 0, oy = 0;
-    float odx = 0, ody = 0;
+    float yaw_offset = 0;
 
-    // states
-    float px = 0, py = 0, pz = 0;
-    Eigen::Quaternionf orientation;
-    Eigen::Vector3f velocity;
+    Eigen::Vector3d velocity;
+    Eigen::Vector3d aBias;
 
-    Eigen::Vector3f gravity;
-    Eigen::Vector3f aBias;
-    Eigen::Vector3f gBias;
-
-    bool tracking_started = false;
-
-    bool dead_reckoning = false;
-
-    ros::ServiceClient set_datum_client;
-
-    ros::Subscriber imuorient_sub;
-    geometry_msgs::Quaternion orientation_last;
-
-    ros::Subscriber gpsfix_sub;
-    sensor_msgs::NavSatFix::ConstPtr gps_last;
-
-    ros::Subscriber height_sub;
-    float height_last = 0;
-    float height_pre_last = 0;
-
-    double ochg;
-
-    float yaw_corr = 0;
-    int avgcounter = 0;
+    vector<sensor_msgs::ImuConstPtr> imuBuffer;
+    std::mutex imuMutex;
 
     std::chrono::time_point<std::chrono::high_resolution_clock> time_last;
+
+    PoseManager *poseManager;
+
+    TrackerState state = IDLE;
+
+    ros::Subscriber imuorient_sub;
 
 public:
     explicit Fusion(ros::NodeHandle *nh);
 
-    static void makeQuaternionFromVector(Eigen::Vector3f &inVec, Eigen::Quaternionf &outQuat);
+    void dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw, vector<ORB_SLAM3::IMU::Point> &vImuMeas);
 
-    void dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw, vector<ORB_SLAM3::IMU::Point>& vImuMeas);
+    void deadReckoning(const vector<sensor_msgs::ImuConstPtr> &imuBuffer);
 
-    void deadReckoning(const vector<ORB_SLAM3::IMU::Point>& vImuMeas);
-
-    void setGPSDatum();
+    void tracking();
 
     void imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg);
-
-    void gpsDataCallback(const sensor_msgs::NavSatFix::ConstPtr &msg);
-
-    void heightCallback(const std_msgs::Float64::ConstPtr &msg);
-
-    void publishData();
 
 };

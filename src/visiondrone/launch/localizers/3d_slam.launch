@@ -11,6 +11,9 @@
     <node pkg="height_estimation" type="height_estimation_node" name="height_estimation" output="screen"
           required="true"/>
 
+    <!-- Orientation estimation -->
+    <include file="$(find visiondrone)/launch/processing/orientation_estimation.launch"/>
+
     <!-- ORB_SLAM3 -->
     <node name="Mono" pkg="orb_slam3" type="ORBSLAM3" output="screen">
         <param name="topic_imu" value="/camera/imu"/>
