@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+    <!-- START PI CAMERA MODULE -->
+    <include file="$(find visiondrone)/launch/subsystems/pi_camera.launch"/>
+
+    <!-- RECORD ROSBAG -->
+    <node pkg="rosbag" type="record" name="data_capture" required="true"
+          args="$(eval 'record --tcpnodelay --buffsize 0 -O /media/usb/rosbags/' + raw_input('Enter rec file name: ') + '.bag
+          /camera/orthogonal
+       ')"/>
+</launch>

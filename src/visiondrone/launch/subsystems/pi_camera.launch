@@ -3,12 +3,13 @@
 <launch>
     <node pkg="visiondrone" type="pi_camera.sh" name="picamera_params"/>
 
-    <node type="usb_cam_node" pkg="usb_cam" name="pi_camera" output="screen" required="true">
+    <node type="usb_cam_node" pkg="usb_cam" name="pi_camera" output="screen" required="true"
+          launch-prefix="bash -c 'sleep 2; $0 $@'">
         <param name="video_device" value="/dev/video6"/>
-        <param name="image_width" value="1280"/>
-        <param name="image_height" value="720"/>
+        <param name="image_width" value="640"/>
+        <param name="image_height" value="480"/>
         <param name="pixel_format" value="yuyv" />
-        <param name="framerate" value="1"/>
+        <param name="framerate" value="60"/>
         <param name="focus" value="0"/>
         <param name="camera_frame_id" value="orthogonal_camera"/>
 

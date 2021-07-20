@@ -7,6 +7,10 @@
         <rosparam command="load" file="$(find gps_injection)/config/gps_config.yaml"/>
     </node>
 
+    <!-- MAGNETOMETER -->
+    <node pkg="mag_driver" type="mag_driver_node" name="mag_driver_node" output="screen" clear_params="false"
+          required="true"/>
+
     <!-- MAVLINK (FC SENSORS) -->
     <include file="$(find visiondrone)/launch/subsystems/mavros.launch">
         <arg name="pluginlists_yaml" value="$(find visiondrone)/launch/subsystems/apm_pluginlists.yaml"/>
