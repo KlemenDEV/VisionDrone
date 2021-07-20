@@ -549,6 +549,13 @@ namespace rs2
         }
         return option;
     }
+    std::string adjust_description(const std::string& str_in, const std::string& to_be_replaced, const std::string& to_replace)
+    {
+        std::string adjusted_string(str_in);
+        auto pos = adjusted_string.find(to_be_replaced);
+        adjusted_string.replace(pos, to_be_replaced.size(), to_replace);
+        return adjusted_string;
+    }
 
     bool option_model::draw(std::string& error_message, notifications_model& model, bool new_line, bool use_option_name)
     {
@@ -560,7 +567,26 @@ namespace rs2
             if (opt == RS2_OPTION_HOLES_FILL)
                 use_option_name = false;
 
-            auto desc = endpoint->get_option_description(opt);
+            // lambda function used to convert meters to cm - while the number is a string
+            auto convert_float_str = [](std::string float_str, float conversion_factor) {
+                if (float_str.size() == 0)
+                    return float_str;
+                float number_float = std::stof(float_str);
+                return std::to_string(number_float * conversion_factor);
+            };
+
+            std::string desc_str (endpoint->get_option_description(opt));
+
+            // Device D405 is for short range, therefore, its units are in cm - for better UX
+            bool use_cm_units = false;
+            std::string device_pid = dev->dev.get_info(RS2_CAMERA_INFO_PRODUCT_ID);
+            if (device_pid == "0B5B" && val_in_range(opt, { RS2_OPTION_MIN_DISTANCE, RS2_OPTION_MAX_DISTANCE, RS2_OPTION_DEPTH_UNITS }))
+            {
+                use_cm_units = true;
+                desc_str = adjust_description(desc_str, "meters", "cm");
+            }
+
+            auto desc = desc_str.c_str();
 
             // remain option to append to the current line
             if (!new_line)
@@ -675,12 +701,25 @@ namespace rs2
                         }
                         else if (edit_mode)
                         {
+                            std::string buff_str = edit_value;
+
+                            // when cm must be used instead of meters
+                            if (use_cm_units)
+                                buff_str = convert_float_str(buff_str, 100.f);
+
                             char buff[TEXT_BUFF_SIZE];
                             memset(buff, 0, TEXT_BUFF_SIZE);
-                            strcpy(buff, edit_value.c_str());
+                            strcpy(buff, buff_str.c_str());
+
                             if (ImGui::InputText(id.c_str(), buff, TEXT_BUFF_SIZE,
                                 ImGuiInputTextFlags_EnterReturnsTrue))
                             {
+                                if (use_cm_units)
+                                {
+                                    buff_str = convert_float_str(std::string(buff), 0.01f);
+                                    memset(buff, 0, TEXT_BUFF_SIZE);
+                                    strcpy(buff, buff_str.c_str());
+                                }
                                 float new_value;
                                 if(!utilities::string::string_to_value<float>(buff, new_value))
                                 {
@@ -696,8 +735,13 @@ namespace rs2
                                 {
                                     set_option(opt, new_value, error_message);
                                 }
-
                                 edit_mode = false;
+                            }
+                            else if (use_cm_units)
+                            {
+                                buff_str = convert_float_str(buff_str, 0.01f);
+                                memset(buff, 0, TEXT_BUFF_SIZE);
+                                strcpy(buff, buff_str.c_str());
                             }
                             edit_value = buff;
                         }
@@ -720,9 +764,41 @@ namespace rs2
                         else
                         {
                             float tmp_value = value;
-                            if (ImGui::SliderFloat(id.c_str(), &tmp_value,
-                                range.min, range.max, "%.4f"))
+                            float temp_value_displayed = tmp_value;
+                            float min_range_displayed = range.min;
+                            float max_range_displayed = range.max;
+
+                            // computing the number of decimal digits taken from the step options' property
+                            // this will then be used to format the displayed value
+                            auto num_of_decimal_digits = [](float f) {
+                                int res = 0;
+                                while (f && (int)f == 0)
+                                {
+                                    f *= 10.f;
+                                    ++res;
+                                }
+                                return res;
+                            };
+                            int num_of_decimal_digits_displayed = num_of_decimal_digits(range.step);
+
+                            // displaying in cm instead of meters for D405
+                            if (use_cm_units)
                             {
+                                temp_value_displayed *= 100.f;
+                                min_range_displayed *= 100.f;
+                                max_range_displayed *= 100.f;
+                                int updated_num_of_decimal_digits_displayed = num_of_decimal_digits_displayed - 2;
+                                if (updated_num_of_decimal_digits_displayed > 0)
+                                    num_of_decimal_digits_displayed = updated_num_of_decimal_digits_displayed;
+                            }
+
+                            std::stringstream formatting_ss;
+                            formatting_ss << "%." << num_of_decimal_digits_displayed << "f";
+
+                            if (ImGui::SliderFloat(id.c_str(), &temp_value_displayed,
+                                min_range_displayed, max_range_displayed, formatting_ss.str().c_str()))
+                            {
+                                tmp_value = use_cm_units ? temp_value_displayed / 100.f : temp_value_displayed;
                                 auto loffset = std::abs(fmod(tmp_value, range.step));
                                 auto roffset = range.step - loffset;
                                 if (tmp_value >= 0)
@@ -1279,10 +1355,14 @@ namespace rs2
                     // Watch out for read-only options in the playback sensor!
                     try
                     {
-                        s->set_option( RS2_OPTION_SENSOR_MODE,
-                            static_cast< float >( resolution_from_width_height(
-                                res_values[ui.selected_res_id].first,
-                                res_values[ui.selected_res_id].second ) ) );
+                        auto requested_sensor_mode = static_cast<float>(resolution_from_width_height(
+                            res_values[ui.selected_res_id].first,
+                            res_values[ui.selected_res_id].second));
+
+                        auto currest_sensor_mode = s->get_option(RS2_OPTION_SENSOR_MODE);
+
+                        if (requested_sensor_mode != currest_sensor_mode)
+                            s->set_option(RS2_OPTION_SENSOR_MODE, requested_sensor_mode);
                     }
                     catch( not_implemented_error const &)
                     {
@@ -1390,7 +1470,9 @@ namespace rs2
                     res = true;
                     _options_invalidated = true;
 
-                    if (s->supports(RS2_OPTION_SENSOR_MODE))
+                    // Set sensor mode only at the Viewer app,
+                    // DQT app will handle the sensor mode when the streaming is off (while reseting the stream)
+                    if (s->supports(RS2_OPTION_SENSOR_MODE) && !allow_change_resolution_while_streaming)
                     {
                         auto width = res_values[tmp_selected_res_id].first;
                         auto height = res_values[tmp_selected_res_id].second;
@@ -2037,7 +2119,8 @@ namespace rs2
         try {
             s->start([&, syncer](frame f)
             {
-                if (viewer.synchronization_enable && is_synchronized_frame(viewer, f))
+			    // The condition here must match the condition inside render_loop()!
+                if( viewer.synchronization_enable )
                 {
                     syncer->invoke(f);
                 }
@@ -3171,7 +3254,18 @@ namespace rs2
                 {
                     if (ds.get_option(RS2_OPTION_ENABLE_IR_REFLECTIVITY) == 1.0f)
                     {
-                        if ((0.2f == roi_percentage) && roi_display_rect.contains(mouse.cursor))
+                        rect roi_for_reflectivity{
+                            (float)dev->algo_roi.min_x,
+                            (float)dev->algo_roi.min_y,
+                            (float)( dev->algo_roi.max_x - dev->algo_roi.min_x ),
+                            (float)( dev->algo_roi.max_y - dev->algo_roi.min_y ) };
+
+                        auto normalized_roi = roi_for_reflectivity
+                                                  .normalize( _normalized_zoom.unnormalize( get_original_stream_bounds() ) )
+                                                  .unnormalize( stream_rect )
+                                                  .cut_by( stream_rect );
+
+                        if ((0.2f == roi_percentage) && normalized_roi.contains(mouse.cursor))
                         {
                             // Add reflectivity information on frame, if max usable range is displayed, display reflectivity on the same line
                             show_reflectivity = draw_reflectivity(x, y, ds, streams, ss, show_max_range);
@@ -3192,7 +3286,18 @@ namespace rs2
                         bool lf_exist = texture->get_last_frame();
                         if (is_stream_alive() && texture->get_last_frame().get_profile().stream_type() == RS2_STREAM_INFRARED)
                         {
-                            if ((0.2f == roi_percentage) && roi_display_rect.contains(mouse.cursor))
+                            rect roi_for_reflectivity{
+                                (float)dev->algo_roi.min_x,
+                                (float)dev->algo_roi.min_y,
+                                (float)(dev->algo_roi.max_x - dev->algo_roi.min_x),
+                                (float)(dev->algo_roi.max_y - dev->algo_roi.min_y) };
+
+                            auto normalized_roi = roi_for_reflectivity
+                                                      .normalize( _normalized_zoom.unnormalize( get_original_stream_bounds() ) )
+                                                      .unnormalize( stream_rect )
+                                                      .cut_by( stream_rect );
+
+                            if ((0.2f == roi_percentage) && normalized_roi.contains(mouse.cursor))
                             {
                                 show_reflectivity = draw_reflectivity(x, y, ds, streams, ss, show_max_range);
                             }
@@ -3662,7 +3767,6 @@ namespace rs2
 
             glColor3f(1.f, 1.f, 1.f);
             roi_percentage = dev->roi_percentage;
-            roi_display_rect = r;
         }
 
         update_ae_roi_rect(stream_rect, g, error_message);
