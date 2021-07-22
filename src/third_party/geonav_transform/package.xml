@@ -25,7 +25,8 @@
   <depend>tf2_geometry_msgs</depend>
   <depend>tf2_ros</depend>
 
-  <build_depend>robot_localization</build_depend>
+  <build_depend>orb_slam3</build_depend>
+
   <export>
     <rosdoc config="rosdoc.yaml"/>    
   </export>

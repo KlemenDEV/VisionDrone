@@ -94,7 +94,8 @@ class ComplementaryFilterROS
 
     void initializeParams();
     void imuCallback(const ImuMsg::ConstPtr& imu_msg_raw);
-    void imuMagCallback(const ImuMsg::ConstPtr& imu_msg_raw, const MagMsg::ConstPtr& mav_msg);
+    void imuMagCallback(const ImuMsg::ConstPtr& imu_msg_raw,
+                        const MagMsg::ConstPtr& mav_msg);
     void publish(const sensor_msgs::Imu::ConstPtr& imu_msg_raw);
 
     tf::Quaternion hamiltonToTFQuaternion(

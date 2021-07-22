@@ -38,7 +38,7 @@ along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 #include <Eigen/Dense>
 
 #include <string>
-#include <robot_localization/SetDatum.h>
+#include <orb_slam3/SetDatum.h>
 
 #include <geometry_msgs/PoseStamped.h>
 
@@ -74,8 +74,8 @@ namespace GeonavTransform {
         //! @brief Sends transform
         void broadcastTf();
 
-        bool datumCallback(robot_localization::SetDatum::Request& request,
-                                            robot_localization::SetDatum::Response&);
+        bool datumCallback(orb_slam3::SetDatum::Request& request,
+                           orb_slam3::SetDatum::Response&);
 
         void imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg);
 

@@ -17,9 +17,9 @@
 #include <geographic_msgs/GeoPose.h>
 #include <geographic_msgs/GeoPoint.h>
 
-#include <robot_localization/navsat_transform.h>
-
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
+#include <orb_slam3/SetDatum.h>
 
 #include <chrono>
 #include <thread>

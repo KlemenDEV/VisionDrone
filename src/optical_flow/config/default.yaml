@@ -21,7 +21,7 @@ mrs_optic_flow:
 
   shifted_pts_thr: 8
 
-  max_processing_rate: 1000
+  max_processing_rate: 60
   method: 4
   scan_radius: 21
   step_size: 24

@@ -22,7 +22,6 @@
     <depend>image_transport</depend>
 
     <depend>geometry_msgs</depend>
-    <depend>robot_localization</depend>
     <depend>geonav_transform</depend>
 
     <export>

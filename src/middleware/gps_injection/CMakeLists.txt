@@ -9,7 +9,6 @@ find_package(catkin REQUIRED COMPONENTS
         geometry_msgs
         mavros_msgs
         geographic_msgs
-        robot_localization
         )
 
 catkin_package()

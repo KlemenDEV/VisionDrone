@@ -5,7 +5,7 @@ PoseManager::PoseManager(ros::NodeHandle *nh) {
     point_pub = nh->advertise<geometry_msgs::PoseStamped>("/orbslam3/pose", 1);
 
     // IMU EARTH orientation (for initial pose)
-    imuorient_sub = nh->subscribe<sensor_msgs::Imu>("/mavros/imu/data", 1, &PoseManager::imuDataCallback, this);
+    imuorient_sub = nh->subscribe<sensor_msgs::Imu>("/imu/data", 1, &PoseManager::imuDataCallback, this);
 
     // GPS ground truth
     gpsfix_sub = nh->subscribe<sensor_msgs::NavSatFix>("/ublox/fix", 1, &PoseManager::gpsDataCallback, this);
@@ -13,7 +13,7 @@ PoseManager::PoseManager(ros::NodeHandle *nh) {
     // Height estimator
     height_sub = nh->subscribe<std_msgs::Float64>("/drone/height_estimate", 1, &PoseManager::heightCallback, this);
 
-    set_datum_client = nh->serviceClient<robot_localization::SetDatum>("/datum");
+    set_datum_client = nh->serviceClient<orb_slam3::SetDatum>("/datum");
 }
 
 void PoseManager::imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg) {
@@ -74,7 +74,7 @@ void PoseManager::setGPSDatum() {
     datumPose.position = datumPosition;
     datumPose.orientation = orientation_last;
 
-    robot_localization::SetDatum setDatum;
+    orb_slam3::SetDatum setDatum;
     setDatum.request.geo_pose = datumPose;
 
     if (set_datum_client.call(setDatum)) {

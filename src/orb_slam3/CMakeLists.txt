@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
         geometry_msgs
         geographic_msgs
         eigen_conversions
+        message_generation
         )
 
 find_package(Eigen3 3.1.0 REQUIRED)
@@ -35,6 +36,14 @@ elseif (COMPILER_SUPPORTS_CXX0X)
 else ()
     message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
 endif ()
+
+add_service_files(
+        FILES
+        SetDatum.srv
+)
+
+# Actually generate the language-specific message and service files
+generate_messages(DEPENDENCIES geographic_msgs)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
 
@@ -60,7 +69,7 @@ set(LIBS
 catkin_package(
         INCLUDE_DIRS include
         LIBRARIES ${PROJECT_NAME}
-        CATKIN_DEPENDS roscpp
+        CATKIN_DEPENDS roscpp message_runtime geographic_msgs
 )
 
 include_directories(
@@ -79,6 +88,8 @@ add_executable(ORBSLAM3
         src/PoseManager.cc
         )
 
+add_dependencies(ORBSLAM3 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 target_link_libraries(ORBSLAM3
         ${LIBS}
         ${catkin_LIBRARIES}
@@ -87,6 +98,8 @@ target_link_libraries(ORBSLAM3
 add_library(${PROJECT_NAME}
         src/PoseManager.cc
         )
+
+add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 install(
         TARGETS ${PROJECT_NAME}

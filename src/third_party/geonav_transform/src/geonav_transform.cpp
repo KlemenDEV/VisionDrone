@@ -5,7 +5,6 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 #include <string>
-#include <robot_localization/SetDatum.h>
 
 namespace GeonavTransform {
     GeonavTransform::GeonavTransform() :
@@ -66,7 +65,7 @@ namespace GeonavTransform {
         nh_priv.param<std::string>("sub_fix", topic_sub_fix, "nav_fix");
         ros::Subscriber odom_sub = nh.subscribe(topic_sub_fix, 1, &GeonavTransform::navOdomCallback, this);
 
-        ros::Subscriber imuorient_sub = nh.subscribe<sensor_msgs::Imu>("/mavros/imu/data", 1,
+        ros::Subscriber imuorient_sub = nh.subscribe<sensor_msgs::Imu>("/imu/data", 1,
                                                                        &GeonavTransform::imuDataCallback, this);
 
         // Subscribe to the messages and services we need
@@ -192,8 +191,8 @@ namespace GeonavTransform {
         orientation_last = msg->orientation;
     }
 
-    bool GeonavTransform::datumCallback(robot_localization::SetDatum::Request &request,
-                                        robot_localization::SetDatum::Response &) {
+    bool GeonavTransform::datumCallback(orb_slam3::SetDatum::Request &request,
+                                        orb_slam3::SetDatum::Response &) {
         tf2::Quaternion quat_tf;
         tf2::convert(request.geo_pose.orientation, quat_tf);
 

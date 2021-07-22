@@ -7,8 +7,6 @@
 
 #include <mavros_msgs/RCIn.h>
 
-#include <robot_localization/navsat_transform.h>
-
 #include "UBXSender.h"
 #include "GPSData.h"
 
@@ -20,12 +18,6 @@ GPSData gps_pos_predicted;
 
 // if true, predicted position is injected instead of GPS pass-through
 volatile bool inject_data = false;
-
-// if true, home position has been set (happens when 3D fix is obtained)
-bool home_set = false;
-
-ros::Subscriber imuorient_sub;
-geometry_msgs::Quaternion orientation_last;
 
 void rcInCallback(const mavros_msgs::RCIn::ConstPtr &msg) {
     // switch depending on the Channel 8 value (> 1500 -> inject data)
@@ -40,10 +32,6 @@ void rcInCallback(const mavros_msgs::RCIn::ConstPtr &msg) {
             ROS_INFO("GPS injection system source: UBLOX ANTENNA");
         }
     }
-}
-
-void imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg) {
-    orientation_last = msg->orientation;
 }
 
 int main(int argc, char **argv) {
@@ -70,16 +58,9 @@ int main(int argc, char **argv) {
     ros::Subscriber predictvel_sub = nh.subscribe<geometry_msgs::TwistWithCovarianceStamped>
             ("/visionpos/velocity", 1, &GPSData::consume, &gps_pos_predicted);
 
-    // IMU orientation (for initial pose)
-    imuorient_sub = nh.subscribe<sensor_msgs::Imu>
-            ("/mavros/imu/data", 1, imuDataCallback);
-
     // Set inject_data depending on mavlink RC messages
     ros::Subscriber mavlinkrc_sub = nh.subscribe<mavros_msgs::RCIn>
             ("/mavros/rc/in", 1, rcInCallback);
-
-    // Set datum service client
-    ros::ServiceClient set_datum_client = nh.serviceClient<robot_localization::SetDatum>("set_datum");
 
     UBXSender ubxSender;
     uint32_t gps_time = 0;
@@ -100,33 +81,6 @@ int main(int argc, char **argv) {
             ubxSender.sendData(&gps_pos_antenna);
 
             gps_pos_antenna.markDirty(); // mark data dirty so we do not re-send same data
-        }
-
-        if (!home_set && gps_pos_antenna.isComplete() && gps_pos_antenna.has3DLock()) {
-            geographic_msgs::GeoPoint datumPosition;
-            datumPosition.latitude = gps_pos_antenna.latitude * 1e-7; // deg
-            datumPosition.longitude = gps_pos_antenna.longitude * 1e-7; // deg
-            datumPosition.altitude = gps_pos_antenna.altitude_msl * 1e-3; // m
-
-            geographic_msgs::GeoPose datumPose;
-            datumPose.position = datumPosition;
-            datumPose.orientation = orientation_last;
-
-            robot_localization::SetDatum setDatum;
-            setDatum.request.geo_pose = datumPose;
-
-            if (set_datum_client.call(setDatum)) {
-                ROS_INFO("GLOBAL GPS HOME LOCATION (DATUM) set and propagated to other services");
-                ROS_INFO("DATUM: lat: %f, lon: %f, alt: %f", datumPosition.latitude, datumPosition.longitude,
-                         datumPosition.altitude);
-            } else {
-                ROS_ERROR("FAILED TO PROPAGATE GLOBAL GPS HOME LOCATION (DATUM)");
-            }
-
-            // we no longer need imu data, unsubscribe
-            imuorient_sub.shutdown();
-
-            home_set = true;
         }
 
         // increment GPS time for 20ms (50Hz loop)

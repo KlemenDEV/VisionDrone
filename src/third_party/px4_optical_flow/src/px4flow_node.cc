@@ -19,7 +19,7 @@
 
 #define W_PI(x) atan2(sin(x),cos(x))
 
-//#define USE_PX4
+#define USE_PX4
 
 #ifdef UXE_PX4
 OpticalFlowPX4 flow(477.78586954352323, 480.6678820118329,
