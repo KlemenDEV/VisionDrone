@@ -50,11 +50,9 @@ public:
     float yaw_mag_init = 0;
     float yaw_mag_curr = 0;
 
-    geometry_msgs::Quaternion orientation_last;
-
     explicit PoseManager(ros::NodeHandle *nh);
 
-    void setGPSDatum();
+    void setGPSDatum(geometry_msgs::Quaternion orientation_last);
 
     void imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg);
 

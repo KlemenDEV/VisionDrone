@@ -4,7 +4,7 @@ Fusion::Fusion(ros::NodeHandle *nh) {
     poseManager = new PoseManager(nh);
 
     // IMU fused orientation
-    imuorient_sub = nh->subscribe<sensor_msgs::Imu>("/camera/imu", 15, &Fusion::imuDataCallback, this);
+    imuorient_sub = nh->subscribe<sensor_msgs::Imu>("/imu/data", 15, &Fusion::imuDataCallback, this);
 
     // pre-init states
     velocity = Eigen::Vector3d::Zero();
@@ -105,7 +105,7 @@ void Fusion::deadReckoning(const vector<sensor_msgs::ImuConstPtr> &imuBufferCurr
         if (t_last != -1) dt = pt->header.stamp.toSec() - t_last;
 
         Eigen::Quaterniond orientation;
-        tf::quaternionMsgToEigen(poseManager->orientation_last, orientation);
+        tf::quaternionMsgToEigen(pt->orientation, orientation);
         Eigen::Vector3d aBiasCorrected = Eigen::Vector3d(
                 pt->linear_acceleration.z,
                 pt->linear_acceleration.x,

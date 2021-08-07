@@ -17,8 +17,6 @@ PoseManager::PoseManager(ros::NodeHandle *nh) {
 }
 
 void PoseManager::imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg) {
-    orientation_last = msg->orientation;
-
     tf2::Quaternion quat_gps_rot;
     tf2::fromMsg(msg->orientation, quat_gps_rot);
     tf2::Matrix3x3 gps_tf2_rot(quat_gps_rot);
@@ -32,8 +30,8 @@ void PoseManager::imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg) {
 
         ROS_WARN("Initial yaw pose: %f deg", yaw_mag_init * 180 / M_PI);
 
-        setGPSDatum();
-    } else if (imuDataCount <= 30) {
+        setGPSDatum(msg->orientation);
+    } else if (imuDataCount <= 500) {
         yaw_mag_init += (float) yaw_mag;
         imuDataCount++;
     }
@@ -64,7 +62,7 @@ void PoseManager::publishData(float px, float py) {
     this->point_pub.publish(posest);
 }
 
-void PoseManager::setGPSDatum() {
+void PoseManager::setGPSDatum(geometry_msgs::Quaternion orientation_last) {
     geographic_msgs::GeoPoint datumPosition;
     datumPosition.latitude = gps_last->latitude;
     datumPosition.longitude = gps_last->longitude;
