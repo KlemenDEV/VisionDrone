@@ -8,7 +8,7 @@
     </node>
 
     <!-- MAGNETOMETER -->
-    <node pkg="mag_driver" type="mag_driver_node" name="mag_driver_node" output="screen" clear_params="false"
+    <node pkg="imu_drivers" type="mag_driver_node" name="imu_node" output="screen" clear_params="false"
           required="true"/>
 
     <!-- MAVLINK (FC SENSORS) -->
