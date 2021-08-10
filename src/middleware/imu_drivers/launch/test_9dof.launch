@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+    <!-- MAGNETOMETER -->
+    <node pkg="imu_drivers" type="imu9dof_driver_node" name="imu_node" output="screen" clear_params="false"
+          required="true"/>
+</launch>

@@ -20,3 +20,7 @@ target_link_libraries(mag_driver_node ${catkin_LIBRARIES})
 add_executable(imu9dof_driver_node src/imu9dof_driver_node.cc src/i2c.cc)
 add_dependencies(imu9dof_driver_node ${catkin_EXPORTED_TARGETS})
 target_link_libraries(imu9dof_driver_node ${catkin_LIBRARIES})
+
+add_executable(imu9dof_calibrate src/imu9dof_calibrate.cc src/i2c.cc)
+add_dependencies(imu9dof_calibrate ${catkin_EXPORTED_TARGETS})
+target_link_libraries(imu9dof_calibrate ${catkin_LIBRARIES})

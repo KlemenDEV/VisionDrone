@@ -69,15 +69,9 @@ enum class ACCEL_DLPF_CFG : uint8_t {
     DLPF_420HZ,
 };
 
-static constexpr uint8_t
-MPU9250_WHOAMI_DEFAULT_VALUE {
-0x71};
-static constexpr uint8_t
-MPU9255_WHOAMI_DEFAULT_VALUE {
-0x73};
-static constexpr uint8_t
-MPU6500_WHOAMI_DEFAULT_VALUE {
-0x70};
+static constexpr uint8_t MPU9250_WHOAMI_DEFAULT_VALUE {0x71};
+static constexpr uint8_t MPU9255_WHOAMI_DEFAULT_VALUE {0x73};
+static constexpr uint8_t MPU6500_WHOAMI_DEFAULT_VALUE {0x70};
 
 struct MPU9250Setting {
     ACCEL_FS_SEL accel_fs_sel{ACCEL_FS_SEL::A16G};
@@ -109,7 +103,7 @@ class MPU9250 {
     float mag_bias_factory[3]{0., 0., 0.};
     float mag_bias[3]{0., 0., 0.};  // mag calibration value in MAG_OUTPUT_BITS: 16BITS
     float mag_scale[3]{1., 1., 1.};
-    float magnetic_declination = -7.51;  // Japan, 24th June
+    float magnetic_declination = +4.35;  // Trebanjski vrh
 
     // Temperature
     int16_t temperature_count{0};  // temperature raw count output
@@ -191,7 +185,7 @@ public:
     bool isConnectedMPU9250() {
         uint8_t c = read_byte(dev, WHO_AM_I_MPU9250);
         if (b_verbose) {
-            printf("MPU9250 WHO AM I = %d", c);
+            printf("MPU9250 WHO AM I = %d\n", c);
         }
         bool b = (c == MPU9250_WHOAMI_DEFAULT_VALUE);
         b |= (c == MPU9255_WHOAMI_DEFAULT_VALUE);
@@ -202,7 +196,7 @@ public:
     bool isConnectedAK8963() {
         uint8_t c = read_byte(dev_mag, AK8963_WHO_AM_I);
         if (b_verbose) {
-            printf("AK8963 WHO AM I = %d", c);
+            printf("AK8963 WHO AM I = %d\n", c);
         }
         return (c == AK8963_WHOAMI_DEFAULT_VALUE);
     }
