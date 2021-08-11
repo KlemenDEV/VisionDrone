@@ -5,7 +5,7 @@ PoseManager::PoseManager(ros::NodeHandle *nh) {
     point_pub = nh->advertise<geometry_msgs::PoseStamped>("/orbslam3/pose", 1);
 
     // IMU EARTH orientation (for initial pose)
-    imuorient_sub = nh->subscribe<sensor_msgs::Imu>("/imu/data", 1, &PoseManager::imuDataCallback, this);
+    imuorient_sub = nh->subscribe<sensor_msgs::Imu>("/imu/9dof", 1, &PoseManager::imuDataCallback, this);
 
     // GPS ground truth
     gpsfix_sub = nh->subscribe<sensor_msgs::NavSatFix>("/ublox/fix", 1, &PoseManager::gpsDataCallback, this);
@@ -31,7 +31,7 @@ void PoseManager::imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg) {
         ROS_WARN("Initial yaw pose: %f deg", yaw_mag_init * 180 / M_PI);
 
         setGPSDatum(msg->orientation);
-    } else if (imuDataCount <= 500) {
+    } else if (imuDataCount <= 30) {
         yaw_mag_init += (float) yaw_mag;
         imuDataCount++;
     }

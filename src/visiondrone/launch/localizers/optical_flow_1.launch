@@ -10,9 +10,6 @@
         <param name="relative" value="true"/>
     </node>
 
-    <!-- Orientation estimation -->
-    <include file="$(find visiondrone)/launch/processing/orientation_estimation.launch"/>
-
     <!-- Optical flow (image to velocity) -->
     <node name="optic_flow" pkg="nodelet" type="nodelet" args="standalone mrs_optic_flow/OpticFlow" output="screen">
         <rosparam file="$(find optical_flow)/config/default.yaml"/>

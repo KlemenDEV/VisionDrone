@@ -1073,7 +1073,7 @@ void OpticFlow::onInit() {
   nrep_                  = 0;
 
   if (_ang_rate_source_ == "imu") {
-    subscriber_imu_ = nh_.subscribe("/imu/data", 1, &OpticFlow::callbackImu, this);
+      subscriber_imu_ = nh_.subscribe("/imu/9dof", 1, &OpticFlow::callbackImu, this);
   } else if (_ang_rate_source_ == "odometry_diff") {
   } else {
     if (_ang_rate_source_ != "odometry") {

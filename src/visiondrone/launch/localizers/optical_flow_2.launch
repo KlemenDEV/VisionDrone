@@ -10,12 +10,8 @@
         <param name="relative" value="true"/>
     </node>
 
-    <!-- Orientation estimation -->
-    <include file="$(find visiondrone)/launch/processing/orientation_estimation.launch"/>
-
     <!-- Optical flow (image to velocity) -->
     <node pkg="px4_optical_flow" type="px4flow_node" name="optic_flow" required="true"/>
-
 
     <!-- Velocity to position -->
     <node pkg="optical_flow" type="velocity_integrator_node" name="optical_flow" required="true"/>

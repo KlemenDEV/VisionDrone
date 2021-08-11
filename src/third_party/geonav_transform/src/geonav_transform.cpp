@@ -65,7 +65,7 @@ namespace GeonavTransform {
         nh_priv.param<std::string>("sub_fix", topic_sub_fix, "nav_fix");
         ros::Subscriber odom_sub = nh.subscribe(topic_sub_fix, 1, &GeonavTransform::navOdomCallback, this);
 
-        ros::Subscriber imuorient_sub = nh.subscribe<sensor_msgs::Imu>("/imu/data", 1,
+        ros::Subscriber imuorient_sub = nh.subscribe<sensor_msgs::Imu>("/imu/9dof", 1,
                                                                        &GeonavTransform::imuDataCallback, this);
 
         // Subscribe to the messages and services we need
