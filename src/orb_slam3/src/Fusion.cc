@@ -4,7 +4,7 @@ Fusion::Fusion(ros::NodeHandle *nh) {
     poseManager = new PoseManager(nh);
 
     // IMU fused orientation
-    imuorient_sub = nh->subscribe<sensor_msgs::Imu>("/imu/data", 15, &Fusion::imuDataCallback, this);
+    imuorient_sub = nh->subscribe<sensor_msgs::Imu>("/imu/9dof", 15, &Fusion::imuDataCallback, this);
 
     // pre-init states
     velocity = Eigen::Vector3d::Zero();
