@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
     ros::Publisher mag_pub = nh.advertise<sensor_msgs::MagneticField>("/mag/data", 15);
 
     struct I2cDevice dev;
-    dev.filename = "/dev/i2c-1";
+    dev.filename = (char *) "/dev/i2c-1";
     dev.addr = HMC5983_ADDRESS;
 
     if (i2c_start(&dev)) {

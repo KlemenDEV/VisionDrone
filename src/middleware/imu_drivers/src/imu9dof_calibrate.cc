@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
 
     struct I2cDevice dev;
-    dev.filename = "/dev/i2c-1";
+    dev.filename = (char *) "/dev/i2c-1";
     dev.addr = MPU9250_DEFAULT_ADDRESS;
     if (i2c_start(&dev)) {
         printf("failed to start i2c device for imu\r\n");
@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
     }
 
     struct I2cDevice dev_mag;
-    dev_mag.filename = "/dev/i2c-1";
+    dev_mag.filename = (char *) "/dev/i2c-1";
     dev_mag.addr = AK8963_ADDRESS;
     if (i2c_start(&dev_mag)) {
         printf("failed to start i2c device for magnetometer\r\n");

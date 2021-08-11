@@ -1,5 +1,7 @@
 #include <ros/ros.h>
 
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
 #include <sensor_msgs/Imu.h>
 
 #include "MPU9250.h"
@@ -15,7 +17,7 @@ int main(int argc, char **argv) {
     ros::Publisher imu_pub = nh.advertise<sensor_msgs::Imu>("/imu/9dof", 15);
 
     struct I2cDevice dev;
-    dev.filename = "/dev/i2c-1";
+    dev.filename = (char *) "/dev/i2c-1";
     dev.addr = MPU9250_DEFAULT_ADDRESS;
     if (i2c_start(&dev)) {
         printf("failed to start i2c device for imu\r\n");
@@ -23,7 +25,7 @@ int main(int argc, char **argv) {
     }
 
     struct I2cDevice dev_mag;
-    dev_mag.filename = "/dev/i2c-1";
+    dev_mag.filename = (char *) "/dev/i2c-1";
     dev_mag.addr = AK8963_ADDRESS;
     if (i2c_start(&dev_mag)) {
         printf("failed to start i2c device for magnetometer\r\n");
@@ -40,6 +42,9 @@ int main(int argc, char **argv) {
     imu.setGyroBias(-160.829269409180, 106.951217651367, 29.487804412842);
     imu.setMagBias(67.437385559082, 141.586883544922, -13.775641441345);
     imu.setMagScale(1.004357337952, 1.010964989662, 0.985042750835);
+
+    tf2::Quaternion sensor_rotation;
+    sensor_rotation.setRPY(0, 3.14159, 0);
 
     ros::Rate loop_rate(200);
     while (ros::ok()) {
@@ -58,10 +63,12 @@ int main(int argc, char **argv) {
             imu_msg.linear_acceleration.y = imu.getLinearAccY() * G;
             imu_msg.linear_acceleration.z = imu.getLinearAccZ() * G;
 
-            imu_msg.orientation.x = imu.getQuaternionX();
-            imu_msg.orientation.y = imu.getQuaternionY();
-            imu_msg.orientation.z = imu.getQuaternionZ();
-            imu_msg.orientation.w = imu.getQuaternionW();
+
+            tf2::Quaternion orientation_tf2(imu.getQuaternionX(), imu.getQuaternionY(), imu.getQuaternionZ(),
+                                            imu.getQuaternionW());
+            tf2::Quaternion rotated_orientation_tf2 = (sensor_rotation * orientation_tf2).normalize();
+
+            imu_msg.orientation = tf2::toMsg(rotated_orientation_tf2);
 
             imu_pub.publish(imu_msg);
         }
