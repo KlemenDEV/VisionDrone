@@ -37,6 +37,7 @@ int main(int argc, char **argv) {
         cout << '\n' << "Press a key to start acc/gyr calibration, hold the sensor still...";
     } while (cin.get() != '\n');
 
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     imu.calibrateAccelGyro();
 
     do {

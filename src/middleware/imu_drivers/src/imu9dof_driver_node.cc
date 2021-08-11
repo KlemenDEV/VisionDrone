@@ -33,11 +33,17 @@ int main(int argc, char **argv) {
     imu.selectFilter(QuatFilterSel::MADGWICK);
     imu.setFilterIterations(15);
     imu.setMagneticDeclination(4.35);
+
     imu.setup(&dev, &dev_mag);
+
+    imu.setAccBias(318.243896484375, 218.146347045898, 813.560546875000);
+    imu.setGyroBias(-160.829269409180, 106.951217651367, 29.487804412842);
+    imu.setMagBias(67.437385559082, 141.586883544922, -13.775641441345);
+    imu.setMagScale(1.004357337952, 1.010964989662, 0.985042750835);
 
     ros::Rate loop_rate(200);
     while (ros::ok()) {
-        if(imu.update()) {
+        if (imu.update()) {
             sensor_msgs::Imu imu_msg;
             imu_msg.header.stamp = ros::Time::now();
             imu_msg.header.frame_id = "imu_9dof";

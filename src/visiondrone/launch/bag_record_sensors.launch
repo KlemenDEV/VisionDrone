@@ -20,7 +20,8 @@
 
           /ublox/fix
           /ublox/fix_velocity
-          /mag/data
+
+          /imu/9dof
 
           /mavros/imu/static_pressure
        ')"/>
