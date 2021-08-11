@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
     imu.setMagScale(1.004357337952, 1.010964989662, 0.985042750835);
 
     tf2::Quaternion sensor_rotation;
-    sensor_rotation.setRPY(0, 3.14159, 0);
+    sensor_rotation.setRPY(0, M_PI, 0);
 
     ros::Rate loop_rate(200);
     while (ros::ok()) {
