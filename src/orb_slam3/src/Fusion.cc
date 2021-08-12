@@ -30,7 +30,7 @@ void Fusion::tracking() {
     }
 }
 
-void Fusion::dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw, vector<ORB_SLAM3::IMU::Point> &vImuMeas) {
+void Fusion::dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw, vector <ORB_SLAM3::IMU::Point> &vImuMeas) {
     if (Tcw.rows == 4 && Tcw.cols == 4) { // valid data
         cv::Mat Twc(4, 4, CV_32F);
 
@@ -84,7 +84,7 @@ void Fusion::dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw, vector<ORB_
     }
 }
 
-void Fusion::deadReckoning(const vector<sensor_msgs::ImuConstPtr> &imuBufferCurr) {
+void Fusion::deadReckoning(const vector <sensor_msgs::ImuConstPtr> &imuBufferCurr) {
     if (imuBufferCurr.empty()) return;
 
     if (state != DEAD_RECKONING) {
@@ -95,22 +95,16 @@ void Fusion::deadReckoning(const vector<sensor_msgs::ImuConstPtr> &imuBufferCurr
     ROS_WARN_THROTTLE(1, "Dead reckoning");
 
     Eigen::Vector3d position = Eigen::Vector3d::Zero();
-    //sensor_msgs::ImuConstPtr msgorient = nullptr;
 
     double t_last = -1;
     for (const auto &pt : imuBufferCurr) {
-        //if (msgorient == nullptr) msgorient = pt;
-
         double dt = 1. / 200.;
         if (t_last != -1) dt = pt->header.stamp.toSec() - t_last;
 
         Eigen::Quaterniond orientation;
         tf::quaternionMsgToEigen(pt->orientation, orientation);
-        Eigen::Vector3d aBiasCorrected = Eigen::Vector3d(
-                pt->linear_acceleration.z,
-                pt->linear_acceleration.x,
-                pt->linear_acceleration.y + 9.81
-        );
+        Eigen::Vector3d aBiasCorrected = Eigen::Vector3d(pt->linear_acceleration.x, pt->linear_acceleration.y,
+                                                         pt->linear_acceleration.z);
 
         velocity += (orientation * aBiasCorrected) * dt;
         position += velocity * dt;

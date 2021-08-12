@@ -19,6 +19,9 @@ namespace GeonavTransform {
         transform_odom2base_inverse_ = tf2::Transform(tf2::Transform::getIdentity());
         transform_utm2odom_ = tf2::Transform(tf2::Transform::getIdentity());
         transform_utm2odom_inverse_ = tf2::Transform(tf2::Transform::getIdentity());
+
+        quat_orientation.setRPY(0, 0, -1.5707);
+        //quat_orientation.setRPY(0, 0, 0);
     }
 
     GeonavTransform::~GeonavTransform() = default;
@@ -42,8 +45,6 @@ namespace GeonavTransform {
         // Setup transforms and messages
         nav_in_odom_.header.frame_id = odom_frame_id_;
         nav_in_odom_.header.seq = 0;
-        nav_in_utm_.header.frame_id = utm_frame_id_;
-        nav_in_utm_.header.seq = 0;
 
         transform_msg_utm2odom_.header.frame_id = utm_frame_id_;
         transform_msg_utm2odom_.child_frame_id = odom_frame_id_;
@@ -56,10 +57,6 @@ namespace GeonavTransform {
         std::string topic_pub_odom;
         nh_priv.param<std::string>("pub_odom", topic_pub_odom, "geonav_odom");
         odom_pub_ = nh.advertise<geometry_msgs::PoseStamped>(topic_pub_odom, 5);
-
-        std::string topic_pub_utm;
-        nh_priv.param<std::string>("pub_utm", topic_pub_utm, "geonav_utm");
-        utm_pub_ = nh.advertise<geometry_msgs::PoseStamped>(topic_pub_utm, 5);
 
         std::string topic_sub_fix;
         nh_priv.param<std::string>("sub_fix", topic_sub_fix, "nav_fix");
@@ -79,7 +76,7 @@ namespace GeonavTransform {
         } // end of Loop
     } // end of ::run()
 
-    void GeonavTransform::broadcastTf() {
+    void GeonavTransform::broadcastTf(void) {
         transform_msg_odom2base_.header.stamp = ros::Time::now();
         transform_msg_odom2base_.header.seq++;
         transform_msg_odom2base_.transform = tf2::toMsg(transform_odom2base_);
@@ -99,25 +96,20 @@ namespace GeonavTransform {
         ROS_INFO_STREAM("Datum UTM coordinate is ("
                                 << std::fixed << utm_x << ", " << utm_y << ")");
 
+
         // Set the transform utm->odom
         transform_utm2odom_.setOrigin(tf2::Vector3(utm_x, utm_y, alt));
-
-        tf2::Quaternion quat_orientation;
-        // quat_orientation.setRPY(0, 0, -1.5707);
-        quat_orientation.setRPY(0, 0, 0);
-        quat_orientation = quat_orientation.normalize();
-        // transform_utm2odom_.setRotation(quat_orientation * q);
-
-        transform_utm2odom_.setRotation(quat_orientation);
-
+        transform_utm2odom_.setRotation(q);
         transform_utm2odom_inverse_ = transform_utm2odom_.inverse();
-
-        // Convert quaternion to RPY - to double check and display
+        // Convert quaternion to RPY - to double check and diplay
         tf2::Matrix3x3 mat(q);
         double roll, pitch, yaw;
         mat.getRPY(roll, pitch, yaw);
         ROS_INFO_STREAM("Datum orientation roll, pitch, yaw is ("
                                 << roll << ", " << pitch << ", " << yaw << ")");
+
+
+        //ROS_INFO_STREAM("Transform utm -> odom is: " << transform_utm2odom_);
 
         // Send out static UTM transform - frames are specified in ::run()
         transform_msg_utm2odom_.header.stamp = ros::Time::now();
@@ -125,9 +117,11 @@ namespace GeonavTransform {
         transform_msg_utm2odom_.transform = tf2::toMsg(transform_utm2odom_);
         transform_msg_utm2odom_.transform.translation.z = (zero_altitude_ ? 0.0
                                                                           : transform_msg_utm2odom_.transform.translation.z);
-        //utm_broadcaster_.sendTransform(transform_msg_utm2odom_);
+        utm_broadcaster_.sendTransform(transform_msg_utm2odom_);
 
         datum_set = true;
+
+        return true;
     } // end setDatum
 
     void GeonavTransform::navOdomCallback(const sensor_msgs::NavSatFix::ConstPtr &msg) {
@@ -150,27 +144,16 @@ namespace GeonavTransform {
 
         transform_utm2nav_inverse_ = transform_utm2nav_.inverse();
 
-        // Publish Nav/Base Odometry in UTM frame - note frames are set in ::run()
-        nav_in_utm_.header.stamp = nav_update_time_;
-        nav_in_utm_.header.seq++;
-        // Create position information using transform.
-        // Convert from transform to pose message
-        //tf2::toMsg(transform_utm2nav_, nav_in_utm_.pose.pose);
-        tf2::Vector3 tmp;
-        tmp = transform_utm2nav_.getOrigin();
-        nav_in_utm_.pose.position.x = tmp[0];
-        nav_in_utm_.pose.position.y = tmp[1];
-        nav_in_utm_.pose.position.z = tmp[2];
-
-        nav_in_utm_.pose.position.z = (zero_altitude_ ? 0.0 : nav_in_utm_.pose.position.z);
-
-        // Publish
-        // utm_pub_.publish(nav_in_utm_);
-
         // Calculate Nav in odom frame
         // Note the 'base' and 'nav' frames are the same for now
         // odom2base = odom2nav = odom2utm * utm2nav
         transform_odom2base_.mult(transform_utm2odom_inverse_, transform_utm2nav_);
+
+        tf2::Vector3 origin = transform_odom2base_.getOrigin();
+        double oldx = origin.getX();
+        origin.setX(origin.getY());
+        origin.setY(-oldx);
+        transform_odom2base_.setOrigin(origin);
 
         // Publish Nav odometry in odom frame - note frames are set in ::run()
         nav_in_odom_.header.stamp = nav_update_time_;
@@ -178,7 +161,7 @@ namespace GeonavTransform {
 
         // Position from transform
         tf2::toMsg(transform_odom2base_, nav_in_odom_.pose);
-        nav_in_odom_.pose.position.z = (zero_altitude_ ? 0.0 : nav_in_odom_.pose.position.z);
+        nav_in_odom_.pose.position.z = nav_in_odom_.pose.position.z;
 
         //double oldX = nav_in_odom_.pose.position.x;
         //nav_in_odom_.pose.position.x = -nav_in_odom_.pose.position.y;
@@ -194,7 +177,7 @@ namespace GeonavTransform {
     bool GeonavTransform::datumCallback(orb_slam3::SetDatum::Request &request,
                                         orb_slam3::SetDatum::Response &) {
         tf2::Quaternion quat_tf;
-        tf2::convert(request.geo_pose.orientation, quat_tf);
+        tf2::convert(orientation_last, quat_tf);
 
         setDatum(request.geo_pose.position.latitude, request.geo_pose.position.longitude,
                  request.geo_pose.position.altitude, quat_tf);

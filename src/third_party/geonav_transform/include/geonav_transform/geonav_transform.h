@@ -60,6 +60,8 @@ namespace GeonavTransform {
 
     private:
 
+        tf2::Quaternion quat_orientation;
+
         //! @brief Sets datum values
         //! yaw is ENU
         //!

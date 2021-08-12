@@ -16,6 +16,8 @@ PoseManager::PoseManager(ros::NodeHandle *nh) {
     set_datum_client = nh->serviceClient<orb_slam3::SetDatum>("/datum");
 }
 
+#define IMU_SAMPLES 100
+
 void PoseManager::imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg) {
     tf2::Quaternion quat_gps_rot;
     tf2::fromMsg(msg->orientation, quat_gps_rot);
@@ -25,13 +27,16 @@ void PoseManager::imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg) {
 
     yaw_mag_curr = (float) yaw_mag;
 
-    if (imuDataCount > 30 && !datum_set) {
-        yaw_mag_init /= 30.0f;
+    if (imuDataCount > IMU_SAMPLES && !datum_set) {
+        yaw_mag_init /= (float) IMU_SAMPLES;
 
         ROS_WARN("Initial yaw pose: %f deg", yaw_mag_init * 180 / M_PI);
 
         setGPSDatum(msg->orientation);
-    } else if (imuDataCount <= 30) {
+
+        // we no longer need the orientation
+        imuorient_sub.shutdown();
+    } else if (imuDataCount <= IMU_SAMPLES) {
         yaw_mag_init += (float) yaw_mag;
         imuDataCount++;
     }
