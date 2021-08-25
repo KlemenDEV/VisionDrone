@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <launch>
+    <param name="run_cmd" command="$(find visiondrone)/launch/rviz/ls.sh $(find visiondrone)/../../data/inputs/"/>
+
+    <arg name="bag_file_name" value="$(eval raw_input('Enter bag file name: '))"/>
+
     <!-- PLAY ROSBAG -->
-    <node pkg="rosbag" type="play" name="data_loader" args="/home/pylo/Desktop/opt02.bag"/>
+    <node pkg="rosbag" type="play" name="data_loader" required="true"
+          args="$(find visiondrone)/../../data/inputs/$(arg bag_file_name).bag"/>
 
     <!-- Optical flow -->
     <include file="$(find visiondrone)/launch/localizers/optical_flow_2.launch"/>
@@ -27,11 +32,8 @@
     <!-- Pose to matlab -->
     <node type="pose2matlab.py" name="gps_pose_slam" pkg="visiondrone">
         <param name="pose" value="/orbslam3/pose"/>
-        <param name="outfile" value="pose_slam.mat"/>
-    </node>
-    <node type="pose2matlab.py" name="gps_pose_mat" pkg="visiondrone">
-        <param name="pose" value="/ublox/fix/local"/>
-        <param name="outfile" value="pose_gps.mat"/>
+        <param name="gt" value="/ublox/fix/local"/>
+        <param name="outfile" value="$(find visiondrone)/../../data/outputs/flow2_$(arg bag_file_name).mat"/>
     </node>
 
     <!-- Quadcopter model -->

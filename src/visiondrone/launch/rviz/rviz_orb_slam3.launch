@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <launch>
+    <param name="run_cmd" command="$(find visiondrone)/launch/rviz/ls.sh $(find visiondrone)/../../data/inputs/"/>
+
+    <arg name="bag_file_name" value="$(eval raw_input('Enter bag file name: '))"/>
+
     <!-- PLAY ROSBAG -->
-    <node pkg="rosbag" type="play" name="data_loader" args="/home/pylo/Desktop/slo01.bag"
-          launch-prefix="bash -c 'sleep 11; $0 $@'"/>
+    <node pkg="rosbag" type="play" name="data_loader" required="true"
+          args="$(find visiondrone)/../../data/inputs/$(arg bag_file_name).bag"/>
 
     <!-- ORB_SLAM3 -->
     <include file="$(find visiondrone)/launch/localizers/3d_slam.launch">
@@ -30,11 +34,8 @@
     <!-- Pose to matlab -->
     <node type="pose2matlab.py" name="gps_pose_slam" pkg="visiondrone">
         <param name="pose" value="/orbslam3/pose"/>
-        <param name="outfile" value="pose_slam.mat"/>
-    </node>
-    <node type="pose2matlab.py" name="gps_pose_mat" pkg="visiondrone">
-        <param name="pose" value="/ublox/fix/local"/>
-        <param name="outfile" value="pose_gps.mat"/>
+        <param name="gt" value="/ublox/fix/local"/>
+        <param name="outfile" value="$(find visiondrone)/../../data/outputs/orbslam3_$(arg bag_file_name).mat"/>
     </node>
 
     <!-- Quadcopter model -->
