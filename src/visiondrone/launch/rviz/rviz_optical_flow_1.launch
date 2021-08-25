@@ -2,7 +2,7 @@
 
 <launch>
     <!-- PLAY ROSBAG -->
-    <node pkg="rosbag" type="play" name="data_loader" args="/home/pylo/Desktop/test9dof1.bag"/>
+    <node pkg="rosbag" type="play" name="data_loader" args="/home/pylo/Desktop/opt03.bag"/>
 
     <!-- Optical flow -->
     <include file="$(find visiondrone)/launch/localizers/optical_flow_1.launch"/>

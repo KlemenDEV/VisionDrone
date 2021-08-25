@@ -30,19 +30,21 @@ OpticalFlowPX4 flow(477.78586954352323, 480.6678820118329,
 OpticalFlowOpenCV flow(477.78586954352323, 480.6678820118329,
                        -1, // image rate
                        640, 480,
-                       90, // default 20
+                       200, // default 20
                        1.645f //90% confidence interval
 );
 #endif
 
 ros::Publisher publisher_velocity;
 
-float height_last = 0;
+double height_last = 0;
 
 double roll, pitch, yaw;
 
+int init_counter = 0;
+
 void heightCallback(const std_msgs::Float64::ConstPtr &msg) {
-    height_last = (float) msg->data;
+    height_last = msg->data;
 }
 
 void imuDataCallback(const sensor_msgs::Imu::ConstPtr &imu_msg) {
@@ -57,17 +59,19 @@ void callbackImage(const sensor_msgs::ImageConstPtr &msg) {
 
     float cx, cy;
     int dtus;
-
-    // image->image
     int qty = flow.calcFlow(image->image.data, (uint32_t) msg->header.stamp.toNSec(), dtus, cx, cy);
 
-    if (qty < 50) return;
+    // require at least some quality detections
+    if(init_counter < 20) {
+        if (qty > 200) init_counter++;
+        return;
+    }
 
     geometry_msgs::TwistWithCovarianceStamped velocity;
     velocity.header.frame_id = "uav_velocity";
     velocity.header.stamp = msg->header.stamp;
-    velocity.twist.twist.linear.x = (double) cx * (height_last / cos(W_PI(pitch))) * 10;
-    velocity.twist.twist.linear.y = - (double) cy * (height_last / cos(W_PI(roll + M_PI / 2.0))) * 10;
+    velocity.twist.twist.linear.x = ((double) cy) * -30.0 * abs(height_last / cos(pitch));
+    velocity.twist.twist.linear.y = ((double) cx) * -30.0 * abs(height_last / cos(roll));
     publisher_velocity.publish(velocity);
 }
 

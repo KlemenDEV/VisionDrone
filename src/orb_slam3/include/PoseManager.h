@@ -24,6 +24,13 @@
 #include <chrono>
 #include <thread>
 
+enum FlightState {
+    REST,
+    TAKEOFF,
+    FRONT_FLIGHT,
+    FREE_FLIGHT
+};
+
 using namespace std;
 
 class PoseManager {
@@ -42,7 +49,19 @@ private:
     sensor_msgs::NavSatFix::ConstPtr gps_last;
 
     ros::Subscriber height_sub;
-    float height_last = 0;
+
+    geometry_msgs::Quaternion orientation_last;
+
+    FlightState flightState = REST;
+
+    std::chrono::time_point<std::chrono::high_resolution_clock> time_last;
+    float opx = 0, opy = 0;
+
+    double yaw_diff = 0;
+    double yaw_mag_avg = 0;
+    int yaw_diff_count = 0;
+
+    float offx = 0, offy = 0;
 
 public:
     bool datum_set = false;
@@ -50,9 +69,11 @@ public:
     float yaw_mag_init = 0;
     float yaw_mag_curr = 0;
 
+    float height_last = 0;
+
     explicit PoseManager(ros::NodeHandle *nh);
 
-    void setGPSDatum(geometry_msgs::Quaternion orientation_last);
+    void setGPSDatum(float px, float py);
 
     void imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg);
 

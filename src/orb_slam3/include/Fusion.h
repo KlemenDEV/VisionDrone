@@ -27,6 +27,10 @@
 
 #include "PoseManager.h"
 
+#include <message_filters/subscriber.h>
+#include <message_filters/time_synchronizer.h>
+#include <message_filters/sync_policies/approximate_time.h>
+
 using namespace std;
 
 enum TrackerState {
@@ -44,26 +48,30 @@ private:
     Eigen::Vector3d velocity;
     Eigen::Vector3d aBias;
 
-    vector<sensor_msgs::ImuConstPtr> imuBuffer;
+    vector<sensor_msgs::Imu> imuBuffer;
     std::mutex imuMutex;
 
     std::chrono::time_point<std::chrono::high_resolution_clock> time_last;
 
+    typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Imu, sensor_msgs::Imu> syncPolicy;
+    typedef message_filters::Synchronizer <syncPolicy> syncer;
+    message_filters::Subscriber <sensor_msgs::Imu> imu1;
+    message_filters::Subscriber <sensor_msgs::Imu> imu2;
+    std::shared_ptr<syncer> syncptr;
+
     PoseManager *poseManager;
 
     TrackerState state = IDLE;
-
-    ros::Subscriber imuorient_sub;
 
 public:
     explicit Fusion(ros::NodeHandle *nh);
 
     void dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw, vector<ORB_SLAM3::IMU::Point> &vImuMeas);
 
-    void deadReckoning(const vector<sensor_msgs::ImuConstPtr> &imuBuffer);
+    void deadReckoning();
 
     void tracking();
 
-    void imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg);
+    void imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg, const sensor_msgs::Imu::ConstPtr &msg2);
 
 };

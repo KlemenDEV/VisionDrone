@@ -16,30 +16,15 @@ PoseManager::PoseManager(ros::NodeHandle *nh) {
     set_datum_client = nh->serviceClient<orb_slam3::SetDatum>("/datum");
 }
 
-#define IMU_SAMPLES 100
-
 void PoseManager::imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg) {
     tf2::Quaternion quat_gps_rot;
-    tf2::fromMsg(msg->orientation, quat_gps_rot);
+    tf2::fromMsg(orientation_last, quat_gps_rot);
     tf2::Matrix3x3 gps_tf2_rot(quat_gps_rot);
     double r, p, yaw_mag;
     gps_tf2_rot.getRPY(r, p, yaw_mag, 1);
 
     yaw_mag_curr = (float) yaw_mag;
-
-    if (imuDataCount > IMU_SAMPLES && !datum_set) {
-        yaw_mag_init /= (float) IMU_SAMPLES;
-
-        ROS_WARN("Initial yaw pose: %f deg", yaw_mag_init * 180 / M_PI);
-
-        setGPSDatum(msg->orientation);
-
-        // we no longer need the orientation
-        imuorient_sub.shutdown();
-    } else if (imuDataCount <= IMU_SAMPLES) {
-        yaw_mag_init += (float) yaw_mag;
-        imuDataCount++;
-    }
+    orientation_last = msg->orientation;
 }
 
 void PoseManager::gpsDataCallback(const sensor_msgs::NavSatFix::ConstPtr &msg) {
@@ -52,12 +37,53 @@ void PoseManager::heightCallback(const std_msgs::Float64::ConstPtr &msg) {
 }
 
 void PoseManager::publishData(float px, float py) {
+    double dt = std::chrono::duration<double, std::milli>(
+            std::chrono::high_resolution_clock::now() - time_last).count() / 1000.0;
+
+    float vx = (px - opx) / dt;
+    float vy = (py - opy) / dt;
+
+    opx = px;
+    opy = py;
+    time_last = std::chrono::high_resolution_clock::now();
+
+    if (!datum_set) {
+        if (flightState == REST) {
+            if (height_last > 7) flightState = TAKEOFF;
+            ROS_WARN_THROTTLE(1.0, "State: REST");
+            return;
+        } else if (flightState == TAKEOFF) {
+            if (vx > 7) flightState = FRONT_FLIGHT;
+            ROS_WARN_THROTTLE(1.0, "State: TAKEOFF");
+            return;
+        } else if (flightState == FRONT_FLIGHT) {
+            if (vx < 7 || abs(vy) > 4) return;
+
+            double yaw_est = atan2(vy, vx);
+
+            yaw_diff += yaw_mag_curr - yaw_est;
+            yaw_mag_avg += yaw_mag_curr;
+            yaw_diff_count++;
+
+            if (yaw_diff_count > 10) {
+                yaw_diff /= (double) yaw_diff_count;
+                yaw_mag_avg /= (double) yaw_diff_count;
+
+                setGPSDatum(px, py);
+                flightState = FREE_FLIGHT;
+            } else {
+                ROS_WARN_THROTTLE(1.0, "State: FRONT_FLIGHT");
+                return;
+            }
+        }
+    }
+
     geometry_msgs::PoseStamped posest;
     geometry_msgs::Pose pose;
     geometry_msgs::Point pt;
 
-    pt.x = px;
-    pt.y = py;
+    pt.x = (px - offx) * cos(yaw_diff);
+    pt.y = (py - offy) * sin(yaw_diff);
     pt.z = height_last;
 
     pose.position = pt;
@@ -67,14 +93,23 @@ void PoseManager::publishData(float px, float py) {
     this->point_pub.publish(posest);
 }
 
-void PoseManager::setGPSDatum(geometry_msgs::Quaternion orientation_last) {
+void PoseManager::setGPSDatum(float px, float py) {
+    if (datum_set) return;
+
+    yaw_mag_init = yaw_mag_avg;
+    ROS_WARN("Initial yaw: %f deg", yaw_mag_avg * 180 / M_PI);
+
+    double yaw_offset_mag = yaw_mag_avg - yaw_mag_curr;
+    yaw_diff += yaw_offset_mag;
+
+    geographic_msgs::GeoPose datumPose;
+
     geographic_msgs::GeoPoint datumPosition;
     datumPosition.latitude = gps_last->latitude;
     datumPosition.longitude = gps_last->longitude;
-    datumPosition.altitude = gps_last->altitude;
-
-    geographic_msgs::GeoPose datumPose;
+    datumPosition.altitude = gps_last->altitude - height_last;
     datumPose.position = datumPosition;
+
     datumPose.orientation = orientation_last;
 
     orb_slam3::SetDatum setDatum;
@@ -85,9 +120,9 @@ void PoseManager::setGPSDatum(geometry_msgs::Quaternion orientation_last) {
         ROS_WARN("DATUM: lat: %f, lon: %f, alt: %f", datumPosition.latitude, datumPosition.longitude,
                  datumPosition.altitude);
 
+        offx = px;
+        offy = py;
         datum_set = true;
-
-        publishData(0, 0);
     } else {
         ROS_ERROR("FAILED TO PROPAGATE GLOBAL GPS HOME LOCATION (DATUM)");
     }

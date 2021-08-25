@@ -8,7 +8,7 @@
 
 #include <PoseManager.h>
 
-float px, py;
+double px = 0, py = 0;
 
 ros::Time time_last;
 bool initialzed = false;
@@ -16,23 +16,20 @@ bool initialzed = false;
 PoseManager *poseManager;
 
 void velocityCallback(const geometry_msgs::TwistWithCovarianceStamped::ConstPtr &msg) {
-    if (!poseManager->datum_set)
-        return;
-
     if (!initialzed) {
         time_last = msg->header.stamp;
         initialzed = true;
         return;
     }
 
-    auto dt = (float) (msg->header.stamp - time_last).toSec();
+    auto dt = (double) (msg->header.stamp - time_last).toSec();
 
     px += msg->twist.twist.linear.x * dt;
     py += msg->twist.twist.linear.y * dt;
 
     time_last = msg->header.stamp;
 
-    poseManager->publishData(px, -py);
+    poseManager->publishData((float) px, (float) py);
 }
 
 int main(int argc, char **argv) {

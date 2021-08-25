@@ -1303,8 +1303,8 @@ void OpticFlow::callbackImu(const sensor_msgs::ImuConstPtr& msg) {
     {
       std::scoped_lock lock(mutex_angular_rate_);
 
-      angular_rate_ = cv::Point3d(msg->angular_velocity.x, msg->angular_velocity.y, msg->angular_velocity.z);
-      angular_rate_tf_.setRPY(msg->angular_velocity.x, msg->angular_velocity.y, msg->angular_velocity.z);
+      angular_rate_ = cv::Point3d(-msg->angular_velocity.x, -msg->angular_velocity.y, -msg->angular_velocity.z);
+      angular_rate_tf_.setRPY(-msg->angular_velocity.x, -msg->angular_velocity.y, -msg->angular_velocity.z);
     }
 
     got_imu_ = true;
@@ -1315,6 +1315,11 @@ void OpticFlow::callbackImu(const sensor_msgs::ImuConstPtr& msg) {
 
     tf2::fromMsg(msg->orientation, imu_orientation_);
     tf2::Matrix3x3(imu_orientation_).getRPY(imu_roll_, imu_pitch_, imu_yaw_);
+
+    imu_roll_ *= -1;
+    imu_pitch_ *= -1;
+    imu_yaw_ *= -1;
+
     /* std::cout << "OR IMUM CB: " << msg->orientation.x<< msg->orientation.y <<msg->orientation.z <<" - " << msg->orientation.w << std::endl; */
     /* std::cout << "OR IMU CB: " << imu_orientation_.getAxis().x() << imu_orientation_.getAxis().y() <<imu_orientation_.getAxis().z() <<" - " <<
      * imu_orientation_.getAngle() << std::endl; */
@@ -1323,8 +1328,8 @@ void OpticFlow::callbackImu(const sensor_msgs::ImuConstPtr& msg) {
   {
     std::scoped_lock lock(mutex_dynamic_tilt_);
 
-    imu_roll_rate_  = imu_roll_rate_ * (1 - filter_ratio) + filter_ratio * msg->angular_velocity.x;
-    imu_pitch_rate_ = imu_pitch_rate_ * (1 - filter_ratio) + filter_ratio * msg->angular_velocity.y;
+    imu_roll_rate_  = imu_roll_rate_ * (1 - filter_ratio) + filter_ratio * -msg->angular_velocity.x;
+    imu_pitch_rate_ = imu_pitch_rate_ * (1 - filter_ratio) + filter_ratio * -msg->angular_velocity.y;
     /* tf2::Matrix3x3(imu_orientation_).getRPY(imu_roll_, imu_pitch_, imu_yaw_); */
     /* std::cout << "OR IMUM CB: " << msg->orientation.x<< msg->orientation.y <<msg->orientation.z <<" - " << msg->orientation.w << std::endl; */
     /* std::cout << "OR IMU CB: " << imu_orientation_.getAxis().x() << imu_orientation_.getAxis().y() <<imu_orientation_.getAxis().z() <<" - " <<

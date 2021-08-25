@@ -2,12 +2,12 @@
 
 <launch>
     <!-- PLAY ROSBAG -->
-    <node pkg="rosbag" type="play" name="data_loader" args="/home/pylo/Desktop/test9dof1.bag"
+    <node pkg="rosbag" type="play" name="data_loader" args="/home/pylo/Desktop/slo01.bag"
           launch-prefix="bash -c 'sleep 11; $0 $@'"/>
 
     <!-- ORB_SLAM3 -->
     <include file="$(find visiondrone)/launch/localizers/3d_slam.launch">
-        <arg name="visualize" value="false"/>
+        <arg name="visualize" value="true"/>
     </include>
 
     <!-- MAP GPS LOCATION TO LOCAL -->
