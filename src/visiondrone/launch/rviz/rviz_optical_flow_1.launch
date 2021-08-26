@@ -33,6 +33,7 @@
     <node type="pose2matlab.py" name="gps_pose_slam" pkg="visiondrone">
         <param name="pose" value="/orbslam3/pose"/>
         <param name="gt" value="/ublox/fix/local"/>
+        <param name="velocity" value="/estimate/velocity_out"/>
         <param name="outfile" value="$(find visiondrone)/../../data/outputs/flow1_$(arg bag_file_name).mat"/>
     </node>
 

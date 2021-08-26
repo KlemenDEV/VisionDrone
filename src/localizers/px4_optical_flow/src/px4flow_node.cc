@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
     ros::Subscriber sub_imu = nh.subscribe("/imu/9dof", 15, imuDataCallback);
     ros::Subscriber sub_height = nh.subscribe("/drone/height_estimate", 1, heightCallback);
 
-    publisher_velocity = nh.advertise<geometry_msgs::TwistWithCovarianceStamped>("/optic_flow/velocity_out", 1);
+    publisher_velocity = nh.advertise<geometry_msgs::TwistWithCovarianceStamped>("/estimate/velocity_out", 1);
 
     ros::spin();
     ros::shutdown();

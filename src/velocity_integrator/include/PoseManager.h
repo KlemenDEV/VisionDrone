@@ -40,6 +40,7 @@ private:
     ros::Publisher gps_pub;
 
     ros::ServiceClient set_datum_client;
+    ros::ServiceClient set_datum_client_ref;
 
     ros::Subscriber imuorient_sub;
     int imuDataCount = 0;

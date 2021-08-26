@@ -14,6 +14,7 @@ PoseManager::PoseManager(ros::NodeHandle *nh) {
     height_sub = nh->subscribe<std_msgs::Float64>("/drone/height_estimate", 1, &PoseManager::heightCallback, this);
 
     set_datum_client = nh->serviceClient<velocity_integrator::SetDatum>("/datum");
+    set_datum_client_ref = nh->serviceClient<velocity_integrator::SetDatum>("/datum_ref");
 }
 
 void PoseManager::imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg) {
@@ -126,4 +127,6 @@ void PoseManager::setGPSDatum(float px, float py) {
     } else {
         ROS_ERROR("FAILED TO PROPAGATE GLOBAL GPS HOME LOCATION (DATUM)");
     }
+
+    set_datum_client_ref.call(setDatum);
 }

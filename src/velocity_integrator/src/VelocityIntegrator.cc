@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
     PoseManager poseManagerObj(&nh);
     poseManager = &poseManagerObj;
 
-    ros::Subscriber velocity_sub = nh.subscribe("/optic_flow/velocity_out", 5, velocityCallback);
+    ros::Subscriber velocity_sub = nh.subscribe("/estimate/velocity_out", 5, velocityCallback);
 
     ros::spin();
     ros::shutdown();
