@@ -7,19 +7,28 @@ from geometry_msgs.msg import PoseStamped
 import numpy as np
 
 import os
+import time
 
-data = np.zeros((0, 0))
-gtdata = np.zeros((0, 0))
+data = np.empty((0, 4), float)
+gtdata = np.empty((0, 4), float)
+
+start_time = None
 
 
 def odom_cb(msg):
-    global data
-    data = np.append(data, np.array([msg.pose.position.x, msg.pose.position.y, msg.pose.position.z]))
+    global data, start_time
+    if start_time is None:
+        start_time = time.time()
+    data = np.vstack(
+        (data, np.array([time.time() - start_time, msg.pose.position.x, msg.pose.position.y, msg.pose.position.z])))
 
 
 def gt_cb(msg):
-    global gtdata
-    gtdata = np.append(gtdata, np.array([msg.pose.position.x, msg.pose.position.y, msg.pose.position.z]))
+    global gtdata, start_time
+    if start_time is None:
+        pass
+    gtdata = np.vstack(
+        (gtdata, np.array([time.time() - start_time, msg.pose.position.x, msg.pose.position.y, msg.pose.position.z])))
 
 
 def shutdown():

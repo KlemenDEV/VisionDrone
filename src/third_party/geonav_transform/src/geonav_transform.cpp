@@ -153,6 +153,7 @@ namespace GeonavTransform {
         double oldx = origin.getX();
         origin.setX(origin.getY());
         origin.setY(-oldx);
+        origin.setZ(-origin.getZ());
         transform_odom2base_.setOrigin(origin);
 
         // Publish Nav odometry in odom frame - note frames are set in ::run()

@@ -107,7 +107,7 @@ void PoseManager::setGPSDatum(float px, float py) {
     geographic_msgs::GeoPoint datumPosition;
     datumPosition.latitude = gps_last->latitude;
     datumPosition.longitude = gps_last->longitude;
-    datumPosition.altitude = gps_last->altitude - height_last;
+    datumPosition.altitude = gps_last->altitude + height_last;
     datumPose.position = datumPosition;
 
     datumPose.orientation = orientation_last;
