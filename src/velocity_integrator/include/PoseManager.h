@@ -24,13 +24,6 @@
 #include <chrono>
 #include <thread>
 
-enum FlightState {
-    REST,
-    TAKEOFF,
-    FRONT_FLIGHT,
-    FREE_FLIGHT
-};
-
 using namespace std;
 
 class PoseManager {
@@ -49,23 +42,20 @@ private:
     sensor_msgs::NavSatFix::ConstPtr gps_last;
     geometry_msgs::Quaternion orientation_last;
 
-    FlightState flightState = REST;
+    volatile double yaw_mag_init = 0;
+    volatile double yaw_mag_curr = 0;
+
+    volatile double height_last = 0;
 
     volatile bool datum_set = false;
-
-    volatile double yaw_diff = 0;
-    volatile double yaw_mag_avg = 0;
-    volatile int yaw_diff_count = 0;
-
 public:
-    volatile float yaw_mag_curr = 0;
-    volatile float height_last = 0;
+    volatile double yaw_last = 0;
 
     explicit PoseManager(ros::NodeHandle *nh);
 
-    void publishData(float px, float py, float vx, float vy);
+    void publishData(double px, double py);
 
-    void setGPSDatum(float px, float py);
+    void setGPSDatum();
 
     void imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg);
 

@@ -24,13 +24,12 @@ void velocityCallback(const geometry_msgs::TwistWithCovarianceStamped::ConstPtr 
 
     auto dt = (double) (msg->header.stamp - time_last).toSec();
 
-    px += msg->twist.twist.linear.x * cos(poseManager->yaw_mag_curr) * dt;
-    py += msg->twist.twist.linear.y * sin(poseManager->yaw_mag_curr) * dt;
+    px += msg->twist.twist.linear.x * cos(poseManager->yaw_last) * dt;
+    py += msg->twist.twist.linear.y * sin(poseManager->yaw_last) * dt;
 
     time_last = msg->header.stamp;
 
-    poseManager->publishData((float) px, (float) py,
-                             (float) msg->twist.twist.linear.x, (float) msg->twist.twist.linear.y);
+    poseManager->publishData(px, py);
 }
 
 int main(int argc, char **argv) {

@@ -18,63 +18,36 @@ PoseManager::PoseManager(ros::NodeHandle *nh) {
 }
 
 void PoseManager::imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg) {
+    orientation_last = msg->orientation;
+
     tf2::Quaternion quat_gps_rot;
     tf2::fromMsg(orientation_last, quat_gps_rot);
     tf2::Matrix3x3 gps_tf2_rot(quat_gps_rot);
-    double r, p, yaw_mag;
-    gps_tf2_rot.getRPY(r, p, yaw_mag, 1);
+    double r, p, yaw;
+    gps_tf2_rot.getRPY(r, p, yaw, 1);
+    yaw_mag_curr = yaw;
 
-    yaw_mag_curr = (float) yaw_mag;
-    orientation_last = msg->orientation;
+    if (datum_set) yaw_last = yaw_mag_init - yaw_mag_curr;
 }
 
 void PoseManager::gpsDataCallback(const sensor_msgs::NavSatFix::ConstPtr &msg) {
     gps_last = msg;
-    if (datum_set) this->gps_pub.publish(msg);
+    if(datum_set) this->gps_pub.publish(msg);
 }
 
 void PoseManager::heightCallback(const std_msgs::Float64::ConstPtr &msg) {
-    height_last = (float) msg->data;
+    height_last = msg->data;
 }
 
-void PoseManager::publishData(float px, float py, float vx, float vy) {
-    if (!datum_set) {
-        if (flightState == REST) {
-            if (height_last > 5) flightState = TAKEOFF;
-            ROS_WARN_THROTTLE(1.0, "State: REST");
-            return;
-        } else if (flightState == TAKEOFF) {
-            if (vx > 5) flightState = FRONT_FLIGHT;
-            ROS_WARN_THROTTLE(1.0, "State: TAKEOFF");
-            return;
-        } else if (flightState == FRONT_FLIGHT) {
-            if (vx < 5) return;
-
-            double yaw_est = atan2(vy, vx);
-
-            yaw_diff += yaw_mag_curr - yaw_est;
-            yaw_mag_avg += yaw_mag_curr;
-            yaw_diff_count++;
-
-            if (yaw_diff_count > 10) {
-                yaw_diff /= (double) yaw_diff_count;
-                yaw_mag_avg /= (double) yaw_diff_count;
-
-                setGPSDatum(px, py);
-                flightState = FREE_FLIGHT;
-            } else {
-                ROS_WARN_THROTTLE(1.0, "State: FRONT_FLIGHT");
-                return;
-            }
-        }
-    }
+void PoseManager::publishData(double px, double py) {
+    if (!datum_set) setGPSDatum();
 
     geometry_msgs::PoseStamped posest;
     geometry_msgs::Pose pose;
     geometry_msgs::Point pt;
 
-    pt.x = px * cos(yaw_diff);
-    pt.y = py * sin(yaw_diff);
+    pt.x = px;
+    pt.y = py;
     pt.z = height_last;
 
     pose.position = pt;
@@ -84,8 +57,8 @@ void PoseManager::publishData(float px, float py, float vx, float vy) {
     this->point_pub.publish(posest);
 }
 
-void PoseManager::setGPSDatum(float px, float py) {
-    if (datum_set) return;
+void PoseManager::setGPSDatum() {
+    datum_set = true;
 
     geographic_msgs::GeoPose datumPose;
     geographic_msgs::GeoPoint datumPosition;
@@ -103,7 +76,7 @@ void PoseManager::setGPSDatum(float px, float py) {
         ROS_WARN("DATUM: lat: %f, lon: %f, alt: %f", datumPosition.latitude, datumPosition.longitude,
                  datumPosition.altitude);
 
-        datum_set = true;
+        yaw_mag_init = yaw_mag_curr;
         set_datum_client_ref.call(setDatum);
     } else {
         ROS_ERROR("FAILED TO PROPAGATE GLOBAL GPS HOME LOCATION (DATUM)");

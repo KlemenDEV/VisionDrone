@@ -11,7 +11,7 @@
     </node>
 
     <!-- Optical flow (image to velocity) -->
-    <node name="optic_flow" pkg="nodelet" type="nodelet" args="standalone mrs_optic_flow/OpticFlow" output="screen">
+    <node name="estimate" pkg="nodelet" type="nodelet" args="standalone mrs_optic_flow/OpticFlow" output="screen">
         <rosparam file="$(find mrs_optic_flow)/config/default.yaml"/>
 
         <param name="enable_profiler" value="false"/>

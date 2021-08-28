@@ -6,7 +6,7 @@
     <arg name="bag_file_name" value="$(eval raw_input('Enter bag file name: '))"/>
 
     <!-- PLAY ROSBAG -->
-    <node pkg="rosbag" type="play" name="data_loader" required="true"
+    <node pkg="rosbag" type="play" name="data_loader"
           args="$(find visiondrone)/../../data/inputs/$(arg bag_file_name).bag"/>
 
     <!-- ORB_SLAM3 -->
