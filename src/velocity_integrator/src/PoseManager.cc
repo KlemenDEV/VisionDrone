@@ -37,28 +37,18 @@ void PoseManager::heightCallback(const std_msgs::Float64::ConstPtr &msg) {
     height_last = (float) msg->data;
 }
 
-void PoseManager::publishData(float px, float py) {
-    double dt = std::chrono::duration<double, std::milli>(
-            std::chrono::high_resolution_clock::now() - time_last).count() / 1000.0;
-
-    float vx = (px - opx) / dt;
-    float vy = (py - opy) / dt;
-
-    opx = px;
-    opy = py;
-    time_last = std::chrono::high_resolution_clock::now();
-
+void PoseManager::publishData(float px, float py, float vx, float vy) {
     if (!datum_set) {
         if (flightState == REST) {
-            if (height_last > 7) flightState = TAKEOFF;
+            if (height_last > 5) flightState = TAKEOFF;
             ROS_WARN_THROTTLE(1.0, "State: REST");
             return;
         } else if (flightState == TAKEOFF) {
-            if (vx > 7) flightState = FRONT_FLIGHT;
+            if (vx > 5) flightState = FRONT_FLIGHT;
             ROS_WARN_THROTTLE(1.0, "State: TAKEOFF");
             return;
         } else if (flightState == FRONT_FLIGHT) {
-            if (vx < 7 || abs(vy) > 4) return;
+            if (vx < 5) return;
 
             double yaw_est = atan2(vy, vx);
 
@@ -83,8 +73,8 @@ void PoseManager::publishData(float px, float py) {
     geometry_msgs::Pose pose;
     geometry_msgs::Point pt;
 
-    pt.x = (px - offx) * cos(yaw_diff);
-    pt.y = (py - offy) * sin(yaw_diff);
+    pt.x = px * cos(yaw_diff);
+    pt.y = py * sin(yaw_diff);
     pt.z = height_last;
 
     pose.position = pt;
@@ -97,20 +87,12 @@ void PoseManager::publishData(float px, float py) {
 void PoseManager::setGPSDatum(float px, float py) {
     if (datum_set) return;
 
-    yaw_mag_init = yaw_mag_avg;
-    ROS_WARN("Initial yaw: %f deg", yaw_mag_avg * 180 / M_PI);
-
-    double yaw_offset_mag = yaw_mag_avg - yaw_mag_curr;
-    yaw_diff += yaw_offset_mag;
-
     geographic_msgs::GeoPose datumPose;
-
     geographic_msgs::GeoPoint datumPosition;
     datumPosition.latitude = gps_last->latitude;
     datumPosition.longitude = gps_last->longitude;
     datumPosition.altitude = gps_last->altitude - height_last;
     datumPose.position = datumPosition;
-
     datumPose.orientation = orientation_last;
 
     velocity_integrator::SetDatum setDatum;
@@ -121,12 +103,9 @@ void PoseManager::setGPSDatum(float px, float py) {
         ROS_WARN("DATUM: lat: %f, lon: %f, alt: %f", datumPosition.latitude, datumPosition.longitude,
                  datumPosition.altitude);
 
-        offx = px;
-        offy = py;
         datum_set = true;
+        set_datum_client_ref.call(setDatum);
     } else {
         ROS_ERROR("FAILED TO PROPAGATE GLOBAL GPS HOME LOCATION (DATUM)");
     }
-
-    set_datum_client_ref.call(setDatum);
 }

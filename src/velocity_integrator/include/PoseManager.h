@@ -43,36 +43,27 @@ private:
     ros::ServiceClient set_datum_client_ref;
 
     ros::Subscriber imuorient_sub;
-    int imuDataCount = 0;
-
     ros::Subscriber gpsfix_sub;
-
-    sensor_msgs::NavSatFix::ConstPtr gps_last;
-
     ros::Subscriber height_sub;
 
+    sensor_msgs::NavSatFix::ConstPtr gps_last;
     geometry_msgs::Quaternion orientation_last;
 
     FlightState flightState = REST;
 
-    std::chrono::time_point<std::chrono::high_resolution_clock> time_last;
-    float opx = 0, opy = 0;
+    volatile bool datum_set = false;
 
-    double yaw_diff = 0;
-    double yaw_mag_avg = 0;
-    int yaw_diff_count = 0;
-
-    float offx = 0, offy = 0;
+    volatile double yaw_diff = 0;
+    volatile double yaw_mag_avg = 0;
+    volatile int yaw_diff_count = 0;
 
 public:
-    bool datum_set = false;
-
-    float yaw_mag_init = 0;
-    float yaw_mag_curr = 0;
-
-    float height_last = 0;
+    volatile float yaw_mag_curr = 0;
+    volatile float height_last = 0;
 
     explicit PoseManager(ros::NodeHandle *nh);
+
+    void publishData(float px, float py, float vx, float vy);
 
     void setGPSDatum(float px, float py);
 
@@ -81,6 +72,4 @@ public:
     void gpsDataCallback(const sensor_msgs::NavSatFix::ConstPtr &msg);
 
     void heightCallback(const std_msgs::Float64::ConstPtr &msg);
-
-    void publishData(float px, float py);
 };
