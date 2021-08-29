@@ -10,7 +10,7 @@
           args="$(find visiondrone)/../../data/inputs/$(arg bag_file_name).bag"/>
 
     <!-- Optical flow -->
-    <include file="$(find visiondrone)/launch/localizers/optical_flow_1.launch"/>
+    <include file="$(find visiondrone)/launch/localizers/dead_reckoning.launch"/>
 
     <!-- MAP GPS LOCATION TO LOCAL -->
     <node pkg="geonav_transform" type="geonav_transform_node" name="gt_to_local" required="true">
@@ -34,7 +34,7 @@
         <param name="pose" value="/orbslam3/pose"/>
         <param name="gt" value="/ublox/fix/local"/>
         <param name="velocity" value="/estimate/velocity_out"/>
-        <param name="outfile" value="$(find visiondrone)/../../data/outputs/flow1_$(arg bag_file_name).mat"/>
+        <param name="outfile" value="$(find visiondrone)/../../data/outputs/dead_reckoning_$(arg bag_file_name).mat"/>
     </node>
 
     <!-- Quadcopter model -->

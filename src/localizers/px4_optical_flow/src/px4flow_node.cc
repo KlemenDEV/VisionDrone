@@ -39,7 +39,7 @@ double roll, pitch, yaw;
 
 int init_counter = 0;
 
-bool use_px4 = false;
+bool use_px4;
 
 void heightCallback(const std_msgs::Float64::ConstPtr &msg) {
     height_last = msg->data;
@@ -76,8 +76,9 @@ void callbackImage(const sensor_msgs::ImageConstPtr &msg) {
 int main(int argc, char **argv) {
     ros::init(argc, argv, "px4flow_node");
     ros::NodeHandle nh;
+    ros::NodeHandle n("~");
 
-    nh.param<bool>("use_px4", use_px4, false);
+    n.param<bool>("use_px4", use_px4, false);
 
     if (use_px4) {
         ROS_WARN("====== USING PX4 FLOW");

@@ -1,4 +1,4 @@
-#include "PoseManager.h"
+#include "PoseManager.h"-
 
 PoseManager::PoseManager(ros::NodeHandle *nh) {
     gps_pub = nh->advertise<sensor_msgs::NavSatFix>("/ublox/fix_tracking", 1);
@@ -17,7 +17,7 @@ PoseManager::PoseManager(ros::NodeHandle *nh) {
     set_datum_client_ref = nh->serviceClient<velocity_integrator::SetDatum>("/datum_ref");
 }
 
-#define ALPHA 0.9
+#define ALPHA 0.85
 
 void PoseManager::imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg) {
     orientation_last = msg->orientation;
