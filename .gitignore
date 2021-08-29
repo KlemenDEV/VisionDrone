@@ -139,4 +139,5 @@ CATKIN_IGNORE
 
 # End of https://www.toptal.com/developers/gitignore/api/ros,clion
 
-data/
+data/inputs
+data/outputs
