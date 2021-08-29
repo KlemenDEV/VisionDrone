@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
         std_msgs
         cv_bridge
         sensor_msgs
+        velocity_integrator
         )
 
 catkin_package()
