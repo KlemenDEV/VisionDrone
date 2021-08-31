@@ -30,10 +30,11 @@
     </node>
 
     <!-- Pose to matlab -->
-    <node type="pose2matlab.py" name="gps_pose_slam" pkg="visiondrone">
+    <node type="pose2matlab.py" name="gps_pose_slam" pkg="visiondrone" output="screen">
         <param name="pose" value="/orbslam3/pose"/>
         <param name="gt" value="/ublox/fix/local"/>
         <param name="velocity" value="/estimate/velocity_out"/>
+        <param name="imu_data" value="/imu/9dof"/>
         <param name="outfile" value="$(find visiondrone)/../../data/outputs/flow_px4_$(arg bag_file_name).mat"/>
     </node>
 

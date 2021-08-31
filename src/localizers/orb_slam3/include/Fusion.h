@@ -31,43 +31,17 @@
 
 using namespace std;
 
-enum TrackerState {
-    IDLE, SLAM_TRACKING, DEAD_RECKONING
-};
-
 class Fusion {
 
 private:
     float slam_ox = 0, slam_oy = 0;
-    float px = 0, py = 0, p_yaw = 0;
+    double t_last = -1;
 
-    float yaw_offset = 0;
-
-    Eigen::Vector3d velocity;
-    Eigen::Vector3d aBias;
-
-    vector<sensor_msgs::Imu> imuBuffer;
-    std::mutex imuMutex;
-
-    std::chrono::time_point<std::chrono::high_resolution_clock> time_last;
-
-    typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Imu, sensor_msgs::Imu> syncPolicy;
-    typedef message_filters::Synchronizer <syncPolicy> syncer;
-    message_filters::Subscriber <sensor_msgs::Imu> imu1;
-    message_filters::Subscriber <sensor_msgs::Imu> imu2;
-    std::shared_ptr<syncer> syncptr;
-
-    TrackerState state = IDLE;
+    ros::Publisher publisher_velocity;
 
 public:
     explicit Fusion(ros::NodeHandle *nh);
 
-    void dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw, vector<ORB_SLAM3::IMU::Point> &vImuMeas);
-
-    void deadReckoning();
-
-    void tracking();
-
-    void imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg, const sensor_msgs::Imu::ConstPtr &msg2);
+    void dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw);
 
 };

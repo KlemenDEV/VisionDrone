@@ -18,4 +18,7 @@
         <param name="path_to_settings" value="$(find orb_slam3)/orb_slam3.yaml"/>
         <param name="visualize" value="$(arg visualize)"/>
     </node>
+
+    <!-- Velocity to position -->
+    <node pkg="velocity_integrator" type="velocity_integrator_node" name="integrator" required="true"/>
 </launch>

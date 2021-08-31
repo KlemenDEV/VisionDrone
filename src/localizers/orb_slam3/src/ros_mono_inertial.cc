@@ -149,7 +149,7 @@ void ImageGrabber::SyncWithImu() {
 
             cv::Mat Tcw = mpSLAM->TrackMonocular(im, tIm, vImuMeas);
 
-            fusion->dataSLAM(mpSLAM, Tcw, vImuMeas);
+            fusion->dataSLAM(mpSLAM, Tcw);
         }
 
         std::chrono::milliseconds tSleep(1);
