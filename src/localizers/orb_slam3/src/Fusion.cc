@@ -6,11 +6,6 @@ Fusion::Fusion(ros::NodeHandle *nh) {
 
 void Fusion::dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw) {
     if (Tcw.rows == 4 && Tcw.cols == 4) { // valid data
-        /*cv::Mat Twc(4, 4, CV_32F);
-        cv::invert(Tcw, Twc);
-        float slam_x = Twc.at<float>(0, 3);
-        float slam_y = Twc.at<float>(1, 3);*/
-
         float slam_x = Tcw.at<float>(0, 3);
         float slam_y = Tcw.at<float>(1, 3);
 
