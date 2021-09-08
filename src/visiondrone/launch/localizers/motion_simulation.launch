@@ -10,11 +10,11 @@
         <param name="relative" value="true"/>
     </node>
 
-    <!-- Dead reckoning -->
-    <node pkg="dead_reckoning" type="dead_reckoning" name="dead_reckoning" required="true"/>
+    <!-- Motion_simulation -->
+    <node pkg="motion_simulation" type="motion_simulation.py" name="motion_simulation" required="true" output="screen"/>
 
-    <remap from="/estimate/velocity_out" to="/dead_reckoning/velocity_out"/>
+    <remap from="/estimate/velocity_out" to="/motion_simulation/velocity_out"/>
 
     <!-- Velocity to position -->
-    <node pkg="velocity_integrator" type="velocity_integrator_node" name="integrator" required="true"/>
+    <node pkg="velocity_integrator" type="velocity_integrator_node" name="optical_flow" required="true"/>
 </launch>

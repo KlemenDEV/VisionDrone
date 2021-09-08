@@ -31,3 +31,5 @@ add_executable(
 
 add_dependencies(velocity_integrator_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(velocity_integrator_node ${catkin_LIBRARIES})
+
+catkin_install_python(PROGRAMS script/velocity_fusion.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

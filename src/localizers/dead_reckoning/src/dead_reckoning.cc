@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
     syncptr.reset(new syncer(syncPolicy(15), imu1, imu2));
     syncptr->registerCallback(boost::bind(imuDataCallback, _1, _2));
 
-    publisher_velocity = nh.advertise<geometry_msgs::TwistWithCovarianceStamped>("/estimate/velocity_out", 1);
+    publisher_velocity = nh.advertise<geometry_msgs::TwistWithCovarianceStamped>("/dead_reckoning/velocity_out", 1);
 
     ros::spin();
     ros::shutdown();

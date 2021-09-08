@@ -19,6 +19,8 @@
         <param name="visualize" value="$(arg visualize)"/>
     </node>
 
+    <remap from="/estimate/velocity_out" to="/orb_slam3/velocity_out"/>
+
     <!-- Velocity to position -->
     <node pkg="velocity_integrator" type="velocity_integrator_node" name="integrator" required="true"/>
 </launch>

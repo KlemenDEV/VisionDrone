@@ -1,7 +1,7 @@
 #include "Fusion.h"
 
 Fusion::Fusion(ros::NodeHandle *nh) {
-    publisher_velocity = nh->advertise<geometry_msgs::TwistWithCovarianceStamped>("/estimate/velocity_out", 1);
+    publisher_velocity = nh->advertise<geometry_msgs::TwistWithCovarianceStamped>("/orb_slam3/velocity_out", 1);
 }
 
 void Fusion::dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw) {

@@ -11,7 +11,7 @@
 
     <!-- ORB_SLAM3 -->
     <include file="$(find visiondrone)/launch/localizers/3d_slam.launch">
-        <arg name="visualize" value="true"/>
+        <arg name="visualize" value="false"/>
     </include>
 
     <!-- MAP GPS LOCATION TO LOCAL -->
