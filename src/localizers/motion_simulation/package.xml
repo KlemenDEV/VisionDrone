@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-    <name>visiondrone</name>
+    <name>motion_simulation</name>
     <version>0.0.0</version>
-    <description>The visiondrone package</description>
+    <description>The motion_simulation package</description>
 
     <maintainer email="pylo@todo.todo">pylo</maintainer>
 
@@ -17,14 +17,10 @@
     <exec_depend>rospy</exec_depend>
 
     <depend>sensor_msgs</depend>
-    <depend>cv_bridge</depend>
     <depend>std_msgs</depend>
-    <depend>image_transport</depend>
 
     <depend>geometry_msgs</depend>
     <depend>geonav_transform</depend>
-
-    <depend>velocity_integrator</depend>
 
     <export>
     </export>

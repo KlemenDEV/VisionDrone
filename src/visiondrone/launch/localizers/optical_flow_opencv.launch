@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+    <!-- Drone TFs -->
+    <include file="$(find visiondrone)/launch/processing/tf.launch"/>
+
+    <!-- Height estimation -->
+    <node pkg="height_estimation" type="height_estimation_node" name="height_estimation" output="screen"
+          required="true">
+        <param name="relative" value="true"/>
+    </node>
+
+    <!-- Optical flow (image to velocity) -->
+    <node pkg="px4_optical_flow" type="px4flow_node" name="optic_flow" required="true"/>
+
+    <remap from="/estimate/velocity_out" to="/optical_flow/velocity_out"/>
+
+    <!-- Velocity to position -->
+    <node pkg="velocity_integrator" type="velocity_integrator_node" name="optical_flow" required="true"/>
+</launch>

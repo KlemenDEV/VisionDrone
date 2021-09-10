@@ -9,10 +9,8 @@
     <node pkg="rosbag" type="play" name="data_loader"
           args="$(find visiondrone)/../../data/inputs/$(arg bag_file_name).bag"/>
 
-    <!-- ORB_SLAM3 -->
-    <include file="$(find visiondrone)/launch/localizers/3d_slam.launch">
-        <arg name="visualize" value="false"/>
-    </include>
+    <!-- Optical flow -->
+    <include file="$(find visiondrone)/launch/localizers/optical_flow_opencv.launch"/>
 
     <!-- MAP GPS LOCATION TO LOCAL -->
     <node pkg="geonav_transform" type="geonav_transform_node" name="gt_to_local" required="true">
@@ -37,7 +35,7 @@
         <param name="gt" value="/ublox/fix/local"/>
         <param name="velocity" value="/estimate/velocity_out"/>
         <param name="imu_data" value="/imu/9dof"/>
-        <param name="outfile" value="$(find visiondrone)/../../data/outputs/orbslam3_$(arg bag_file_name).mat"/>
+        <param name="outfile" value="$(find visiondrone)/../../data/outputs/flow_opencv_$(arg bag_file_name).mat"/>
     </node>
 
     <!-- Quadcopter model -->
