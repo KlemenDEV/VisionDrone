@@ -11,6 +11,10 @@ void Fusion::dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw) {
 
         double time_now = ros::Time::now().toSec();
 
+        geometry_msgs::TwistWithCovarianceStamped velocitymsg;
+        velocitymsg.header.frame_id = "uav_velocity";
+        velocitymsg.header.stamp = ros::Time::now();
+
         if (mpSLAM->GetTimeFromIMUInit() > 0 && mpSLAM->mpTracker->mState == ORB_SLAM3::Tracking::OK) {
             if (t_last == -1) {
                 t_last = time_now;
@@ -21,9 +25,6 @@ void Fusion::dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw) {
             double vx = (slam_x - slam_ox) / dt;
             double vy = (slam_y - slam_oy) / dt;
 
-            geometry_msgs::TwistWithCovarianceStamped velocitymsg;
-            velocitymsg.header.frame_id = "uav_velocity";
-            velocitymsg.header.stamp = ros::Time::now();
             velocitymsg.twist.twist.linear.x = vx;
             velocitymsg.twist.twist.linear.y = vy;
             publisher_velocity.publish(velocitymsg);
@@ -31,6 +32,9 @@ void Fusion::dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw) {
             t_last = time_now;
         } else {
             t_last = -1; // reset velocity
+
+            velocitymsg.twist.covariance[0] = NAN;
+            publisher_velocity.publish(velocitymsg);
         }
 
         slam_ox = slam_x;

@@ -54,7 +54,7 @@ void imuDataCallback(const sensor_msgs::Imu::ConstPtr &imu_msg2) {
     vx -= ax * dt * 0.25;
     vy += ay * dt * 0.25;
 
-    if (counter % 10 == 0) {
+    if (counter % 25 == 0) {
         geometry_msgs::TwistWithCovarianceStamped velocitymsg;
         velocitymsg.header.frame_id = "uav_velocity";
         velocitymsg.header.stamp = imu_msg2->header.stamp;

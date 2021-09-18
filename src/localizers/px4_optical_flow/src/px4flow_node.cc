@@ -70,6 +70,12 @@ void callbackImage(const sensor_msgs::ImageConstPtr &msg) {
     velocity.header.stamp = msg->header.stamp;
     velocity.twist.twist.linear.x = ((double) cy) * -29.0 * abs(height_last / cos(pitch));
     velocity.twist.twist.linear.y = ((double) cx) * -29.0 * abs(height_last / cos(roll));
+
+    if(qty < 0)
+        velocity.twist.covariance[0] = NAN;
+    else
+        velocity.twist.covariance[0] = qty / 255.;
+
     publisher_velocity.publish(velocity);
 }
 

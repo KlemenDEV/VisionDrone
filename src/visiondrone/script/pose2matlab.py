@@ -17,6 +17,7 @@ import time
 
 data = np.empty((0, 4), float)
 velocitydata = np.empty((0, 4), float)
+velocitysource = np.empty((0, 1), dtype='object')
 
 gtdata = np.empty((0, 4), float)
 gtvelocitydata = np.empty((0, 4), float)
@@ -77,14 +78,15 @@ def imu_cb(msg):
 
 
 def velocity_cb(msg):
-    global velocitydata, start_time
+    global velocitydata, start_time, velocitysource
     if start_time is not None:
+        velocitysource = np.vstack((velocitysource, np.array(msg.header.frame_id, dtype='object')))
         velocitydata = np.vstack((velocitydata, np.array(
             [time.time() - start_time, msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.linear.z])))
 
 
 def shutdown():
-    global data
+    global data, gtdata, gtvelocitydata, gtvelocitydatalocal, datum, velocitydata, velocitysource
     path = os.path.abspath(rospy.get_param("~outfile"))
     rospy.logwarn("Writing matlab file " + path + ", " + str(data.size) + " data entries")
     io.savemat(path, mdict={
@@ -94,6 +96,7 @@ def shutdown():
         'gtvelocitylocal': gtvelocitydatalocal,
         'datum': datum,
         'velocity': velocitydata,
+        'velocitysource': velocitysource,
     })
 
 

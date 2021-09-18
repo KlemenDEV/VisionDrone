@@ -33,10 +33,10 @@
     <node type="pose2matlab.py" name="gps_pose_slam" pkg="visiondrone" output="screen">
         <param name="pose" value="/orbslam3/pose"/>
         <param name="gt" value="/ublox/fix/local"/>
-        <param name="velocity" value="/estimate/velocity_out"/>
+        <param name="velocity" value="/motion_simulation/velocity_out"/>
         <param name="imu_data" value="/imu/9dof"/>
         <param name="outfile"
-               value="$(find visiondrone)/../../data/outputs/motion_simulation_$(arg bag_file_name).mat"/>
+               value="$(find visiondrone)/../../data/outputs/$(arg bag_file_name)_motion_simulation.mat"/>
     </node>
 
     <!-- Quadcopter model -->

@@ -7,6 +7,7 @@ from geometry_msgs.msg import TwistWithCovarianceStamped
 from std_msgs.msg import Float64
 from sensor_msgs.msg import Imu
 import time
+import math
 
 quad = quadcopter.Quadcopter(
     {
@@ -56,6 +57,7 @@ def rc_out_cb(msg):
         msg.channels[3],
     ])
     quad.update(dt)
+
     linear_rate = quad.get_linear_rate('q1')
 
     pose = TwistWithCovarianceStamped()
@@ -64,6 +66,11 @@ def rc_out_cb(msg):
     pose.twist.twist.linear.x = linear_rate[0]
     pose.twist.twist.linear.y = -linear_rate[1]
     pose.twist.twist.linear.z = 0
+
+    rate_total = math.sqrt(pow(linear_rate[0], 2) + pow(linear_rate[1], 2))
+    if rate_total > 15:
+        pose.twist.covariance[0] = float("nan")
+
     velocity_pub.publish(pose)
 
     time_last = time.time()

@@ -16,6 +16,12 @@ bool initialzed = false;
 PoseManager *poseManager;
 
 void velocityCallback(const geometry_msgs::TwistWithCovarianceStamped::ConstPtr &msg) {
+    if(isnan(msg->twist.covariance[0])) {
+        initialzed = false;
+        ROS_WARN_THROTTLE(1, "Velocity integration disabled, invalid data received");
+        return;
+    }
+
     if (!initialzed) {
         time_last = msg->header.stamp;
         initialzed = true;

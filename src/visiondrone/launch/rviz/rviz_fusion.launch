@@ -9,8 +9,10 @@
     <node pkg="rosbag" type="play" name="data_loader"
           args="$(find visiondrone)/../../data/inputs/$(arg bag_file_name).bag"/>
 
-    <!-- Dead reckoning -->
-    <include file="$(find visiondrone)/launch/localizers/dead_reckoning.launch"/>
+    <!-- fusion -->
+    <include file="$(find visiondrone)/launch/localizers/fusion.launch">
+        <arg name="visualize" value="false"/>
+    </include>
 
     <!-- MAP GPS LOCATION TO LOCAL -->
     <node pkg="geonav_transform" type="geonav_transform_node" name="gt_to_local" required="true">
@@ -33,9 +35,9 @@
     <node type="pose2matlab.py" name="gps_pose_slam" pkg="visiondrone" output="screen">
         <param name="pose" value="/orbslam3/pose"/>
         <param name="gt" value="/ublox/fix/local"/>
-        <param name="velocity" value="/dead_reckoning/velocity_out"/>
+        <param name="velocity" value="/estimate/velocity_out"/>
         <param name="imu_data" value="/imu/9dof"/>
-        <param name="outfile" value="$(find visiondrone)/../../data/outputs/$(arg bag_file_name)_dead_reckoning.mat"/>
+        <param name="outfile" value="$(find visiondrone)/../../data/outputs/$(arg bag_file_name)_fusion.mat"/>
     </node>
 
     <!-- Quadcopter model -->
