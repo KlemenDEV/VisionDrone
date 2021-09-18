@@ -33,18 +33,15 @@ int main(int argc, char **argv) {
     }
 
     imu.selectFilter(QuatFilterSel::MADGWICK);
-    imu.setFilterIterations(15);
+    imu.setFilterIterations(10);
     imu.setMagneticDeclination(4.35);
 
     imu.setup(&dev, &dev_mag);
 
-    imu.setAccBias(318.243896484375, 218.146347045898, 813.560546875000);
-    imu.setGyroBias(-160.829269409180, 106.951217651367, 29.487804412842);
+    imu.setAccBias(347.707317352295, -34.146343231201, 892.585937500000);
+    imu.setGyroBias(-145.926834106445, 105.682929992676, 10.487804412842);
     imu.setMagBias(67.437385559082, 141.586883544922, -13.775641441345);
     imu.setMagScale(1.004357337952, 1.010964989662, 0.985042750835);
-
-    tf2::Quaternion sensor_rotation;
-    sensor_rotation.setRPY(0, M_PI, 0);
 
     ros::Rate loop_rate(200);
     while (ros::ok()) {
@@ -59,16 +56,14 @@ int main(int argc, char **argv) {
             imu_msg.angular_velocity.z = imu.getGyroZ() * DEG_TO_RAD;
 
             // imu returns in g's, convert to m/s^2
-            imu_msg.linear_acceleration.x = imu.getLinearAccX() * G;
-            imu_msg.linear_acceleration.y = imu.getLinearAccY() * G;
-            imu_msg.linear_acceleration.z = imu.getLinearAccZ() * G;
+            imu_msg.linear_acceleration.x = imu.getAccX() * G;
+            imu_msg.linear_acceleration.y = imu.getAccY() * G;
+            imu_msg.linear_acceleration.z = imu.getAccZ() * G;
 
 
-            tf2::Quaternion orientation_tf2(imu.getQuaternionX(), imu.getQuaternionY(), imu.getQuaternionZ(),
-                                            imu.getQuaternionW());
-            tf2::Quaternion rotated_orientation_tf2 = (sensor_rotation * orientation_tf2).normalize();
-
-            imu_msg.orientation = tf2::toMsg(rotated_orientation_tf2);
+            tf2::Quaternion orientation;
+            orientation.setRPY(imu.getEulerX() * DEG_TO_RAD, imu.getEulerY() * DEG_TO_RAD, imu.getEulerZ() * DEG_TO_RAD);
+            imu_msg.orientation = tf2::toMsg(orientation);
 
             imu_pub.publish(imu_msg);
         }

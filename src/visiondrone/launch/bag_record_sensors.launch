@@ -24,5 +24,11 @@
           /imu/9dof
 
           /mavros/imu/static_pressure
+
+	  /mavros/global_position/compass_hdg
+	  /mavros/imu/data
+
+          /mavros/rc/out
+          /mavros/rc/in
        ')"/>
 </launch>
