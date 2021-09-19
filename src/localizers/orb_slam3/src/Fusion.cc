@@ -25,8 +25,8 @@ void Fusion::dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw) {
             double vx = (slam_x - slam_ox) / dt;
             double vy = (slam_y - slam_oy) / dt;
 
-            velocitymsg.twist.twist.linear.x = vx;
-            velocitymsg.twist.twist.linear.y = vy;
+            velocitymsg.twist.twist.linear.x = vx * -30.0;
+            velocitymsg.twist.twist.linear.y = vy * -30.0;
             publisher_velocity.publish(velocitymsg);
 
             t_last = time_now;

@@ -6,7 +6,6 @@ from mavros_msgs.msg import RCOut
 from geometry_msgs.msg import TwistWithCovarianceStamped
 from std_msgs.msg import Float64
 from sensor_msgs.msg import Imu
-import time
 import math
 
 quad = quadcopter.Quadcopter(
@@ -22,9 +21,10 @@ quad = quadcopter.Quadcopter(
 
 velocity_pub = None
 
-time_last = None
-
 height = 0
+
+time_last = None
+started = False
 
 
 def height_cb(msg):
@@ -33,29 +33,16 @@ def height_cb(msg):
 
 
 def orient_cb(msg):
-    global quad
+    global time_last, velocity_pub, quad, started
+
+    if height < 0.3 and not started:
+        time_last = msg.header.stamp.secs
+        started = True
+        return
+
+    dt = msg.header.stamp.secs - time_last
+
     quad.set_rotation(msg.orientation)
-
-
-def rc_out_cb(msg):
-    global time_last, velocity_pub, quad
-
-    if height < 0.4:
-        time_last = None
-        return
-
-    if time_last is None:
-        time_last = time.time()
-        return
-
-    dt = time.time() - time_last
-
-    quad.set_motor_speeds('q1', [
-        msg.channels[0],
-        msg.channels[1],
-        msg.channels[2],
-        msg.channels[3],
-    ])
     quad.update(dt)
 
     linear_rate = quad.get_linear_rate('q1')
@@ -68,21 +55,32 @@ def rc_out_cb(msg):
     pose.twist.twist.linear.z = 0
 
     rate_total = math.sqrt(pow(linear_rate[0], 2) + pow(linear_rate[1], 2))
-    if rate_total > 15:
+    if rate_total > 50:
         pose.twist.covariance[0] = float("nan")
 
     velocity_pub.publish(pose)
 
-    time_last = time.time()
+    time_last = msg.header.stamp.secs
+
+
+def rc_out_cb(msg):
+    global quad
+
+    quad.set_motor_speeds('q1', [
+        msg.channels[0],
+        msg.channels[1],
+        msg.channels[2],
+        msg.channels[3],
+    ])
 
 
 if __name__ == "__main__":
     rospy.init_node('simulator')
 
-    velocity_pub = rospy.Publisher('/motion_simulation/velocity_out', TwistWithCovarianceStamped, queue_size=10)
+    velocity_pub = rospy.Publisher('/motion_simulation/velocity_out', TwistWithCovarianceStamped, queue_size=15)
 
-    rc_out_sub = rospy.Subscriber('/mavros/rc/out', RCOut, rc_out_cb, queue_size=10)
-    height_sub = rospy.Subscriber('/drone/height_estimate', Float64, height_cb, queue_size=10)
-    orient_sub = rospy.Subscriber('/imu/9dof', Imu, orient_cb, queue_size=10)
+    rc_out_sub = rospy.Subscriber('/mavros/rc/out', RCOut, rc_out_cb, queue_size=15)
+    height_sub = rospy.Subscriber('/drone/height_estimate', Float64, height_cb, queue_size=15)
+    orient_sub = rospy.Subscriber('/imu/9dof', Imu, orient_cb, queue_size=15)
 
     rospy.spin()

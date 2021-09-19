@@ -25,13 +25,12 @@ class Propeller:
 class Quadcopter:
     # State space representation: [x y z x_dot y_dot z_dot theta phi gamma theta_dot phi_dot gamma_dot]
     # From Quadcopter Dynamics, Simulation, and Control by Andrew Gibiansky
-    def __init__(self, quads, gravity=9.81):
+    def __init__(self, quads):
         self.quads = quads
-        self.g = gravity
         self.r = 0
         self.p = 0
         self.y = 0
-        self.ode = scipy.integrate.ode(self.state_dot).set_integrator('vode', nsteps=1000, method='bdf')
+        self.ode = scipy.integrate.ode(self.state_dot).set_integrator('vode', nsteps=500, method='bdf')
         for key in self.quads:
             self.quads[key]['state'] = np.zeros(3)
             self.quads[key]['m1'] = Propeller(self.quads[key]['prop_size'][0], self.quads[key]['prop_size'][1])
@@ -57,8 +56,8 @@ class Quadcopter:
         dragx = 0.05
         dragy = 0.008
 
-        state_dot[0] = aprop * math.sin(self.p) - dragx * pow(self.quads[key]['state'][0], 2)
-        state_dot[1] = aprop * math.sin(self.r) - dragy * pow(self.quads[key]['state'][1], 2)
+        state_dot[0] = aprop * abs(math.sin(self.p)) - dragx * pow(self.quads[key]['state'][0], 2)
+        state_dot[1] = aprop * abs(math.sin(self.r)) - dragy * pow(self.quads[key]['state'][1], 2)
 
         return state_dot
 

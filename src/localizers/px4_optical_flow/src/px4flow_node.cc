@@ -68,8 +68,8 @@ void callbackImage(const sensor_msgs::ImageConstPtr &msg) {
     geometry_msgs::TwistWithCovarianceStamped velocity;
     velocity.header.frame_id = "uav_velocity";
     velocity.header.stamp = msg->header.stamp;
-    velocity.twist.twist.linear.x = ((double) cy) * -29.0 * abs(height_last / cos(pitch));
-    velocity.twist.twist.linear.y = ((double) cx) * -29.0 * abs(height_last / cos(roll));
+    velocity.twist.twist.linear.x = ((double) cy) * -30.0 * abs(height_last / cos(pitch));
+    velocity.twist.twist.linear.y = ((double) cx) * -30.0 * abs(height_last / cos(roll));
 
     if(qty < 0)
         velocity.twist.covariance[0] = NAN;
