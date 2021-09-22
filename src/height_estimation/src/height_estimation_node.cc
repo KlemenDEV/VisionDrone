@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
 
     AltitudeEstimator altitude_local = AltitudeEstimator(0.0173244,    // sigma Accel
                                                          0.00202674666,    // sigma Gyro
-                                                         0.01,   // sigma Baro
+                                                         0.008,   // sigma Baro
                                                          0.2,    // ca
                                                          0.5);    // accelThreshold
     altitude = &altitude_local;
