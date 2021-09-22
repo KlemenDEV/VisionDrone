@@ -5,7 +5,7 @@
     <include file="$(find visiondrone)/launch/subsystems/sensors.launch"/>
 
     <!-- START REALSENSE CAMERA -->
-    <include file="$(find visiondrone)/launch/subsystems/rs_d435i_iri.launch"/>
+    <include file="$(find visiondrone)/launch/subsystems/rs_d435i_ir.launch"/>
 
     <!-- START PI CAMERA MODULE -->
     <include file="$(find visiondrone)/launch/subsystems/pi_camera.launch"/>
@@ -13,22 +13,16 @@
     <!-- RECORD ROSBAG -->
     <node pkg="rosbag" type="record" name="data_capture" required="true"
           args="$(eval 'record --tcpnodelay --buffsize 0 -O /media/usb/rosbags/' + raw_input('Enter rec file name: ') + '.bag
-          /camera/imu
-          /camera/infra1/image_rect_raw
 
+          /camera/infra1/image_rect_raw
           /camera/orthogonal
 
           /ublox/fix
-          /ublox/fix_velocity
 
           /imu/9dof
 
           /mavros/imu/static_pressure
-
-	  /mavros/global_position/compass_hdg
-	  /mavros/imu/data
-
           /mavros/rc/out
-          /mavros/rc/in
+
        ')"/>
 </launch>
