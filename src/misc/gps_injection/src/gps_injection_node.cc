@@ -20,6 +20,14 @@ GPSData gps_pos_predicted;
 volatile bool inject_data = false;
 
 void rcInCallback(const mavros_msgs::RCIn::ConstPtr &msg) {
+    // CHeck channel 3 (throttle) for failsafe indication
+    bool is_failsafe = msg->channels[2] < 999;
+    if (is_failsafe) {
+        ROS_WARN("FAILSAFE MODE: running GPS pass-through");
+        inject_data = false; // force GPS pass-through
+        return;
+    }
+
     // switch depending on the Channel 8 value (> 1500 -> inject data)
     bool set_value = msg->channels[7] > 1800;
 
@@ -54,37 +62,33 @@ int main(int argc, char **argv) {
 
     // Position prediction subscribers
     ros::Subscriber predictpose_sub = nh.subscribe<sensor_msgs::NavSatFix>
-            ("/visionpos/pose", 1, &GPSData::consume, &gps_pos_predicted);
+            ("/estimate/pose", 1, &GPSData::consume, &gps_pos_predicted);
     ros::Subscriber predictvel_sub = nh.subscribe<geometry_msgs::TwistWithCovarianceStamped>
-            ("/visionpos/velocity", 1, &GPSData::consume, &gps_pos_predicted);
+            ("/estimate/velocity", 1, &GPSData::consume, &gps_pos_predicted);
 
     // Set inject_data depending on mavlink RC messages
     ros::Subscriber mavlinkrc_sub = nh.subscribe<mavros_msgs::RCIn>
             ("/mavros/rc/in", 1, rcInCallback);
 
     UBXSender ubxSender;
-    uint32_t gps_time = 0;
 
     ROS_DEBUG("GPS injector ready");
 
     while (ros::ok()) {
         if (inject_data && gps_pos_predicted.isComplete()) {
-            gps_pos_predicted.setTime(gps_time); // use local time
+            gps_pos_predicted.setTime(ros::Time::now().nsec * 10e-6); // use local time
 
             ubxSender.sendData(&gps_pos_predicted);
 
             gps_pos_predicted.markDirty(); // mark data dirty so we do not re-send same data
         } else if (!inject_data &&
                    gps_pos_antenna.isComplete()) { // if we are not in injection mode, send data if complete
-            gps_pos_antenna.setTime(gps_time); // use local time
+            gps_pos_antenna.setTime(ros::Time::now().nsec * 10e-6); // use local time
 
             ubxSender.sendData(&gps_pos_antenna);
 
             gps_pos_antenna.markDirty(); // mark data dirty so we do not re-send same data
         }
-
-        // increment GPS time for 20ms (50Hz loop)
-        gps_time += 20;
 
         ros::spinOnce();
 

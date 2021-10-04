@@ -34,6 +34,8 @@ void Fusion::dataSLAM(ORB_SLAM3::System *mpSLAM, const cv::Mat &Tcw) {
             t_last = -1; // reset velocity
 
             velocitymsg.twist.covariance[0] = NAN;
+            velocitymsg.twist.twist.linear.x = 0;
+            velocitymsg.twist.twist.linear.y = 0;
             publisher_velocity.publish(velocitymsg);
         }
 

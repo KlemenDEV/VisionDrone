@@ -60,7 +60,6 @@ int main(int argc, char **argv) {
             imu_msg.linear_acceleration.y = imu.getAccY() * G;
             imu_msg.linear_acceleration.z = imu.getAccZ() * G;
 
-
             tf2::Quaternion orientation;
             orientation.setRPY(imu.getEulerX() * DEG_TO_RAD, imu.getEulerY() * DEG_TO_RAD, imu.getEulerZ() * DEG_TO_RAD);
             imu_msg.orientation = tf2::toMsg(orientation);

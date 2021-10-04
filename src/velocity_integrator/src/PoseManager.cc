@@ -1,4 +1,4 @@
-#include "PoseManager.h"-
+#include "PoseManager.h"
 
 PoseManager::PoseManager(ros::NodeHandle *nh) {
     gps_pub = nh->advertise<sensor_msgs::NavSatFix>("/ublox/fix_tracking", 1);
@@ -15,6 +15,7 @@ PoseManager::PoseManager(ros::NodeHandle *nh) {
 
     set_datum_client = nh->serviceClient<velocity_integrator::SetDatum>("/datum");
     set_datum_client_ref = nh->serviceClient<velocity_integrator::SetDatum>("/datum_ref");
+    set_datum_client_sim = nh->serviceClient<velocity_integrator::SetDatum>("/datum_sim");
 }
 
 #define ALPHA 0.85
@@ -35,7 +36,7 @@ void PoseManager::imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg) {
 
 void PoseManager::gpsDataCallback(const sensor_msgs::NavSatFix::ConstPtr &msg) {
     gps_last = msg;
-    if(datum_set) this->gps_pub.publish(msg);
+    if (datum_set) this->gps_pub.publish(msg);
 }
 
 void PoseManager::heightCallback(const std_msgs::Float64::ConstPtr &msg) {
@@ -81,6 +82,7 @@ void PoseManager::setGPSDatum() {
 
         yaw_mag_init = yaw_mag_curr;
         set_datum_client_ref.call(setDatum);
+        set_datum_client_sim.call(setDatum);
     } else {
         ROS_ERROR("FAILED TO PROPAGATE GLOBAL GPS HOME LOCATION (DATUM)");
     }

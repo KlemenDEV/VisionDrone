@@ -26,13 +26,13 @@ public:
 
     void GrabImu(const sensor_msgs::ImuConstPtr &imu_msg);
 
-    queue<sensor_msgs::ImuConstPtr> imuBuf;
+    queue <sensor_msgs::ImuConstPtr> imuBuf;
     std::mutex mBufMutex;
 };
 
 class ImageGrabber {
 public:
-    ImageGrabber(ORB_SLAM3::System *pSLAM, ImuGrabber *pImuGb) : mpSLAM(pSLAM), mpImuGb(pImuGb) {}
+    ImageGrabber(ORB_SLAM3::System *pSLAM, ImuGrabber *pImuGb) : mpSLAM(pSLAM), mpImuGb(pImuGb){}
 
     void GrabImage(const sensor_msgs::ImageConstPtr &msg);
 
@@ -40,7 +40,7 @@ public:
 
     void SyncWithImu();
 
-    queue<sensor_msgs::ImageConstPtr> img0Buf;
+    queue <sensor_msgs::ImageConstPtr> img0Buf;
     std::mutex mBufMutex;
 
     ORB_SLAM3::System *mpSLAM;
@@ -73,12 +73,12 @@ int main(int argc, char **argv) {
     ImageGrabber igb(&SLAM, &imugb);
 
     std::string topic_imu;
-    nh.param<std::string>("topic_imu", topic_imu, "/camera/imu");
-    ros::Subscriber sub_imu = nh.subscribe(topic_imu, 15, &ImuGrabber::GrabImu, &imugb);
+    nh.param<std::string>("topic_imu", topic_imu, "/imu/9dof");
+    ros::Subscriber sub_imu = nh.subscribe(topic_imu, 1000, &ImuGrabber::GrabImu, &imugb);
 
     std::string topic_img;
     nh.param<std::string>("topic_img", topic_img, "/camera/infra1/image_rect_raw");
-    ros::Subscriber sub_img = nh.subscribe(topic_img, 1, &ImageGrabber::GrabImage, &igb);
+    ros::Subscriber sub_img = nh.subscribe(topic_img, 100, &ImageGrabber::GrabImage, &igb);
 
     std::thread sync_thread(&ImageGrabber::SyncWithImu, &igb);
 
@@ -112,6 +112,8 @@ cv::Mat ImageGrabber::GetImage(const sensor_msgs::ImageConstPtr &img_msg) {
     return cv_ptr->image.clone();
 }
 
+#define IMU_T_OFFSET -0.1
+
 void ImageGrabber::SyncWithImu() {
     cv::Mat im;
     double tIm;
@@ -119,22 +121,20 @@ void ImageGrabber::SyncWithImu() {
     while (ros::ok()) {
         if (!img0Buf.empty() && !mpImuGb->imuBuf.empty()) {
             tIm = img0Buf.front()->header.stamp.toSec();
-            if (tIm > mpImuGb->imuBuf.back()->header.stamp.toSec())
+            if (tIm > mpImuGb->imuBuf.back()->header.stamp.toSec() - IMU_T_OFFSET)
                 continue;
 
-            {
-                this->mBufMutex.lock();
-                im = GetImage(img0Buf.front());
-                img0Buf.pop();
-                this->mBufMutex.unlock();
-            }
+            this->mBufMutex.lock();
+            im = GetImage(img0Buf.front());
+            img0Buf.pop();
+            this->mBufMutex.unlock();
 
-            vector<ORB_SLAM3::IMU::Point> vImuMeas;
+            vector <ORB_SLAM3::IMU::Point> vImuMeas;
             mpImuGb->mBufMutex.lock();
             if (!mpImuGb->imuBuf.empty()) {
                 while (!mpImuGb->imuBuf.empty() &&
-                       mpImuGb->imuBuf.front()->header.stamp.toSec() <= tIm) {
-                    double t = mpImuGb->imuBuf.front()->header.stamp.toSec();
+                       mpImuGb->imuBuf.front()->header.stamp.toSec() - IMU_T_OFFSET <= tIm) {
+                    double t = mpImuGb->imuBuf.front()->header.stamp.toSec() - IMU_T_OFFSET;
                     cv::Point3f acc((float) mpImuGb->imuBuf.front()->linear_acceleration.x,
                                     (float) mpImuGb->imuBuf.front()->linear_acceleration.y,
                                     (float) mpImuGb->imuBuf.front()->linear_acceleration.z);
