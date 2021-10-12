@@ -84,7 +84,5 @@ int main(int argc, char **argv) {
 
     ros::spin();
 
-    SLAM.Shutdown();
-
     return 0;
 }

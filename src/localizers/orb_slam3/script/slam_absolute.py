@@ -8,6 +8,8 @@ import random
 import numpy as np
 
 pose_pub = None
+p_off_x = None
+p_off_y = None
 
 # slam last values
 lsy = None
@@ -31,16 +33,16 @@ ransac_m_scale = 0
 def perform_ransac():
     global ransac_m_scale, ransac_err
 
-    if len(ransac_pairs) < 40:
+    if len(ransac_pairs) < 100:
         return
 
     n_iter = 0
     while True:
-        if n_iter > 5000:
+        if n_iter > 15000:
             break
+        n_iter = n_iter + 1
 
         r_gt_y, r_sp_y = random.choice(ransac_pairs)
-
         if r_gt_y == 0 or r_sp_y == 0:
             continue
 
@@ -56,8 +58,6 @@ def perform_ransac():
         if err_curr < ransac_err:
             ransac_m_scale = new_ransac_m_scale
             ransac_err = err_curr
-
-        n_iter = n_iter + 1
 
 
 # noinspection PyUnresolvedReferences,PyTypeChecker
@@ -76,14 +76,14 @@ def height_callback(height):
             else:
                 print("Ransac in progress. Frames: %d" % len(ransac_pairs))
 
-            if ransac_err < 0.4:
+            if ransac_err <= 0.3:
                 global yaw_offs_init
                 print("RANSAC scale: %f su/m" % ransac_m_scale)
 
                 # determine yaw offset
                 yaw_offs_init = last_yaw - lsyaw
                 yaw_offs_init = np.arctan2(np.sin(yaw_offs_init), np.cos(yaw_offs_init))
-                print("Yaw offset: %f deg" % (yaw_offs_init * 180 / np.pi))
+                print("Yaw offset: %f deg" % ((yaw_offs_init * 180) / np.pi))
 
                 ransac_complete = True
 
@@ -108,13 +108,22 @@ def pose_callback(pose):
         return
 
     if ransac_complete is True:
-        pose_absolute = PoseStamped()
-        pose_absolute.header.stamp = rospy.get_rostime()
+        global p_off_x, p_off_y
+
         lg_x = pose.pose.pose.position.x * ransac_m_scale
         lg_y = pose.pose.pose.position.z * ransac_m_scale
 
-        pose_absolute.pose.position.y = np.cos(yaw_offs_init) * lg_x - np.sin(yaw_offs_init) * lg_y
-        pose_absolute.pose.position.x = np.sin(yaw_offs_init) * lg_x + np.cos(yaw_offs_init) * lg_y
+        if p_off_x is None or p_off_y is None:
+            p_off_x = lg_x
+            p_off_y = lg_y
+
+        lg_x -= p_off_x
+        lg_y -= p_off_y
+
+        pose_absolute = PoseStamped()
+        pose_absolute.header.stamp = rospy.get_rostime()
+        pose_absolute.pose.position.y = - (np.cos(yaw_offs_init) * lg_x - np.sin(yaw_offs_init) * lg_y)
+        pose_absolute.pose.position.x = + (np.sin(yaw_offs_init) * lg_x + np.cos(yaw_offs_init) * lg_y)
         pose_pub.publish(pose_absolute)
     else:
         global lsy, lsyaw
@@ -140,10 +149,10 @@ def orient_cb(msg):
 if __name__ == "__main__":
     rospy.init_node('simulator')
 
-    pose_pub = rospy.Publisher('/orbslam3/pose_raw', PoseStamped, queue_size=1)
+    pose_pub = rospy.Publisher('/orbslam3/pose_raw', PoseStamped, queue_size=5)
 
-    pose_sub = rospy.Subscriber('/orb_slam3/pose_out', PoseWithCovarianceStamped, pose_callback, queue_size=1)
-    height_sub = rospy.Subscriber('/drone/height_estimate', Float64, height_callback, queue_size=1)
+    pose_sub = rospy.Subscriber('/orb_slam3/pose_out', PoseWithCovarianceStamped, pose_callback, queue_size=5)
+    height_sub = rospy.Subscriber('/drone/height_estimate', Float64, height_callback, queue_size=5)
     orient_sub = rospy.Subscriber('/imu/9dof', Imu, orient_cb, queue_size=15)
 
     rospy.spin()
