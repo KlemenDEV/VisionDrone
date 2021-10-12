@@ -9,7 +9,7 @@
         <param name="image_width" value="640"/>
         <param name="image_height" value="480"/>
         <param name="pixel_format" value="yuyv" />
-        <param name="framerate" value="45"/>
+        <param name="framerate" value="60"/>
         <param name="focus" value="0"/>
         <param name="camera_frame_id" value="orthogonal_camera"/>
 

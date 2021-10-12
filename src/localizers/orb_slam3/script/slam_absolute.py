@@ -38,8 +38,9 @@ def perform_ransac():
 
     n_iter = 0
     while True:
-        if n_iter > 15000:
+        if n_iter > 20000:
             break
+
         n_iter = n_iter + 1
 
         r_gt_y, r_sp_y = random.choice(ransac_pairs)
