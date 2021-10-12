@@ -13,6 +13,8 @@
 
 #include <opencv2/core/core.hpp>
 
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
 #include "System.h"
 #include "ImuTypes.h"
 
@@ -37,12 +39,23 @@ void grabImage(const sensor_msgs::ImageConstPtr &msg) {
         pose.pose.pose.position.y = Twc.at<float>(1, 3);
         pose.pose.pose.position.z = Twc.at<float>(2, 3);
 
+        tf2::Matrix3x3 tf2_rot(Twc.at<double>(0, 0), Twc.at<double>(0, 1), Twc.at<double>(0, 2),
+                               Twc.at<double>(1, 0), Twc.at<double>(1, 1), Twc.at<double>(1, 2),
+                               Twc.at<double>(2, 0), Twc.at<double>(2, 1), Twc.at<double>(2, 2));
+        tf2::Quaternion tf2_quat_rot;
+        tf2_rot.getRotation(tf2_quat_rot);
+        pose.pose.pose.orientation = tf2::toMsg(tf2_quat_rot);
+
         if (mpSLAM->mpTracker->mState == ORB_SLAM3::Tracking::OK) {
             pose.pose.covariance[0] = 0;
         } else {
             pose.pose.covariance[0] = 1;
         }
 
+        publisher.publish(pose);
+    } else {
+        geometry_msgs::PoseWithCovarianceStamped pose;
+        pose.pose.covariance[0] = 1;
         publisher.publish(pose);
     }
 }
