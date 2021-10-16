@@ -10,7 +10,7 @@
     <arg name="infra_height"        default="480"/>
     <arg name="enable_infra1"       default="true"/>
     <arg name="enable_infra2"       default="false"/>
-    <arg name="infra_fps"           default="15"/>
+    <arg name="infra_fps"           default="30"/>
 
     <rosparam>
         /camera/stereo_module/emitter_enabled: 0
