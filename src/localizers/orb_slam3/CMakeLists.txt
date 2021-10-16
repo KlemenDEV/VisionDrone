@@ -9,6 +9,8 @@ find_package(catkin REQUIRED COMPONENTS
         rospy
         tf
         sensor_msgs
+        geometry_msgs
+        sensor_msgs
         image_transport
         cv_bridge
         nav_msgs
@@ -58,13 +60,11 @@ set(LIBS
         )
 
 catkin_package(
-        INCLUDE_DIRS include
         LIBRARIES ${PROJECT_NAME}
         CATKIN_DEPENDS roscpp message_runtime geographic_msgs
 )
 
 include_directories(
-        include
         ${catkin_INCLUDE_DIRS}
         ${PROJECT_SOURCE_DIR}
         ${PROJECT_SOURCE_DIR}/../../../non_ros/orb_slam3/
@@ -73,10 +73,7 @@ include_directories(
         ${Pangolin_INCLUDE_DIRS}
 )
 
-add_executable(ORBSLAM3
-        src/ros_mono_inertial.cc
-        src/Fusion.cc
-        )
+add_executable(ORBSLAM3 src/orb_slam3.cc)
 
 add_dependencies(ORBSLAM3 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
@@ -84,3 +81,5 @@ target_link_libraries(ORBSLAM3
         ${LIBS}
         ${catkin_LIBRARIES}
         )
+
+catkin_install_python(PROGRAMS script/slam_absolute.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

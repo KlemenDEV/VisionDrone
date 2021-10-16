@@ -15,8 +15,8 @@
           args="$(eval 'record --tcpnodelay --buffsize 0 -O /media/usb/rosbags/' + raw_input('Enter rec file name: ') + '.bag
           /camera/infra1/image_rect_raw
           /camera/orthogonal
-          /ublox/fix
           /imu/9dof
+          /ublox/fix
           /mavros/imu/static_pressure
           /mavros/rc/out
        ')"/>
