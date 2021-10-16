@@ -78,9 +78,9 @@ int main(int argc, char **argv) {
 
     std::string topic_img;
     nh.param<std::string>("topic_img", topic_img, "/camera/infra1/image_rect_raw");
-    ros::Subscriber sub_img = nh.subscribe(topic_img, 1, grabImage);
+    ros::Subscriber sub_img = nh.subscribe(topic_img, 5, grabImage);
 
-    publisher = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/orb_slam3/pose_out", 1);
+    publisher = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/orb_slam3/pose_out", 10);
 
     ros::spin();
 
