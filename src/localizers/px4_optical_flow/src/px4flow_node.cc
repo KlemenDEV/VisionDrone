@@ -17,8 +17,6 @@
 #include "flow_opencv.hpp"
 #include "flow_px4.hpp"
 
-#define W_PI(x) atan2(sin(x),cos(x))
-
 OpticalFlowPX4 flowpx4(477.78586954352323, 480.6678820118329,
                        -1, // image rate
                        640, 480
@@ -39,6 +37,8 @@ double roll = 0, pitch = 0, yaw = 0;
 
 double wx, wy;
 
+double vx, vy;
+
 int init_counter = 0;
 
 bool use_px4;
@@ -53,8 +53,8 @@ void imuDataCallback(const sensor_msgs::Imu::ConstPtr &imu_msg) {
     tf2::Matrix3x3 est_rot(quat_est_rot);
     est_rot.getRPY(roll, pitch, yaw);
 
-    wx = imu_msg->angular_velocity.x;
-    wy = imu_msg->angular_velocity.y;
+    wx = imu_msg->angular_velocity.x * 0.9 + wx * 0.1;
+    wy = imu_msg->angular_velocity.y * 0.9 + wy * 0.1;
 }
 
 void callbackImage(const sensor_msgs::ImageConstPtr &msg) {
@@ -68,13 +68,19 @@ void callbackImage(const sensor_msgs::ImageConstPtr &msg) {
     else
         qty = flow.calcFlow(image->image.data, usec_stamp, dtus, cx, cy);
 
-    double height_actual = abs(height_last / (cos(roll) * cos(pitch)));
+    double sensor_dist = abs(height_last / (cos(roll) * cos(pitch)));
+
+    double nvx = sensor_dist * (wy - (double) cy / (dtus * 1e-6));
+    double nvy = sensor_dist * (wx - (double) cx / (dtus * 1e-6));
+
+    vx = nvx * 0.9 + vx * 0.1;
+    vy = nvy * 0.9 + vy * 0.1;
 
     geometry_msgs::TwistWithCovarianceStamped velocity;
     velocity.header.frame_id = "uav_velocity";
     velocity.header.stamp = msg->header.stamp;
-    velocity.twist.twist.linear.x = height_actual * (wy - (double) cy / (dtus * 1e-6));
-    velocity.twist.twist.linear.y = height_actual * (wx - (double) cx / (dtus * 1e-6));
+    velocity.twist.twist.linear.x = vx;
+    velocity.twist.twist.linear.y = vy;
 
     if (qty < 0)
         velocity.twist.covariance[0] = NAN;
@@ -101,7 +107,7 @@ int main(int argc, char **argv) {
     flow.setCameraDistortion(0.11906203790630414, -0.23224501485827584, 0.002897948377514225, -0.0026544348133675866);
 
     ros::Subscriber sub_img = nh.subscribe("/camera/orthogonal", 1, callbackImage);
-    ros::Subscriber sub_imu = nh.subscribe("/imu/9dof", 15, imuDataCallback);
+    ros::Subscriber sub_imu = nh.subscribe("/imu/9dof", 5, imuDataCallback);
     ros::Subscriber sub_height = nh.subscribe("/drone/height_estimate", 1, heightCallback);
 
     publisher_velocity = nh.advertise<geometry_msgs::TwistWithCovarianceStamped>("/optical_flow/velocity_out", 1);
