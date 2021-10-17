@@ -35,7 +35,9 @@ ros::Publisher publisher_velocity;
 
 double height_last = 0;
 
-double roll, pitch, yaw;
+double roll = 0, pitch = 0, yaw = 0;
+
+double wx, wy;
 
 int init_counter = 0;
 
@@ -50,28 +52,31 @@ void imuDataCallback(const sensor_msgs::Imu::ConstPtr &imu_msg) {
     tf2::fromMsg(imu_msg->orientation, quat_est_rot);
     tf2::Matrix3x3 est_rot(quat_est_rot);
     est_rot.getRPY(roll, pitch, yaw);
+
+    wx = imu_msg->angular_velocity.x;
+    wy = imu_msg->angular_velocity.y;
 }
 
 void callbackImage(const sensor_msgs::ImageConstPtr &msg) {
     cv_bridge::CvImagePtr image = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8);
+    uint32_t usec_stamp = msg->header.stamp.toNSec() * 1e-3;
 
     float cx, cy;
-    int dtus;
-    int qty = 0;
+    int dtus, qty;
+    if (use_px4)
+        qty = flowpx4.calcFlow(image->image.data, usec_stamp, dtus, cx, cy);
+    else
+        qty = flow.calcFlow(image->image.data, usec_stamp, dtus, cx, cy);
 
-    if (use_px4) {
-        qty = flowpx4.calcFlow(image->image.data, (uint32_t) msg->header.stamp.toNSec(), dtus, cx, cy);
-    } else {
-        qty = flow.calcFlow(image->image.data, (uint32_t) msg->header.stamp.toNSec(), dtus, cx, cy);
-    }
+    double height_actual = abs(height_last / (cos(roll) * cos(pitch)));
 
     geometry_msgs::TwistWithCovarianceStamped velocity;
     velocity.header.frame_id = "uav_velocity";
     velocity.header.stamp = msg->header.stamp;
-    velocity.twist.twist.linear.x = ((double) cy) * -25.0 * abs(height_last / cos(pitch));
-    velocity.twist.twist.linear.y = ((double) cx) * -25.0 * abs(height_last / cos(roll));
+    velocity.twist.twist.linear.x = height_actual * (wy - (double) cy / (dtus * 1e-6));
+    velocity.twist.twist.linear.y = height_actual * (wx - (double) cx / (dtus * 1e-6));
 
-    if(qty < 0)
+    if (qty < 0)
         velocity.twist.covariance[0] = NAN;
     else
         velocity.twist.covariance[0] = qty / 255.;
