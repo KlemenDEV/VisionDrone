@@ -15,7 +15,7 @@
         <param name="use_px4" value="true"/>
     </node>
 
-    <remap from="/estimate/velocity_out" to="/optical_flow/velocity_out"/>
+    <remap from="/estimate/velocity" to="/optical_flow/velocity_out"/>
 
     <!-- Velocity to position -->
     <node pkg="velocity_integrator" type="velocity_integrator_node" name="optical_flow" required="true"/>

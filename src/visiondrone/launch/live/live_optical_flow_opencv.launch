@@ -18,7 +18,7 @@
     </node>
 
     <node type="local2gps.py" name="local_2_gps" pkg="gps_injection">
-        <param name="pose" value="/orbslam3/pose"/>
+        <param name="pose" value="/estimate/pose"/>
         <param name="velocity" value="/optical_flow/velocity_out"/>
     </node>
 

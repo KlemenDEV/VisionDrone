@@ -65,7 +65,7 @@ def dead_reckoning_cb(msg):
 if __name__ == '__main__':
     rospy.init_node('velocity_fusion')
 
-    velocity_pub = rospy.Publisher('/estimate/velocity_out', Twist, queue_size=10)
+    velocity_pub = rospy.Publisher('/estimate/velocity', Twist, queue_size=10)
 
     s1 = rospy.Subscriber("/orb_slam3/velocity_out", Twist, slam_cb, queue_size=10)
     s2 = rospy.Subscriber("/optical_flow/velocity_out", Twist, optical_flow_cb, queue_size=10)

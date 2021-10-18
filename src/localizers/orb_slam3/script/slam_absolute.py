@@ -150,7 +150,7 @@ def orient_cb(msg):
 if __name__ == "__main__":
     rospy.init_node('simulator')
 
-    pose_pub = rospy.Publisher('/orbslam3/pose_raw', PoseStamped, queue_size=5)
+    pose_pub = rospy.Publisher('/estimate/pose_raw', PoseStamped, queue_size=5)
 
     pose_sub = rospy.Subscriber('/orb_slam3/pose_out', PoseWithCovarianceStamped, pose_callback, queue_size=5)
     height_sub = rospy.Subscriber('/drone/height_estimate', Float64, height_callback, queue_size=5)

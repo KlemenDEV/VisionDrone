@@ -17,6 +17,7 @@
           /camera/orthogonal
           /imu/9dof
           /ublox/fix
+          /ublox/fix_velocity
           /mavros/imu/static_pressure
           /mavros/rc/out
        ')"/>
