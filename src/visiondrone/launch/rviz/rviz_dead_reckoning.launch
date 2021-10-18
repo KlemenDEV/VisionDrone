@@ -9,7 +9,7 @@
     <node pkg="rosbag" type="play" name="data_loader"
           args="$(find visiondrone)/../../data/inputs/$(arg bag_file_name).bag"/>
 
-    <!-- Optical flow -->
+    <!-- Dead reckoning -->
     <include file="$(find visiondrone)/launch/localizers/dead_reckoning.launch"/>
 
     <!-- MAP GPS LOCATION TO LOCAL -->
@@ -30,11 +30,12 @@
     </node>
 
     <!-- Pose to matlab -->
-    <node type="pose2matlab.py" name="gps_pose_slam" pkg="visiondrone">
+    <node type="pose2matlab.py" name="gps_pose_slam" pkg="visiondrone" output="screen">
         <param name="pose" value="/orbslam3/pose"/>
         <param name="gt" value="/ublox/fix/local"/>
-        <param name="velocity" value="/estimate/velocity_out"/>
-        <param name="outfile" value="$(find visiondrone)/../../data/outputs/dead_reckoning_$(arg bag_file_name).mat"/>
+        <param name="velocity" value="/dead_reckoning/velocity_out"/>
+        <param name="imu_data" value="/imu/9dof"/>
+        <param name="outfile" value="$(find visiondrone)/../../data/outputs/$(arg bag_file_name)_dead_reckoning.mat"/>
     </node>
 
     <!-- Quadcopter model -->

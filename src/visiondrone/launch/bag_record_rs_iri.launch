@@ -2,7 +2,7 @@
 
 <launch>
     <!-- REALSENSE CAMERA -->
-    <include file="$(find runs)/launch/subsystems/rs_d435i_iri.launch"/>
+    <include file="$(find visiondrone)/launch/subsystems/rs_d435i_iri.launch"/>
 
     <!-- RECORD ROSBAG -->
     <node pkg="rosbag" type="record" name="data_capture"

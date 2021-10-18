@@ -34,6 +34,7 @@ private:
 
     ros::ServiceClient set_datum_client;
     ros::ServiceClient set_datum_client_ref;
+    ros::ServiceClient set_datum_client_sim;
 
     ros::Subscriber imuorient_sub;
     ros::Subscriber gpsfix_sub;

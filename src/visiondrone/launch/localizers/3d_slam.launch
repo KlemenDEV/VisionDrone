@@ -12,10 +12,12 @@
 
     <!-- ORB_SLAM3 -->
     <node name="Mono" pkg="orb_slam3" type="ORBSLAM3" output="screen">
-        <param name="topic_imu" value="/camera/imu"/>
-        <param name="topic_img" value="/camera/infra1/image_rect_raw"/>
         <param name="path_to_vocabulary" value="$(dirname)/../../../../non_ros/orb_slam3/Vocabulary/ORBvoc.txt"/>
         <param name="path_to_settings" value="$(find orb_slam3)/orb_slam3.yaml"/>
         <param name="visualize" value="$(arg visualize)"/>
     </node>
+
+    <node pkg="orb_slam3" type="slam_absolute.py" name="slam_absolute" required="true" output="screen"/>
+
+    <node pkg="velocity_integrator" type="pose_manager_node" name="integrator" required="true"/>
 </launch>

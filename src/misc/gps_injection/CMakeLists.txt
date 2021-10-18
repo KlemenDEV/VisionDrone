@@ -23,3 +23,7 @@ add_executable(gps_injection_node src/gps_injection_node.cc
 
 add_dependencies(gps_injection_node ${catkin_EXPORTED_TARGETS})
 target_link_libraries(gps_injection_node ${catkin_LIBRARIES})
+
+catkin_install_python(PROGRAMS script/local2gps.py
+        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+        )

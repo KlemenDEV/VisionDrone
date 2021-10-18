@@ -19,8 +19,6 @@ private:
     float ca;
     // Zero-velocity update acceleration threshold
     float accelThreshold;
-    // gravity
-    float g = 9.81;
     // For computing the sampling period
     // required filters for altitude and vertical velocity estimation
     ComplementaryFilter complementary;

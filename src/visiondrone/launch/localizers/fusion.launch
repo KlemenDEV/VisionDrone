@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+    <arg name="visualize" default="false"/>
+
+    <!-- Drone TFs -->
+    <include file="$(find visiondrone)/launch/processing/tf.launch"/>
+
+    <!-- Height estimation -->
+    <node pkg="height_estimation" type="height_estimation_node" name="height_estimation" output="screen"
+          required="true"/>
+
+    <!-- ORB_SLAM3 -->
+    <node name="Mono" pkg="orb_slam3" type="ORBSLAM3" output="screen">
+        <param name="path_to_vocabulary" value="$(dirname)/../../../../non_ros/orb_slam3/Vocabulary/ORBvoc.txt"/>
+        <param name="path_to_settings" value="$(find orb_slam3)/orb_slam3.yaml"/>
+        <param name="visualize" value="$(arg visualize)"/>
+    </node>
+
+    <!-- Optical flow (image to velocity) -->
+    <node pkg="px4_optical_flow" type="px4flow_node" name="optic_flow" required="true">
+        <param name="use_px4" value="false"/>
+    </node>
+
+    <!-- Motion_simulation -->
+    <node pkg="motion_simulation" type="motion_simulation.py" name="motion_simulation" required="true" output="screen"/>
+
+    <!-- Dead reckoning -->
+    <node pkg="dead_reckoning" type="dead_reckoning" name="dead_reckoning" required="true" output="screen"/>
+
+    <!-- Velocity fusion -->
+    <node pkg="velocity_integrator" type="velocity_fusion.py" name="fusion" required="true" output="screen"/>
+
+    <!-- Velocity to position -->
+    <node pkg="velocity_integrator" type="velocity_integrator_node" name="integrator" required="true"/>
+</launch>

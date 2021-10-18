@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+    <!-- 9DOF -->
+    <node pkg="imu_drivers" type="imu9dof_driver_node" name="imu_node" output="screen" clear_params="false"
+          required="true"/>
+
+    <!-- RECORD ROSBAG -->
+    <node pkg="rosbag" type="record" name="data_capture"
+          args="$(eval 'record --tcpnodelay --buffsize 0 -O /media/usb/rosbags/' + raw_input('Enter rec file name: ') + '.bag
+          /imu/9dof
+       ')"/>
+
+</launch>

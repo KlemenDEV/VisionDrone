@@ -22,12 +22,14 @@ catkin_package(CATKIN_DEPENDS roscpp message_runtime message_generation geograph
 
 include_directories(${catkin_INCLUDE_DIRS} include)
 
-# Node for GPS generator
-add_executable(
-        velocity_integrator_node
-        src/VelocityIntegrator.cc
-        src/PoseManager.cc
-)
+# Nodes
 
+add_executable(velocity_integrator_node src/VelocityIntegrator.cc src/PoseManager.cc)
 add_dependencies(velocity_integrator_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(velocity_integrator_node ${catkin_LIBRARIES})
+
+add_executable(pose_manager_node src/PoseManagerNode.cc src/PoseManager.cc)
+add_dependencies(pose_manager_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(pose_manager_node ${catkin_LIBRARIES})
+
+catkin_install_python(PROGRAMS script/velocity_fusion.py DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

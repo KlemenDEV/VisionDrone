@@ -36,7 +36,7 @@ namespace GeonavTransform {
         nav_update_time_ = ros::Time::now();
 
         // Load ROS parameters
-        nh_priv.param("frequency", frequency, 4.);
+        nh_priv.param("frequency", frequency, 5.);
         nh_priv.param("zero_altitude", zero_altitude_, false);
         nh_priv.param<std::string>("base_link_frame_id", base_link_frame_id_, "base_link");
         nh_priv.param<std::string>("odom_frame_id", odom_frame_id_, "odom");

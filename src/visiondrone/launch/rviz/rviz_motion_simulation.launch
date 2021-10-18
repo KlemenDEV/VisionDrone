@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+    <param name="run_cmd" command="$(find visiondrone)/launch/rviz/ls.sh $(find visiondrone)/../../data/inputs/"/>
+
+    <arg name="bag_file_name" value="$(eval raw_input('Enter bag file name: '))"/>
+
+    <!-- PLAY ROSBAG -->
+    <node pkg="rosbag" type="play" name="data_loader"
+          args="$(find visiondrone)/../../data/inputs/$(arg bag_file_name).bag"/>
+
+    <!-- Motion simulation -->
+    <include file="$(find visiondrone)/launch/localizers/motion_simulation.launch"/>
+
+    <!-- MAP GPS LOCATION TO LOCAL -->
+    <node pkg="geonav_transform" type="geonav_transform_node" name="gt_to_local" required="true">
+        <param name="pub_odom" value="/ublox/fix/local"/>
+        <param name="sub_fix" value="/ublox/fix_tracking"/>
+        <param name="odom_frame_id" value="map"/>
+    </node>
+
+    <!-- Path display -->
+    <node type="pose2path.py" name="path_estimate_gen" pkg="visiondrone">
+        <param name="pose" value="/orbslam3/pose"/>
+        <param name="path" value="/orbslam3/path"/>
+    </node>
+    <node type="pose2path.py" name="path_gps_gen" pkg="visiondrone">
+        <param name="pose" value="/ublox/fix/local"/>
+        <param name="path" value="/ublox/fix/path"/>
+    </node>
+
+    <!-- Pose to matlab -->
+    <node type="pose2matlab.py" name="gps_pose_slam" pkg="visiondrone" output="screen">
+        <param name="pose" value="/orbslam3/pose"/>
+        <param name="gt" value="/ublox/fix/local"/>
+        <param name="velocity" value="/motion_simulation/velocity_out"/>
+        <param name="imu_data" value="/imu/9dof"/>
+        <param name="outfile"
+               value="$(find visiondrone)/../../data/outputs/$(arg bag_file_name)_motion_simulation.mat"/>
+    </node>
+
+    <!-- Quadcopter model -->
+    <param name="robot_description" textfile="$(find visiondrone)/rviz/drone.urdf"/>
+
+    <!-- Open RVIZ to show results -->
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find visiondrone)/rviz/orbslam.rviz" required="true"/>
+</launch>

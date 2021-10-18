@@ -16,6 +16,12 @@ bool initialzed = false;
 PoseManager *poseManager;
 
 void velocityCallback(const geometry_msgs::TwistWithCovarianceStamped::ConstPtr &msg) {
+    if(isnan(msg->twist.covariance[0])) {
+        initialzed = false;
+        ROS_WARN_THROTTLE(1, "Velocity integration disabled, invalid data received");
+        return;
+    }
+
     if (!initialzed) {
         time_last = msg->header.stamp;
         initialzed = true;
@@ -24,8 +30,8 @@ void velocityCallback(const geometry_msgs::TwistWithCovarianceStamped::ConstPtr 
 
     auto dt = (double) (msg->header.stamp - time_last).toSec();
 
-    px += msg->twist.twist.linear.x * cos(poseManager->yaw_last) * dt;
-    py += msg->twist.twist.linear.y * sin(poseManager->yaw_last) * dt;
+    px += msg->twist.twist.linear.x * cos(poseManager->yaw_last) * dt - msg->twist.twist.linear.y * sin(poseManager->yaw_last) * dt;
+    py -= msg->twist.twist.linear.x * sin(poseManager->yaw_last) * dt + msg->twist.twist.linear.y * cos(poseManager->yaw_last) * dt;
 
     time_last = msg->header.stamp;
 

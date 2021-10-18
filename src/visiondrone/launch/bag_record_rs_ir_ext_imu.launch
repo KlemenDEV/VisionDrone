@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+    <!-- REALSENSE CAMERA -->
+    <include file="$(find visiondrone)/launch/subsystems/rs_d435i_ir.launch"/>
+
+    <!-- 9DOF -->
+    <node pkg="imu_drivers" type="imu9dof_driver_node" name="imu_node" output="screen" clear_params="false"
+          required="true"/>
+
+    <!-- RECORD ROSBAG -->
+    <node pkg="rosbag" type="record" name="data_capture"
+          args="$(eval 'record --tcpnodelay --buffsize 0 -O /media/usb/rosbags/' + raw_input('Enter rec file name: ') + '.bag
+          /camera/infra1/image_rect_raw
+          /imu/9dof
+       ')"/>
+
+</launch>

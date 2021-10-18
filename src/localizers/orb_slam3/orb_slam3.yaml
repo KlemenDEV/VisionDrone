@@ -2,21 +2,21 @@
 
 # Camera model
 Camera.type: "PinHole"
-Camera.fx: 381.2969779674194
-Camera.fy: 383.0543728967688
-Camera.cx: 320.09008913240496
-Camera.cy: 235.07108556891325
-Camera.k1: 0.008451748536780433
-Camera.k2: -0.008405841316301182
-Camera.p1: -0.001996018371668259
-Camera.p2: 0.00035084324295129416
+Camera.fx: 413.7973823205399
+Camera.fy: 416.4908254877894
+Camera.cx: 349.70298696025424
+Camera.cy: 240.1999702359211
+Camera.k1: 0.02853707635618307
+Camera.k2: -0.005732881096945449
+Camera.p1: 0.00015300646829775487
+Camera.p2: 0.012341714182916307
 
 # Camera resolution
 Camera.width: 640
 Camera.height: 480
 
 # Camera frames per second
-Camera.fps: 15.0
+Camera.fps: 30.0
 
 # Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
 Camera.RGB: 0
@@ -25,30 +25,30 @@ Tbc: !!opencv-matrix
   rows: 4
   cols: 4
   dt: f
-  data: [0.9992388187788414, -0.025954633384049776, 0.029122844149651436, -0.01970023351778659,
-         0.02587077654266056, 0.9996600039857785, 0.003252591617850455, 0.003018595083008139,
-         -0.029197362321707106, -0.002496685212908488, 0.9995705480837268, -0.004112312975807544,
+  data: [0.06657856165189369, -0.32638884883682934, -0.9428879119404041, 0.08225239708772863,
+        -0.02824882589680222, 0.9439892610683258, -0.3287647773456416, -0.10672722607496424,
+         0.9973812204788188, 0.048524162462081744, 0.053629345451313704, -0.04700040578104183,
          0.0, 0.0, 0.0, 1.0]
 
 # IMU noise
-IMU.Frequency: 200
-IMU.NoiseAcc: 0.0173244
-IMU.AccWalk: 0.00064540166
-IMU.NoiseGyro: 0.00202674666
-IMU.GyroWalk: 0.0000059667
+IMU.Frequency: 140
+IMU.NoiseAcc: 1.5518791653745640e-02
+IMU.AccWalk: 7.5960548677204509e-04
+IMU.NoiseGyro: 1.2863346079614393e-03
+IMU.GyroWalk: 3.6009359675890065e-05
 
 #--------------------------------------------------------------------------------------------
 # ORB Parameters
 #--------------------------------------------------------------------------------------------
 
 # ORB Extractor: Number of features per image
-ORBextractor.nFeatures: 500 # 1000
+ORBextractor.nFeatures: 1400 # 1000
 
 # ORB Extractor: Scale factor between levels in the scale pyramid
-ORBextractor.scaleFactor: 1.2
+ORBextractor.scaleFactor: 1.3
 
 # ORB Extractor: Number of levels in the scale pyramid
-ORBextractor.nLevels: 8
+ORBextractor.nLevels: 10
 
 # ORB Extractor: Fast threshold
 # Image is divided in a grid. At each cell FAST are extracted imposing a minimum response.

@@ -13,6 +13,8 @@
     <!-- Dead reckoning -->
     <node pkg="dead_reckoning" type="dead_reckoning" name="dead_reckoning" required="true"/>
 
+    <remap from="/estimate/velocity_out" to="/dead_reckoning/velocity_out"/>
+
     <!-- Velocity to position -->
     <node pkg="velocity_integrator" type="velocity_integrator_node" name="integrator" required="true"/>
 </launch>

@@ -11,9 +11,9 @@ plugin_blacklist:
   - vision_speed_estimate
   - wheel_odometry
   - fake_gps
-
-plugin_whitelist:
-  - rc_io
   - rangefinder
   - distance_sensor
   - global_position
+
+plugin_whitelist:
+  - rc_io
