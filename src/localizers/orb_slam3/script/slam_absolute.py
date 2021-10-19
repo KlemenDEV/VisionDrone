@@ -19,8 +19,8 @@ lsyaw = 0
 last_yaw = None
 
 # init data
-lsy_init = None
-height_init = None
+lsy_old = None
+height_old = None
 yaw_offs_init = 0
 
 # ransac variables
@@ -63,13 +63,13 @@ def perform_ransac():
 
 # noinspection PyUnresolvedReferences,PyTypeChecker
 def height_callback(height):
-    global lsy, height_init, lsy_init, ransac_complete
+    global lsy, height_old, lsy_old, ransac_complete
     if ransac_complete is False and lsy is not None and last_yaw is not None:
-        if height_init is None:
-            height_init = height.data
-            lsy_init = lsy
+        if height_old is None:
+            height_old = height.data
+            lsy_old = lsy
         else:
-            ransac_pairs.append((height.data - height_init, lsy - lsy_init))
+            ransac_pairs.append((height.data - height_old, lsy - lsy_old))
             perform_ransac()
 
             if ransac_err < 1:
@@ -88,18 +88,20 @@ def height_callback(height):
 
                 ransac_complete = True
 
+            lsy_old = lsy
+            height_old = height.data
             lsy = None  # reset last slam y
 
 
 def pose_callback(pose):
     if pose.pose.covariance[0] != 0:
-        global lsy, lsyaw, lsy_init, height_init, yaw_offs_init, ransac_pairs, \
+        global lsy, lsyaw, lsy_old, height_old, yaw_offs_init, ransac_pairs, \
             ransac_complete, ransac_err, ransac_m_scale
         # reset estimator
         lsy = None
         lsyaw = 0
-        lsy_init = None
-        height_init = None
+        lsy_old = None
+        height_old = None
         yaw_offs_init = 0
         ransac_pairs = []
         ransac_complete = False
