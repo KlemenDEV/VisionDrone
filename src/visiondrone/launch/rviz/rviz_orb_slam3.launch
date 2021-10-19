@@ -8,7 +8,7 @@
     <!-- PLAY ROSBAG -->
     <node pkg="rosbag" type="play" name="data_loader"
           args="$(find visiondrone)/../../data/inputs/$(arg bag_file_name).bag"
-          launch-prefix="bash -c 'sleep 10; $0 $@'"/>
+          launch-prefix="bash -c 'sleep 15; $0 $@'"/>
 
     <!-- ORB_SLAM3 -->
     <include file="$(find visiondrone)/launch/localizers/3d_slam.launch">
@@ -34,7 +34,6 @@
 
     <!-- Pose to matlab -->
     <node type="pose2matlab.py" name="gps_pose_slam" pkg="visiondrone" output="screen">
-        <remap from="/estimate/velocity" to="/orb_slam3/velocity_out"/>
         <param name="outfile" value="$(find visiondrone)/../../data/outputs/$(arg bag_file_name)_orbslam3.mat"/>
     </node>
 
