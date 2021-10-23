@@ -47,7 +47,7 @@ void updateData() {
 }
 
 void baroCallback(const sensor_msgs::FluidPressure::ConstPtr &msg) {
-    h_baro = (float) (44330 * (1 - pow(msg->fluid_pressure / P0, 1 / 5.255)));
+    h_baro = (float) (44330.0 * (1 - pow(msg->fluid_pressure / P0, 1 / 5.255)));
 }
 
 #define ACC_B_X -0.034772
