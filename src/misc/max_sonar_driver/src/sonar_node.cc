@@ -8,7 +8,7 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
 
     ros::Publisher sonar_pub = nh.advertise<sensor_msgs::Range>("/sonar/data", 10);
-    
+
     int fd = open("/dev/ttyUSB0", O_EXCL);
     if (fd < 0) {
         std::cerr << "Error opening sonar tty\n";
