@@ -2,6 +2,6 @@
 
 <launch>
     <!-- MAGNETOMETER -->
-    <node pkg="imu_drivers" type="mag_driver_node" name="imu_node" output="screen" clear_params="false"
+    <node pkg="max_sonar_driver" type="sonar_node" name="sonar_node" output="screen" clear_params="false"
           required="true"/>
 </launch>
