@@ -7,14 +7,15 @@
 #include "i2c.h"
 
 #define MEAS_SKIP 100
+int measurements = 0;
 
 struct I2cDevice dev;
 
-static uint32_t compute_meas_time(const struct bmp280_config *conf) {
-    uint32_t measurement_time[] = {5500, 7500, 11500, 19500, 37500};
-    uint32_t standby_time[] = {500, 62500, 125000, 250000, 500000, 1000000, 2000000, 4000000};
-    return measurement_time[conf->os_pres] + standby_time[conf->odr]; // us
-}
+struct bmp280_dev bmp;
+struct bmp280_config conf;
+struct bmp280_uncomp_data ucomp_data;
+
+double pressure_comp = 0;
 
 static void delay_ms(uint32_t period_ms) {
     int res;
@@ -54,22 +55,23 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    struct bmp280_dev bmp;
-    struct bmp280_config conf;
     bmp.intf = BMP280_I2C_INTF;
     bmp.delay_ms = delay_ms;
     bmp.read = i2c_reg_read;
     bmp.write = i2c_reg_write;
 
-    int8_t rslt = bmp280_init(&bmp);
+    int8_t rslt = bmp280_soft_reset(&bmp);
+    ROS_INFO("bmp280 soft reset status: %d", rslt);
+
+    rslt = bmp280_init(&bmp);
     ROS_INFO("bmp280_init status: %d", rslt);
 
     rslt = bmp280_get_config(&conf, &bmp);
     ROS_INFO("bmp280_get_config status: %d", rslt);
 
-    conf.filter = BMP280_FILTER_COEFF_2;
+    conf.filter = BMP280_FILTER_COEFF_4;
     conf.os_pres = BMP280_OS_16X;
-    conf.os_temp = BMP280_OS_4X;
+    conf.os_temp = BMP280_OS_2X;
     conf.odr = BMP280_ODR_62_5_MS;
 
     rslt = bmp280_set_config(&conf, &bmp);
@@ -78,21 +80,21 @@ int main(int argc, char **argv) {
     rslt = bmp280_set_power_mode(BMP280_NORMAL_MODE, &bmp);
     ROS_INFO("bmp280_set_power_mode status: %d", rslt);
 
-    ros::Rate rate(1000.0 / (compute_meas_time(&conf) / 1000.0));
 
-    int measurements = 0;
+
+    ros::Rate rate(1000.0 / (double) bmp280_compute_meas_time(&bmp));
     while (ros::ok()) {
-        sensor_msgs::FluidPressure pressure;
-        pressure.header.stamp = ros::Time::now();
-
-        struct bmp280_uncomp_data ucomp_data;
         bmp280_get_uncomp_data(&ucomp_data, &bmp);
-        bmp280_get_comp_pres_double(&pressure.fluid_pressure, ucomp_data.uncomp_press, &bmp);
 
         // Skip first MEAS_SKIP measurements for sensor to settle
         if (measurements <= MEAS_SKIP) {
             measurements++;
         } else {
+            bmp280_get_comp_pres_double(&pressure_comp, ucomp_data.uncomp_press, &bmp);
+
+            sensor_msgs::FluidPressure pressure;
+            pressure.header.stamp = ros::Time::now();
+            pressure.fluid_pressure = pressure_comp;
             baro_pub.publish(pressure);
         }
 

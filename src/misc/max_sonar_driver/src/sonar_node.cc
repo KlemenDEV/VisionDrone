@@ -44,18 +44,19 @@ int main(int argc, char **argv) {
     }
 
     char rxBuf[80];
+    char data;
+
+    int i = 0;
     bool validData = false;
 
     while (ros::ok()) {
-        int i = 0;
-        char data;
         while (read(fd, &data, 1)) {
-            if (i == 0 && data == 'R') {
-                i++;
-            } else if (i > 0) {
+            if (data == 'R') {
+                i = 0;
+            } else {
                 rxBuf[i - 1] = data;
-                if (rxBuf[i - 1] == '\r') {
-                    rxBuf[i - 1] = '\0';
+                if (rxBuf[i - 1] == 10) {
+                    rxBuf[i - 1] = 0;
                     validData = true;
                     break;
                 }
@@ -63,9 +64,9 @@ int main(int argc, char **argv) {
             }
         }
 
-        int range_inch = atoi(&rxBuf[0]);
-
         if (validData) {
+            int range_inch = atoi(&rxBuf[0]);
+
             sensor_msgs::Range rangeMsg;
 
             if (range_inch <= 6 || range_inch >= 255) {
