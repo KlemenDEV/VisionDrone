@@ -44,6 +44,8 @@ int main(int argc, char **argv) {
     }
 
     char rxBuf[80];
+    bool validData = false;
+
     while (ros::ok()) {
         int i = 0;
         char data;
@@ -54,16 +56,29 @@ int main(int argc, char **argv) {
                 rxBuf[i - 1] = data;
                 if (rxBuf[i - 1] == '\r') {
                     rxBuf[i - 1] = '\0';
+                    validData = true;
                     break;
                 }
                 i++;
             }
         }
 
-        sensor_msgs::Range rangeMsg;
-        rangeMsg.range = strtof(&rxBuf[1], NULL) * 0.0254; // inch to m
-        rangeMsg.header.stamp = ros::Time::now();
-        sonar_pub.publish(rangeMsg);
+        int range_inch = atoi(&rxBuf[0]);
+
+        if (validData) {
+            sensor_msgs::Range rangeMsg;
+
+            if (range_inch <= 6 || range_inch >= 255) {
+                rangeMsg.range = -1;
+            } else {
+                rangeMsg.range = range_inch * 0.0254; // inch to m
+            }
+
+            rangeMsg.header.stamp = ros::Time::now();
+            sonar_pub.publish(rangeMsg);
+
+            validData = false;
+        }
     }
 
     close(fd);

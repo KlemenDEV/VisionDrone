@@ -6,6 +6,8 @@
 #include "bmp280.h"
 #include "i2c.h"
 
+#define MEAS_SKIP 100
+
 struct I2cDevice dev;
 
 static uint32_t compute_meas_time(const struct bmp280_config *conf) {
@@ -67,7 +69,7 @@ int main(int argc, char **argv) {
 
     conf.filter = BMP280_FILTER_COEFF_2;
     conf.os_pres = BMP280_OS_16X;
-    conf.os_temp = BMP280_OS_2X;
+    conf.os_temp = BMP280_OS_4X;
     conf.odr = BMP280_ODR_62_5_MS;
 
     rslt = bmp280_set_config(&conf, &bmp);
@@ -76,19 +78,24 @@ int main(int argc, char **argv) {
     rslt = bmp280_set_power_mode(BMP280_NORMAL_MODE, &bmp);
     ROS_INFO("bmp280_set_power_mode status: %d", rslt);
 
-    double sleep_time_ms = compute_meas_time(&conf) / 1000.0;
-    ros::Rate rate(1000.0 / sleep_time_ms);
-    while (ros::ok()) {
-        double pressure_comp, temperat_comp;
-        struct bmp280_uncomp_data ucomp_data;
-        bmp280_get_uncomp_data(&ucomp_data, &bmp);
-        bmp280_get_comp_pres_double(&pressure_comp, ucomp_data.uncomp_press, &bmp);
-        bmp280_get_comp_temp_double(&temperat_comp, ucomp_data.uncomp_temp, &bmp);
+    ros::Rate rate(1000.0 / (compute_meas_time(&conf) / 1000.0));
 
+    int measurements = 0;
+    while (ros::ok()) {
         sensor_msgs::FluidPressure pressure;
         pressure.header.stamp = ros::Time::now();
-        pressure.fluid_pressure = pressure_comp;
-        baro_pub.publish(pressure);
+
+        struct bmp280_uncomp_data ucomp_data;
+        bmp280_get_uncomp_data(&ucomp_data, &bmp);
+        bmp280_get_comp_pres_double(&pressure.fluid_pressure, ucomp_data.uncomp_press, &bmp);
+
+        // Skip first MEAS_SKIP measurements for sensor to settle
+        if (measurements <= MEAS_SKIP) {
+            measurements++;
+        } else {
+            baro_pub.publish(pressure);
+        }
+
         ros::spinOnce();
         rate.sleep();
     }
