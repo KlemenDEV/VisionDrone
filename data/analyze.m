@@ -1,4 +1,4 @@
-clear all;
+clearvars;
 close all;
 clc;
 
@@ -62,8 +62,8 @@ gx.Layout.Tile = 1;
 gx.Layout.TileSpan = [2 1];
 key = 'pk.eyJ1Ijoia2xlbWVuNjMiLCJhIjoiY2twYTg5YjN5MHE0czJyb2c5Z2x0YjRmdSJ9.m5V1rMbGCykrJ2f0OMOuWA';
 addCustomBasemap('mapbox', strcat('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/256/{z}/{x}/{y}?access_token=', key));
-[gtlat, gtlon, ~] = local2latlon(gt_pose(:,2), gt_pose(:,3), 0, datum);
-[estimate_poselat, estimate_poselon, ~] = local2latlon(estimate_pose(:,2), estimate_pose(:,3), 0, datum);
+[gtlat, gtlon, ~] = local2latlon(-gt_pose(:,3), gt_pose(:,2), 0, datum);
+[estimate_poselat, estimate_poselon, ~] = local2latlon(-estimate_pose(:,3), estimate_pose(:,2), 0, datum);
 hold (gx, 'on')
 geobasemap('mapbox');
 geoplot(gx, gtlat, gtlon);
@@ -119,7 +119,7 @@ t2.Padding = 'tight';
 ax = nexttile(t2);
 hold (ax, 'on')
 plot(ax, gt_vel_enu(:, 1), -smooth(gt_vel_enu(:, 3), 5));
-plot(ax, estimate_vel_enu(:, 1), smooth(estimate_vel_enu(:, 2), 100));
+plot(ax, estimate_vel_enu(:, 1), -smooth(estimate_vel_enu(:, 2), 100));
 title(ax, "X velocity over time");
 xlabel(ax, "time / s");
 ylabel(ax, "v / m/s");
@@ -129,7 +129,7 @@ hold (ax, 'off')
 ax = nexttile(t2);
 hold (ax, 'on')
 plot(ax, gt_vel_enu(:, 1), smooth(gt_vel_enu(:, 2), 5));
-plot(ax, estimate_vel_enu(:, 1), smooth(estimate_vel_enu(:, 3), 100));
+plot(ax, estimate_vel_enu(:, 1), -smooth(estimate_vel_enu(:, 3), 100));
 title(ax, "Y velocity over time");
 xlabel(ax, "time / s");
 ylabel(ax, "v / m/s");
