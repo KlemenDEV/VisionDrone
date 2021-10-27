@@ -15,6 +15,8 @@ bool initialzed = false;
 
 PoseManager *poseManager;
 
+ros::Publisher pub_vel_enu;
+
 void velocityCallback(const geometry_msgs::TwistWithCovarianceStamped::ConstPtr &msg) {
     if(isnan(msg->twist.covariance[0])) {
         initialzed = false;
@@ -30,12 +32,22 @@ void velocityCallback(const geometry_msgs::TwistWithCovarianceStamped::ConstPtr 
 
     auto dt = (double) (msg->header.stamp - time_last).toSec();
 
-    px += msg->twist.twist.linear.x * cos(poseManager->yaw_last) * dt - msg->twist.twist.linear.y * sin(poseManager->yaw_last) * dt;
-    py -= msg->twist.twist.linear.x * sin(poseManager->yaw_last) * dt + msg->twist.twist.linear.y * cos(poseManager->yaw_last) * dt;
+    double vel_enu_x = +(msg->twist.twist.linear.x * cos(poseManager->yaw_last) - msg->twist.twist.linear.y * sin(poseManager->yaw_last));
+    double vel_enu_y = -(msg->twist.twist.linear.x * sin(poseManager->yaw_last) + msg->twist.twist.linear.y * cos(poseManager->yaw_last));
+
+    px += vel_enu_x * dt;
+    py += vel_enu_y * dt;
 
     time_last = msg->header.stamp;
 
     poseManager->publishData(px, py);
+
+    geometry_msgs::TwistWithCovarianceStamped velocitymsg;
+    velocitymsg.header.frame_id = "uav_velocity_enu";
+    velocitymsg.header.stamp = msg->header.stamp;
+    velocitymsg.twist.twist.linear.x = vel_enu_x;
+    velocitymsg.twist.twist.linear.y = vel_enu_y;
+    pub_vel_enu.publish(velocitymsg);
 }
 
 int main(int argc, char **argv) {
@@ -45,7 +57,9 @@ int main(int argc, char **argv) {
     PoseManager poseManagerObj(&nh);
     poseManager = &poseManagerObj;
 
-    ros::Subscriber velocity_sub = nh.subscribe("/estimate/velocity_out", 5, velocityCallback);
+    ros::Subscriber velocity_sub = nh.subscribe("/estimate/velocity", 5, velocityCallback);
+
+    pub_vel_enu = nh.advertise<geometry_msgs::TwistWithCovarianceStamped>("/estimate/velocity_enu", 5);
 
     ros::spin();
     ros::shutdown();

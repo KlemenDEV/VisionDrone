@@ -1,18 +1,24 @@
 #include <ros/ros.h>
 
-#include <chrono>
-
 #include <sensor_msgs/FluidPressure.h>
 #include <std_msgs/Float64.h>
-
 #include <sensor_msgs/Imu.h>
+
+#include <chrono>
 
 #include "altitude.h"
 
 #define P0 101200.0
+
 #define G 9.81
 
-using namespace std;
+#define ACC_B_X -0.034772
+#define ACC_B_Y -0.163474
+#define ACC_B_Z  0.058925
+
+#define GYR_B_X -0.003426
+#define GYR_B_Y  0.003331
+#define GYR_B_Z -0.002723
 
 AltitudeEstimator *altitude;
 
@@ -24,21 +30,20 @@ bool init = false;
 
 float h_baro = 0;
 
-float accel[3] = {};
-float gyro[3] = {};
-bool imu_data = false;
+float accel[3] = {0};
+float gyro[3] = {0};
 
 void updateData() {
-    if (h_baro == 0 || !imu_data)
+    if (h_baro == 0)
         return;
 
+    std::chrono::time_point <std::chrono::high_resolution_clock> new_time = std::chrono::high_resolution_clock::now();
+
     if (!init) {
-        time_last = std::chrono::high_resolution_clock::now();
+        time_last = new_time;
         init = true;
         return;
     }
-
-    std::chrono::time_point <std::chrono::high_resolution_clock> new_time = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<float> dt = new_time - time_last;
     altitude->estimate(accel, gyro, h_baro, dt.count());
@@ -47,16 +52,8 @@ void updateData() {
 }
 
 void baroCallback(const sensor_msgs::FluidPressure::ConstPtr &msg) {
-    h_baro = (float) (44330 * (1 - pow(msg->fluid_pressure / P0, 1 / 5.255)));
+    h_baro = (float) (44330.0 * (1 - pow(msg->fluid_pressure / P0, 1 / 5.255)));
 }
-
-#define ACC_B_X -0.034772
-#define ACC_B_Y -0.163474
-#define ACC_B_Z 0.058925
-
-#define GYR_B_X -0.003426
-#define GYR_B_Y 0.003331
-#define GYR_B_Z -0.002723
 
 void imuCallback(const sensor_msgs::ImuConstPtr &imu_msg) {
     accel[0] = (float) (imu_msg->linear_acceleration.x - ACC_B_X) / G; // x
@@ -67,29 +64,23 @@ void imuCallback(const sensor_msgs::ImuConstPtr &imu_msg) {
     gyro[1] = (float) (imu_msg->angular_velocity.y - GYR_B_Y); // y
     gyro[2] = (float) (imu_msg->angular_velocity.z - GYR_B_Z); // z
 
-    imu_data = true;
     updateData();
 }
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "height_estimation_node");
     ros::NodeHandle nh;
-    ros::NodeHandle n("~");
 
-    ros::Subscriber baro_sub = nh.subscribe<sensor_msgs::FluidPressure>
-            ("/mavros/imu/static_pressure", 5, baroCallback);
-
-    ros::Subscriber sub_imu = nh.subscribe("/imu/9dof", 20, imuCallback);
+    ros::Subscriber baro_sub = nh.subscribe<sensor_msgs::FluidPressure>("/baro/data", 5, baroCallback);
+    ros::Subscriber sub_imu = nh.subscribe("/imu/9dof", 10, imuCallback);
 
     height_pub = nh.advertise<std_msgs::Float64>("/drone/height_estimate", 5);
-    height_pub_abs = nh.advertise<std_msgs::Float64>("/drone/height_estimate_absolute", 5);
 
-    AltitudeEstimator altitude_local = AltitudeEstimator(1.5518791653745640e-02,    // sigma Accel
-                                                         1.2863346079614393e-03,    // sigma Gyro
-                                                         0.0035,   // sigma Baro
-                                                         0.2,    // ca
-                                                         0.5);    // accelThreshold
-    altitude = &altitude_local;
+    altitude = new AltitudeEstimator(1.5518791653745640e-02,    // sigma Accel
+                                     1.2863346079614393e-03,    // sigma Gyro
+                                     0.0005,   // sigma Baro
+                                     0.5,    // ca
+                                     0.5);    // accelThreshold
 
     ros::Rate loop_rate(50);
 
@@ -98,14 +89,10 @@ int main(int argc, char **argv) {
 
     while (ros::ok()) {
         float alt = (float) altitude->getAltitude();
-        if (alt != 0) {
-            //std_msgs::Float64 fmsg;
-            //fmsg.data = alt;
-            //height_pub_abs.publish(fmsg);
-
-            if (init_counter < 100) {
+        if (alt != 0 || init_counter > 300) {
+            if (init_counter < 300) {
                 init_counter++;
-            } else if (init_counter == 100) {
+            } else if (init_counter == 300) {
                 rel_init = alt;
                 init_counter++;
                 ROS_WARN("Relative height origin: %f", alt);

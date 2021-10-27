@@ -15,89 +15,76 @@ import math
 import os
 import time
 
-data = np.empty((0, 4), float)
-velocitydata = np.empty((0, 4), float)
-velocitysource = np.empty((0, 1), dtype='object')
+estimate_pose = np.empty((0, 4), float)
+estimate_vel = np.empty((0, 4), float)
+estimate_vel_enu = np.empty((0, 4), float)
 
-gtdata = np.empty((0, 4), float)
-gtvelocitydata = np.empty((0, 4), float)
-gtvelocitydatalocal = np.empty((0, 4), float)
+gt_pose = np.empty((0, 4), float)
+gt_vel = np.empty((0, 4), float)
+gt_vel_enu = np.empty((0, 4), float)
 
 start_time = None
 datum = None
-
-gtox = 0
-gtoy = 0
-gtoz = 0
-gttime = None
-
 yaw = 0
 
 
 def odom_cb(msg):
-    global data, start_time
-    if start_time is None:
-        start_time = time.time()
+    global estimate_pose
+    estimate_pose = np.vstack(
+        (estimate_pose,
+         np.array([time.time() - start_time, msg.pose.position.x, msg.pose.position.y, msg.pose.position.z])))
 
-    data = np.vstack(
-        (data, np.array([time.time() - start_time, msg.pose.position.x, msg.pose.position.y, msg.pose.position.z])))
+
+def velocity_cb(msg):
+    global estimate_vel
+    estimate_vel = np.vstack((estimate_vel, np.array(
+        [time.time() - start_time, msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.linear.z])))
+
+
+def velocity_enu_cb(msg):
+    global estimate_vel_enu
+    estimate_vel_enu = np.vstack((estimate_vel_enu, np.array(
+        [time.time() - start_time, msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.linear.z])))
 
 
 def gt_cb(msg):
-    global gtdata, start_time, gtox, gtoy, gtoz, gttime, gtvelocitydata, gtvelocitydatalocal
+    global gt_pose
+    gt_pose = np.vstack((gt_pose, np.array(
+        [time.time() - start_time, msg.pose.position.x, msg.pose.position.y, msg.pose.position.z])))
 
-    if start_time is not None:
-        gtdata = np.vstack((gtdata, np.array(
-            [time.time() - start_time, msg.pose.position.x, msg.pose.position.y, msg.pose.position.z])))
 
-        if gttime is not None:
-            dt = time.time() - gttime
-            vx = (msg.pose.position.x - gtox) / dt
-            vy = (msg.pose.position.y - gtoy) / dt
-            vz = (msg.pose.position.z - gtoz) / dt
+def gt_velocity_cb(msg):
+    global gt_vel_enu, gt_vel
+    gt_vel_enu = np.vstack((gt_vel_enu, np.array(
+        [time.time() - start_time, msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.linear.z])))
 
-            gtvelocitydata = np.vstack((gtvelocitydata, np.array([time.time() - start_time, vx, vy, vz])))
+    vxl = math.cos(-yaw) * msg.twist.twist.linear.x - math.sin(-yaw) * msg.twist.twist.linear.y
+    vyl = math.sin(-yaw) * msg.twist.twist.linear.x + math.cos(-yaw) * msg.twist.twist.linear.y
+    gt_vel = np.vstack(
+        (gt_vel, np.array([time.time() - start_time, vxl, vyl, msg.twist.twist.linear.z])))
 
-            vxl = math.cos(yaw) * vy - math.sin(yaw) * vx
-            vyl = math.sin(yaw) * vy + math.cos(yaw) * vx
 
-            gtvelocitydatalocal = np.vstack((gtvelocitydatalocal, np.array([time.time() - start_time, vxl, vyl, vz])))
+def shutdown():
+    path = os.path.abspath(rospy.get_param("~outfile"))
+    io.savemat(path, mdict={
+        'datum': datum,
 
-        gtox = msg.pose.position.x
-        gtoy = msg.pose.position.y
-        gtoz = msg.pose.position.z
-        gttime = time.time()
+        'gt_pose': gt_pose,
+        'gt_vel': gt_vel,
+        'gt_vel_enu': gt_vel_enu,
+
+        'estimate_pose': estimate_pose,
+        'estimate_vel': estimate_vel,
+        'estimate_vel_enu': estimate_vel_enu
+    })
+    rospy.logwarn("Writing matlab file " + path + ", " + str(estimate_pose.size) + " data entries")
 
 
 def imu_cb(msg):
     global yaw
-
     quaternion = (msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w)
     euler = tf.transformations.euler_from_quaternion(quaternion)
     yaw = euler[2]
-
-
-def velocity_cb(msg):
-    global velocitydata, start_time, velocitysource
-    if start_time is not None:
-        velocitysource = np.vstack((velocitysource, np.array(msg.header.frame_id, dtype='object')))
-        velocitydata = np.vstack((velocitydata, np.array(
-            [time.time() - start_time, msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.linear.z])))
-
-
-def shutdown():
-    global data, gtdata, gtvelocitydata, gtvelocitydatalocal, datum, velocitydata, velocitysource
-    path = os.path.abspath(rospy.get_param("~outfile"))
-    rospy.logwarn("Writing matlab file " + path + ", " + str(data.size) + " data entries")
-    io.savemat(path, mdict={
-        'data': data,
-        'gt': gtdata,
-        'gtvelocity': gtvelocitydata,
-        'gtvelocitylocal': gtvelocitydatalocal,
-        'datum': datum,
-        'velocity': velocitydata,
-        'velocitysource': velocitysource,
-    })
 
 
 def handle_datum(req):
@@ -109,15 +96,22 @@ def handle_datum(req):
 if __name__ == '__main__':
     rospy.init_node('posetomatlab')
 
-    odom_sub = rospy.Subscriber(rospy.get_param("~pose"), PoseStamped, odom_cb, queue_size=10)
-    velocity_sub = rospy.Subscriber(rospy.get_param("~velocity"), TwistWithCovarianceStamped, velocity_cb,
-                                    queue_size=10)
+    # estimate subscribers
+    estimate_pose_sub = rospy.Subscriber('/estimate/pose', PoseStamped, odom_cb, queue_size=10)
+    estimate_vel_sub = rospy.Subscriber('/estimate/velocity', TwistWithCovarianceStamped, velocity_cb, queue_size=10)
+    estimate_vel_enu_sub = rospy.Subscriber('/estimate/velocity_enu', TwistWithCovarianceStamped, velocity_enu_cb,
+                                            queue_size=10)
 
-    odom_sub2 = rospy.Subscriber(rospy.get_param("~gt"), PoseStamped, gt_cb, queue_size=10)
-    imu_sub = rospy.Subscriber(rospy.get_param("~imu_data"), Imu, imu_cb, queue_size=10)
+    # gt subscribers
+    gt_pose_sub = rospy.Subscriber('/ublox/fix/local', PoseStamped, gt_cb, queue_size=10)
+    gt_vel_enu_sub = rospy.Subscriber('/ublox/fix_velocity', TwistWithCovarianceStamped, gt_velocity_cb, queue_size=10)
 
+    # misc data subscribers and services
+    imu_sub = rospy.Subscriber('/imu/9dof', Imu, imu_cb, queue_size=10)
     rospy.Service('datum_ref', SetDatum, handle_datum)
 
     rospy.on_shutdown(shutdown)
+
+    start_time = time.time()
 
     rospy.spin()

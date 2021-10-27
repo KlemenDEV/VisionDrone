@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "pose_manager");
     ros::NodeHandle nh;
 
-    ros::Subscriber pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/orbslam3/pose_raw", 1, poseCallback);
+    ros::Subscriber pose_sub = nh.subscribe<geometry_msgs::PoseStamped>("/estimate/pose_raw", 1, poseCallback);
 
     PoseManager poseManagerObj(&nh);
     poseManager = &poseManagerObj;

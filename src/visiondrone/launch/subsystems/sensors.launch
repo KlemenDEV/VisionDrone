@@ -7,8 +7,16 @@
         <rosparam command="load" file="$(find gps_injection)/config/gps_config.yaml"/>
     </node>
 
-    <!-- 9DOF -->
+    <!-- MPU9050 9DOF -->
     <node pkg="imu_drivers" type="imu9dof_driver_node" name="imu_node" output="screen" clear_params="false"
+          required="true"/>
+
+    <!-- BMP280 BARO -->
+    <node pkg="imu_drivers" type="baro_driver_node" name="baro_node" output="screen" clear_params="false"
+          required="true"/>
+
+    <!-- MAXSONAR EZ0 SONAR -->
+    <node pkg="max_sonar_driver" type="sonar_node" name="sonar_node" output="screen" clear_params="false"
           required="true"/>
 
     <!-- MAVLINK (FC SENSORS) -->

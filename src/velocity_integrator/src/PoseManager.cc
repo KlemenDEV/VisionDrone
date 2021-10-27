@@ -2,7 +2,7 @@
 
 PoseManager::PoseManager(ros::NodeHandle *nh) {
     gps_pub = nh->advertise<sensor_msgs::NavSatFix>("/ublox/fix_tracking", 1);
-    point_pub = nh->advertise<geometry_msgs::PoseStamped>("/orbslam3/pose", 1);
+    point_pub = nh->advertise<geometry_msgs::PoseStamped>("/estimate/pose", 1);
 
     // IMU EARTH orientation (for initial pose)
     imuorient_sub = nh->subscribe<sensor_msgs::Imu>("/imu/9dof", 1, &PoseManager::imuDataCallback, this);

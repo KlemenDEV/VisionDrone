@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 import rospy
 import tf.transformations
-from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
+from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, TwistWithCovarianceStamped
 from sensor_msgs.msg import Imu
 from std_msgs.msg import Float64
 import random
 import numpy as np
 
 pose_pub = None
+vel_pub = None
+vel_enu_pub = None
 p_off_x = None
 p_off_y = None
 
@@ -15,12 +17,17 @@ p_off_y = None
 lsy = None
 lsyaw = 0
 
+# slam old values
+lsx = None
+lsz = None
+lst = None
+
 # imu last yaw
 last_yaw = None
 
 # init data
-lsy_init = None
-height_init = None
+lsy_old = None
+height_old = None
 yaw_offs_init = 0
 
 # ransac variables
@@ -63,13 +70,13 @@ def perform_ransac():
 
 # noinspection PyUnresolvedReferences,PyTypeChecker
 def height_callback(height):
-    global lsy, height_init, lsy_init, ransac_complete
+    global lsy, height_old, lsy_old, ransac_complete
     if ransac_complete is False and lsy is not None and last_yaw is not None:
-        if height_init is None:
-            height_init = height.data
-            lsy_init = lsy
+        if height_old is None:
+            height_old = height.data
+            lsy_old = lsy
         else:
-            ransac_pairs.append((height.data - height_init, lsy - lsy_init))
+            ransac_pairs.append((height.data - height_old, lsy - lsy_old))
             perform_ransac()
 
             if ransac_err < 1:
@@ -88,18 +95,23 @@ def height_callback(height):
 
                 ransac_complete = True
 
+            lsy_old = lsy
+            height_old = height.data
             lsy = None  # reset last slam y
 
 
 def pose_callback(pose):
     if pose.pose.covariance[0] != 0:
-        global lsy, lsyaw, lsy_init, height_init, yaw_offs_init, ransac_pairs, \
-            ransac_complete, ransac_err, ransac_m_scale
+        global lsy, lsyaw, lsy_old, height_old, yaw_offs_init, ransac_pairs, \
+            ransac_complete, ransac_err, ransac_m_scale, lsx, lsz, lst
         # reset estimator
         lsy = None
         lsyaw = 0
-        lsy_init = None
-        height_init = None
+        lsy_old = None
+        height_old = None
+        lsx = None
+        lsz = None
+        lst = None
         yaw_offs_init = 0
         ransac_pairs = []
         ransac_complete = False
@@ -126,6 +138,40 @@ def pose_callback(pose):
         pose_absolute.pose.position.y = - (np.cos(yaw_offs_init) * lg_x - np.sin(yaw_offs_init) * lg_y)
         pose_absolute.pose.position.x = + (np.sin(yaw_offs_init) * lg_x + np.cos(yaw_offs_init) * lg_y)
         pose_pub.publish(pose_absolute)
+
+        if lsz is None:
+            lsx = pose_absolute.pose.position.x
+            lsz = pose_absolute.pose.position.y
+            lst = pose.header.stamp.to_sec()
+        else:
+            dx = pose_absolute.pose.position.x - lsx
+            dy = pose_absolute.pose.position.y - lsz
+            dt = pose.header.stamp.to_sec() - lst
+
+            if dt > 0:
+                vx_enu = dx / dt
+                vy_enu = dy / dt
+                vel_enu = TwistWithCovarianceStamped()
+                vel_enu.header.stamp = rospy.get_rostime()
+                vel_enu.header.frame_id = "uav_velocity_enu"
+                vel_enu.twist.twist.linear.x = vx_enu
+                vel_enu.twist.twist.linear.y = vy_enu
+                vel_enu.twist.twist.linear.z = 0
+                vel_enu_pub.publish(vel_enu)
+
+                vx = np.cos(-last_yaw) * vx_enu - np.sin(-last_yaw) * vy_enu
+                vy = np.sin(-last_yaw) * vx_enu + np.cos(-last_yaw) * vy_enu
+                vel = TwistWithCovarianceStamped()
+                vel.header.stamp = rospy.get_rostime()
+                vel.header.frame_id = "uav_velocity"
+                vel.twist.twist.linear.x = -vx
+                vel.twist.twist.linear.y = -vy
+                vel.twist.twist.linear.z = 0
+                vel_pub.publish(vel)
+
+            lsx = pose_absolute.pose.position.x
+            lsz = pose_absolute.pose.position.y
+            lst = pose.header.stamp.to_sec()
     else:
         global lsy, lsyaw
         lsy = -pose.pose.pose.position.y
@@ -150,7 +196,9 @@ def orient_cb(msg):
 if __name__ == "__main__":
     rospy.init_node('simulator')
 
-    pose_pub = rospy.Publisher('/orbslam3/pose_raw', PoseStamped, queue_size=5)
+    pose_pub = rospy.Publisher('/estimate/pose_raw', PoseStamped, queue_size=5)
+    vel_pub = rospy.Publisher('/estimate/velocity', TwistWithCovarianceStamped, queue_size=5)
+    vel_enu_pub = rospy.Publisher('/estimate/velocity_enu', TwistWithCovarianceStamped, queue_size=5)
 
     pose_sub = rospy.Subscriber('/orb_slam3/pose_out', PoseWithCovarianceStamped, pose_callback, queue_size=5)
     height_sub = rospy.Subscriber('/drone/height_estimate', Float64, height_callback, queue_size=5)

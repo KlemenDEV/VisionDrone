@@ -16,8 +16,10 @@
           /camera/infra1/image_rect_raw
           /camera/orthogonal
           /imu/9dof
+          /sonar/data
+          /baro/data
           /ublox/fix
-          /mavros/imu/static_pressure
+          /ublox/fix_velocity
           /mavros/rc/out
        ')"/>
 </launch>
