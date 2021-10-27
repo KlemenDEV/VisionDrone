@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
 
     altitude = new AltitudeEstimator(1.5518791653745640e-02,    // sigma Accel
                                      1.2863346079614393e-03,    // sigma Gyro
-                                     0.018,   // sigma Baro
+                                     0.0005,   // sigma Baro
                                      0.5,    // ca
                                      0.5);    // accelThreshold
 
@@ -89,10 +89,10 @@ int main(int argc, char **argv) {
 
     while (ros::ok()) {
         float alt = (float) altitude->getAltitude();
-        if (alt != 0 || init_counter > 200) {
-            if (init_counter < 200) {
+        if (alt != 0 || init_counter > 300) {
+            if (init_counter < 300) {
                 init_counter++;
-            } else if (init_counter == 200) {
+            } else if (init_counter == 300) {
                 rel_init = alt;
                 init_counter++;
                 ROS_WARN("Relative height origin: %f", alt);
