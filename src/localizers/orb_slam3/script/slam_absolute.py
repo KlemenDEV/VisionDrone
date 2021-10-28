@@ -37,15 +37,12 @@ ransac_err = 1
 ransac_m_scale = 0
 
 
-def perform_ransac():
+def perform_ransac(err, max_iter):
     global ransac_m_scale, ransac_err
-
-    if len(ransac_pairs) < 100:
-        return
 
     n_iter = 0
     while True:
-        if n_iter > 20000:
+        if n_iter > max_iter:
             break
 
         n_iter = n_iter + 1
@@ -58,7 +55,7 @@ def perform_ransac():
 
         err_curr = 0
         for gt_y, sp_y in ransac_pairs:
-            if abs(gt_y - sp_y * new_ransac_m_scale) > 2:
+            if abs(gt_y - sp_y * new_ransac_m_scale) > err:
                 err_curr = err_curr + 1
 
         err_curr /= float(len(ransac_pairs))
@@ -77,14 +74,14 @@ def height_callback(height):
             lsy_old = lsy
         else:
             ransac_pairs.append((height.data - height_old, lsy - lsy_old))
-            perform_ransac()
 
-            if ransac_err < 1:
-                print("SLAM RANSAC error: %f" % ransac_err)
+            if len(ransac_pairs) < 100:
+                print("Collecting data for ransac. Frames: %d" % len(ransac_pairs))
             else:
-                print("Ransac in progress. Frames: %d" % len(ransac_pairs))
+                perform_ransac(0.08, 10000)
+                print("SLAM RANSAC error: %f" % ransac_err)
 
-            if ransac_err <= 0.3:
+            if ransac_err <= 0.2:
                 global yaw_offs_init
                 print("RANSAC scale: %f su/m" % ransac_m_scale)
 
