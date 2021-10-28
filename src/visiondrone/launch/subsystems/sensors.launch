@@ -15,10 +15,6 @@
     <node pkg="imu_drivers" type="baro_driver_node" name="baro_node" output="screen" clear_params="false"
           required="true"/>
 
-    <!-- MAXSONAR EZ0 SONAR -->
-    <node pkg="max_sonar_driver" type="sonar_node" name="sonar_node" output="screen" clear_params="false"
-          required="true"/>
-
     <!-- MAVLINK (FC SENSORS) -->
     <include file="$(find visiondrone)/launch/subsystems/mavros.launch">
         <arg name="pluginlists_yaml" value="$(find visiondrone)/launch/subsystems/apm_pluginlists.yaml"/>
