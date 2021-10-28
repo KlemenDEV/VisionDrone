@@ -4,7 +4,6 @@ import tf.transformations
 from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, TwistWithCovarianceStamped
 from sensor_msgs.msg import Imu
 from std_msgs.msg import Float64
-import random
 import numpy as np
 
 pose_pub = None
@@ -37,18 +36,11 @@ ransac_err = 1
 ransac_m_scale = 0
 
 
-def perform_ransac(err, max_iter):
+def perform_ransac(err):
     global ransac_m_scale, ransac_err
 
-    n_iter = 0
-    while True:
-        if n_iter > max_iter:
-            break
-
-        n_iter = n_iter + 1
-
-        r_gt_y, r_sp_y = random.choice(ransac_pairs)
-        if r_gt_y == 0 or r_sp_y == 0:
+    for r_gt_y, r_sp_y in ransac_pairs:
+        if r_sp_y == 0:
             continue
 
         new_ransac_m_scale = r_gt_y / r_sp_y
@@ -78,10 +70,10 @@ def height_callback(height):
             if len(ransac_pairs) < 100:
                 print("Collecting data for ransac. Frames: %d" % len(ransac_pairs))
             else:
-                perform_ransac(0.08, 10000)
+                perform_ransac(0.1)
                 print("SLAM RANSAC error: %f" % ransac_err)
 
-            if ransac_err <= 0.2:
+            if ransac_err <= 0.1:
                 global yaw_offs_init
                 print("RANSAC scale: %f su/m" % ransac_m_scale)
 
@@ -98,8 +90,10 @@ def height_callback(height):
 
 
 def pose_callback(pose):
+    global ransac_pairs
+
     if pose.pose.covariance[0] != 0:
-        global lsy, lsyaw, lsy_old, height_old, yaw_offs_init, ransac_pairs, \
+        global lsy, lsyaw, lsy_old, height_old, yaw_offs_init, \
             ransac_complete, ransac_err, ransac_m_scale, lsx, lsz, lst
         # reset estimator
         lsy = None
@@ -114,7 +108,6 @@ def pose_callback(pose):
         ransac_complete = False
         ransac_err = 1
         ransac_m_scale = 0
-        print("Scale estimator reset")
         return
 
     if ransac_complete is True:
