@@ -28,13 +28,14 @@ ros::Publisher height_pub_abs;
 std::chrono::time_point <std::chrono::high_resolution_clock> time_last;
 bool init = false;
 
-float h_baro = 0;
+volatile float h_baro = 0;
+volatile float accel[3] = {0};
+volatile float gyro[3] = {0};
 
-float accel[3] = {0};
-float gyro[3] = {0};
+bool imu_data = false;
 
 void updateData() {
-    if (h_baro == 0)
+    if (h_baro == 0 || !imu_data)
         return;
 
     std::chrono::time_point <std::chrono::high_resolution_clock> new_time = std::chrono::high_resolution_clock::now();
@@ -46,7 +47,9 @@ void updateData() {
     }
 
     std::chrono::duration<float> dt = new_time - time_last;
-    altitude->estimate(accel, gyro, h_baro, dt.count());
+
+
+    altitude->estimate(const_cast<float*>(accel), const_cast<float*>(gyro), h_baro, dt.count());
 
     time_last = new_time;
 }
@@ -64,7 +67,7 @@ void imuCallback(const sensor_msgs::ImuConstPtr &imu_msg) {
     gyro[1] = (float) (imu_msg->angular_velocity.y - GYR_B_Y); // y
     gyro[2] = (float) (imu_msg->angular_velocity.z - GYR_B_Z); // z
 
-    updateData();
+    imu_data = true;
 }
 
 int main(int argc, char **argv) {
@@ -80,19 +83,21 @@ int main(int argc, char **argv) {
                                      1.2863346079614393e-03,    // sigma Gyro
                                      0.0005,   // sigma Baro
                                      0.5,    // ca
-                                     0.5);    // accelThreshold
+                                     0.6);    // accelThreshold
 
-    ros::Rate loop_rate(50);
+    ros::Rate loop_rate(30);
 
     double rel_init = 0;
     int init_counter = 0;
 
     while (ros::ok()) {
+        updateData();
+
         float alt = (float) altitude->getAltitude();
-        if (alt != 0 || init_counter > 300) {
-            if (init_counter < 300) {
+        if (alt != 0 || init_counter > 200) {
+            if (init_counter < 200) {
                 init_counter++;
-            } else if (init_counter == 300) {
+            } else if (init_counter == 200) {
                 rel_init = alt;
                 init_counter++;
                 ROS_WARN("Relative height origin: %f", alt);
