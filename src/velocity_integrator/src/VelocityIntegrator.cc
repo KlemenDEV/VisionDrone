@@ -17,8 +17,10 @@ PoseManager *poseManager;
 
 ros::Publisher pub_vel_enu;
 
+#define MAX_VEL 14 // m/s
+
 void velocityCallback(const geometry_msgs::TwistWithCovarianceStamped::ConstPtr &msg) {
-    if(isnan(msg->twist.covariance[0])) {
+    if (isnan(msg->twist.covariance[0])) {
         initialzed = false;
         ROS_WARN_THROTTLE(1, "Velocity integration disabled, invalid data received");
         return;
@@ -32,8 +34,17 @@ void velocityCallback(const geometry_msgs::TwistWithCovarianceStamped::ConstPtr 
 
     auto dt = (double) (msg->header.stamp - time_last).toSec();
 
-    double vel_enu_x = +(msg->twist.twist.linear.x * cos(poseManager->yaw_last) - msg->twist.twist.linear.y * sin(poseManager->yaw_last));
-    double vel_enu_y = -(msg->twist.twist.linear.x * sin(poseManager->yaw_last) + msg->twist.twist.linear.y * cos(poseManager->yaw_last));
+    double vel_x = msg->twist.twist.linear.x;
+    double vel_y = msg->twist.twist.linear.y;
+
+    if (vel_x > MAX_VEL) vel_x = MAX_VEL;
+    else if (vel_x < -MAX_VEL) vel_x = -MAX_VEL;
+
+    if (vel_y > MAX_VEL) vel_y = MAX_VEL;
+    else if (vel_y < -MAX_VEL) vel_y = -MAX_VEL;
+
+    double vel_enu_x = +(vel_x * cos(poseManager->yaw_last) - vel_y * sin(poseManager->yaw_last));
+    double vel_enu_y = -(vel_x * sin(poseManager->yaw_last) + vel_y * cos(poseManager->yaw_last));
 
     px += vel_enu_x * dt;
     py += vel_enu_y * dt;
