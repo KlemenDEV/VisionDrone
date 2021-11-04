@@ -44,9 +44,9 @@
 #include "px4flow.hpp"
 #include <memory.h>
 
-#define DEFAULT_SEARCH_SIZE 6
-#define DEFAULT_FLOW_FEATURE_THRESHOLD 30
-#define DEFAULT_FLOW_VALUE_THRESHOLD 3000
+#define DEFAULT_SEARCH_SIZE 60
+#define DEFAULT_FLOW_FEATURE_THRESHOLD 40
+#define DEFAULT_FLOW_VALUE_THRESHOLD 4000
 
 class OpticalFlowPX4 : public OpticalFlow
 {

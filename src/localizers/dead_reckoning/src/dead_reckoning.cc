@@ -19,64 +19,71 @@
 #include <chrono>
 #include <thread>
 #include <vector>
+#include <cmath>
 
 ros::Publisher publisher_velocity;
 
-
 double t_last = -1;
 int counter = 0;
-volatile double roll, pitch, yaw;
 
 double vx = 0, vy = 0;
 
-void imuDataOrientCallback(const sensor_msgs::Imu::ConstPtr &imu_msg) {
+double height_last = 0;
+
+void heightCallback(const std_msgs::Float64::ConstPtr &msg) {
+    height_last = msg->data;
+}
+
+void imuDataCallback(const sensor_msgs::Imu::ConstPtr &imu_msg) {
     tf2::Quaternion quat_est_rot;
     tf2::fromMsg(imu_msg->orientation, quat_est_rot);
     tf2::Matrix3x3 est_rot(quat_est_rot);
-    double _roll, _pitch, _yaw;
-    est_rot.getRPY(_roll, _pitch, _yaw);
-    roll = _roll;
-    pitch = _pitch;
-    yaw = _yaw;
-}
+    double roll, pitch, yaw;
+    est_rot.getRPY(roll, pitch, yaw);
 
-void imuDataCallback(const sensor_msgs::Imu::ConstPtr &imu_msg2) {
     if (t_last == -1) {
-        t_last = imu_msg2->header.stamp.toSec();
+        if (height_last > 6)
+            t_last = imu_msg->header.stamp.toSec();
         return;
     }
 
-    double dt = imu_msg2->header.stamp.toSec() - t_last;
+    double dt = imu_msg->header.stamp.toSec() - t_last;
 
-    double ax = (imu_msg2->linear_acceleration.z) - 9.81 * sin(roll);
-    double ay = (imu_msg2->linear_acceleration.x) - 9.81 * sin(pitch);
+    double ax = imu_msg->linear_acceleration.x - 0.034772;
+    double ay = imu_msg->linear_acceleration.y - 0.163474;
+    double az = imu_msg->linear_acceleration.z;
 
-    vx -= ax * dt * 0.25;
-    vy += ay * dt * 0.25;
+    double axl = ax - az * sin(roll);
+    double ayl = ay - az * sin(pitch);
 
-    if (counter % 25 == 0) {
+    if (std::abs(ax) > 0.2)
+        vy += axl * dt * 0.25;
+
+    if (std::abs(ay) > 0.2)
+        vx -= ayl * dt * 0.25;
+
+    if (counter % 10 == 0) {
         geometry_msgs::TwistWithCovarianceStamped velocitymsg;
         velocitymsg.header.frame_id = "uav_velocity";
-        velocitymsg.header.stamp = imu_msg2->header.stamp;
+        velocitymsg.header.stamp = imu_msg->header.stamp;
         velocitymsg.twist.twist.linear.x = vx;
         velocitymsg.twist.twist.linear.y = vy;
         publisher_velocity.publish(velocitymsg);
     }
 
     counter++;
-    t_last = imu_msg2->header.stamp.toSec();
+    t_last = imu_msg->header.stamp.toSec();
 }
 
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "dead_reckoning");
-
     ros::NodeHandle nh;
 
-    ros::Subscriber sub_imu = nh.subscribe("/imu/9dof", 15, imuDataOrientCallback);
-    ros::Subscriber sub_imu2 = nh.subscribe("/camera/imu", 15, imuDataCallback);
-
+    ros::Subscriber sub_imu2 = nh.subscribe("/imu/9dof", 15, imuDataCallback);
     publisher_velocity = nh.advertise<geometry_msgs::TwistWithCovarianceStamped>("/dead_reckoning/velocity_out", 1);
+
+    ros::Subscriber sub_height = nh.subscribe("/drone/height_estimate", 1, heightCallback);
 
     ros::spin();
     ros::shutdown();

@@ -37,7 +37,7 @@ double roll = 0, pitch = 0, yaw = 0;
 
 double wx, wy;
 
-double vx, vy;
+double vx = 0, vy = 0;
 
 int init_counter = 0;
 
@@ -63,6 +63,7 @@ void callbackImage(const sensor_msgs::ImageConstPtr &msg) {
 
     float cx, cy;
     int dtus, qty;
+
     if (use_px4)
         qty = flowpx4.calcFlow(image->image.data, usec_stamp, dtus, cx, cy);
     else
@@ -73,8 +74,13 @@ void callbackImage(const sensor_msgs::ImageConstPtr &msg) {
     double nvx = sensor_dist * (wy - (double) cy / (dtus * 1e-6));
     double nvy = sensor_dist * (wx - (double) cx / (dtus * 1e-6));
 
-    vx = nvx * 0.9 + vx * 0.1;
-    vy = nvy * 0.9 + vy * 0.1;
+    if (use_px4) {
+        vx = nvx;
+        vy = nvy;
+    } else {
+        vx = nvx * 0.9 + vx * 0.1;
+        vy = nvy * 0.9 + vy * 0.1;
+    }
 
     geometry_msgs::TwistWithCovarianceStamped velocity;
     velocity.header.frame_id = "uav_velocity";
@@ -93,8 +99,8 @@ void callbackImage(const sensor_msgs::ImageConstPtr &msg) {
 int main(int argc, char **argv) {
     ros::init(argc, argv, "px4flow_node");
     ros::NodeHandle nh;
-    ros::NodeHandle n("~");
 
+    ros::NodeHandle n("~");
     n.param<bool>("use_px4", use_px4, false);
 
     if (use_px4) {
@@ -107,10 +113,10 @@ int main(int argc, char **argv) {
     flow.setCameraDistortion(0.11906203790630414, -0.23224501485827584, 0.002897948377514225, -0.0026544348133675866);
 
     ros::Subscriber sub_img = nh.subscribe("/camera/orthogonal", 1, callbackImage);
-    ros::Subscriber sub_imu = nh.subscribe("/imu/9dof", 5, imuDataCallback);
-    ros::Subscriber sub_height = nh.subscribe("/drone/height_estimate", 1, heightCallback);
+    ros::Subscriber sub_imu = nh.subscribe("/imu/9dof", 10, imuDataCallback);
+    ros::Subscriber sub_height = nh.subscribe("/drone/height_estimate", 10, heightCallback);
 
-    publisher_velocity = nh.advertise<geometry_msgs::TwistWithCovarianceStamped>("/optical_flow/velocity_out", 1);
+    publisher_velocity = nh.advertise<geometry_msgs::TwistWithCovarianceStamped>("/optical_flow/velocity_out", 5);
 
     ros::spin();
     ros::shutdown();
