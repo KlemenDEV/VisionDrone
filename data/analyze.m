@@ -28,12 +28,12 @@ gt_pose(isnan(gt_pose))=0;
 gt_vel(isnan(gt_vel))=0;
 gt_vel_enu(isnan(gt_vel_enu))=0;
 
-%%%%
-%rot = fminsearch(@(x) costf(x, gt(1:10, :), estimate_pose(1:10, :)), 0);
+%%%%-
+%rot = fminsearch(@(x) costf(x, gt_pose(1:100, :), estimate_pose(1:100, :)), 0);
 %estimate_pose2 = cos(rot)*estimate_pose(:, 2) - sin(rot)*estimate_pose(:, 3);
 %estimate_pose3 = sin(rot)*estimate_pose(:, 2) + cos(rot)*estimate_pose(:, 3);
-%estimate_pose(:, 2) = estimate_pose2;
-%estimate_pose(:, 3) = estimate_pose3;
+%estimate_pose(:, 2) = estimate_pose3;
+%estimate_pose(:, 3) = -estimate_pose2;
 %%%%
 
 % 2D estimate error
@@ -49,7 +49,7 @@ d_gt = cumsum(sqrt(sum(d_gt_raw.*d_gt_raw,2)));
 d_estimate_pose = cumsum(sqrt(sum(d_estimate_pose_raw.*d_estimate_pose_raw,2)));
 d_err = abs(d_gt - d_estimate_pose);
 
-figure('units','normalized', 'outerposition', [0 0.1 1 0.9])
+figure('units', 'normalized', 'outerposition', [0.1 0.1 0.8 0.8])
 group = uitabgroup();
 
 tab1 = uitab(group, 'Title', 'General');
@@ -112,7 +112,7 @@ title(ax, "3D");
 hold (ax, 'off')
 
 tab3 = uitab(group, 'Title', 'Velocity in ENU frame');
-t2 = tiledlayout(tab3, 1, 2);
+t2 = tiledlayout(tab3, 2, 2);
 t2.TileSpacing = 'tight';
 t2.Padding = 'tight';
 
@@ -136,8 +136,27 @@ ylabel(ax, "v / m/s");
 legend(ax, "GPS GT", "Estimate");
 hold (ax, 'off')
 
+enu_velerr_x = abs(smooth(gt_vel_enu(:, 3), 5) - smooth(estimate_vel_enu(:, 2), 100));
+enu_velerr_y = abs(smooth(gt_vel_enu(:, 2), 5) - smooth(estimate_vel_enu(:, 3), 100));
+
+ax = nexttile(t2);
+hold (ax, 'on')
+plot(ax, gt_vel_enu(:, 1), enu_velerr_x);
+title(ax, "X velocity error over time");
+xlabel(ax, "time / s");
+ylabel(ax, "v / m/s");
+hold (ax, 'off')
+
+ax = nexttile(t2);
+hold (ax, 'on')
+plot(ax, gt_vel_enu(:, 1), enu_velerr_y);
+title(ax, "Y velocity error over time");
+xlabel(ax, "time / s");
+ylabel(ax, "v / m/s");
+hold (ax, 'off')
+
 tab4 = uitab(group, 'Title', 'Velocity in local frame');
-t3 = tiledlayout(tab4, 1, 2);
+t3 = tiledlayout(tab4, 2, 2);
 t3.TileSpacing = 'tight';
 t3.Padding = 'tight';
 
@@ -160,3 +179,51 @@ xlabel(ax, "time / s");
 ylabel(ax, "v / m/s");
 legend(ax, "GPS GT", "Estimate");
 hold (ax, 'off')
+
+velerr_x = abs(smooth(gt_vel(:, 3), 5) - smooth(estimate_vel(:, 2), 100));
+velerr_y = abs(smooth(gt_vel(:, 2), 5) - smooth(estimate_vel(:, 3), 100));
+
+ax = nexttile(t3);
+hold (ax, 'on')
+plot(ax, gt_vel(:, 1), velerr_x);
+title(ax, "X velocity error over time");
+xlabel(ax, "time / s");
+ylabel(ax, "v / m/s");
+hold (ax, 'off')
+
+ax = nexttile(t3);
+hold (ax, 'on')
+plot(ax, velerr_y);
+title(ax, "Y velocity error over time");
+xlabel(ax, "time / s");
+ylabel(ax, "v / m/s");
+hold (ax, 'off')
+
+tab5 = uitab(group, 'Title', 'Performance measures');
+
+diff_maxptostart=sqrt(max(abs(gt_pose(:, 2)-gt_pose(1, 2)))^2 + max(abs(gt_pose(:, 3)-gt_pose(1, 3)))^2);
+
+diff_gt_start_end=sqrt((gt_pose(end - 20, 2)-gt_pose(1, 2))^2 + (gt_pose(end - 20, 3)-gt_pose(1, 3))^2);
+diff_estimate_start_end=sqrt((estimate_pose(end - 20, 2)-estimate_pose(1, 2))^2 + (estimate_pose(end - 20, 3)-estimate_pose(1, 3))^2);
+
+data = {
+    sprintf('Traveled distance (from GT): %.3f m', d_gt(end))
+    sprintf('Total traveled distance error: %.3f m (%.3f %% traveled distance)', abs(d_gt(end) - d_estimate_pose(end)), 100 * (abs(d_gt(end) - d_estimate_pose(end))) / d_gt(end))
+    ""
+    sprintf('Average 2D error: %.3f m std=%.3f m', mean(err2d), std(err2d))
+    ""
+    sprintf('Average height error: %.3f m std=%.3f m', mean(errh), std(errh))
+    ""
+    sprintf('Average ENU vx error: %.3f m/s std=%.3f m/s', mean(enu_velerr_x), std(enu_velerr_x))
+    sprintf('Average ENU vy error: %.3f m/s std=%.3f m/s', mean(enu_velerr_y), std(enu_velerr_y))
+    ""
+    sprintf('Average local vx error: %.3f m/s std=%.3f m/s', mean(velerr_x), std(velerr_x))
+    sprintf('Average local vy error: %.3f m/s std=%.3f m/s', mean(velerr_y), std(velerr_y))
+    ""
+    sprintf('Biggest distance from the starting point (from GT): %.3f m', diff_maxptostart)
+    sprintf('2D error at end: %.3f m', err2d(end))
+    sprintf('2D error at end: %.3f %% of max. distance from starting point', err2d(end) / diff_maxptostart * 100)
+    ""
+    sprintf('Takeoff->land point 2D error: %.3f m', abs(diff_gt_start_end - diff_estimate_start_end))
+};
+uicontrol(tab5, 'Style', 'text', 'String', data, 'units', 'normalized', 'Position', [0.01 0.38 0.6 0.6], 'FontSize', 14, 'HorizontalAlignment', 'left', 'FontName', 'FixedWidth');
