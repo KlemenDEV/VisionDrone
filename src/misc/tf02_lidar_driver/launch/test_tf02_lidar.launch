@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+    <!-- LIDAR -->
+    <node pkg="tf02_lidar_driver" type="tf02_node" name="tf02_node" output="screen" clear_params="false"
+          required="true"/>
+</launch>

@@ -15,6 +15,10 @@
     <node pkg="imu_drivers" type="baro_driver_node" name="baro_node" output="screen" clear_params="false"
           required="true"/>
 
+    <!-- TF02 LIDAR -->
+    <node pkg="tf02_lidar_driver" type="tf02_node" name="tf02_node" output="screen" clear_params="false"
+          required="true"/>
+
     <!-- MAVLINK (FC SENSORS) -->
     <include file="$(find visiondrone)/launch/subsystems/mavros.launch">
         <arg name="pluginlists_yaml" value="$(find visiondrone)/launch/subsystems/apm_pluginlists.yaml"/>

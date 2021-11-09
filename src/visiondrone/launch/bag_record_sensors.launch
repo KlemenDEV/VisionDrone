@@ -16,6 +16,7 @@
           /camera/infra1/image_rect_raw
           /camera/orthogonal
           /imu/9dof
+          /tf02/data
           /baro/data
           /ublox/fix
           /ublox/fix_velocity
