@@ -65,15 +65,16 @@ def height_callback(height):
             height_old = height.data
             lsy_old = lsy
         else:
+            # todo: always use initial height to calculate difference?
             ransac_pairs.append((height.data - height_old, lsy - lsy_old))
 
             if len(ransac_pairs) < 100:
                 print("Collecting data for ransac. Frames: %d" % len(ransac_pairs))
             else:
-                perform_ransac(0.1)
+                perform_ransac(0.2)
                 print("SLAM RANSAC error: %f" % ransac_err)
 
-            if ransac_err <= 0.1:
+            if ransac_err <= 0.2:
                 global yaw_offs_init
                 print("RANSAC scale: %f su/m" % ransac_m_scale)
 

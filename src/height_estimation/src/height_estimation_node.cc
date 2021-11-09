@@ -3,6 +3,7 @@
 #include <sensor_msgs/FluidPressure.h>
 #include <std_msgs/Float64.h>
 #include <sensor_msgs/Imu.h>
+#include <sensor_msgs/Range.h>
 
 #include <chrono>
 
@@ -22,13 +23,12 @@
 
 AltitudeEstimator *altitude;
 
-ros::Publisher height_pub;
-ros::Publisher height_pub_abs;
-
 std::chrono::time_point <std::chrono::high_resolution_clock> time_last;
 bool init = false;
 
-volatile float h_baro = 0;
+volatile double h_baro = 0;
+volatile double h_lidar = 0;
+
 volatile float accel[3] = {0};
 volatile float gyro[3] = {0};
 
@@ -47,15 +47,17 @@ void updateData() {
     }
 
     std::chrono::duration<float> dt = new_time - time_last;
-
-
-    altitude->estimate(const_cast<float*>(accel), const_cast<float*>(gyro), h_baro, dt.count());
+    altitude->estimate(const_cast<float *>(accel), const_cast<float *>(gyro), (float) h_baro, dt.count());
 
     time_last = new_time;
 }
 
 void baroCallback(const sensor_msgs::FluidPressure::ConstPtr &msg) {
     h_baro = (float) (44330.0 * (1 - pow(msg->fluid_pressure / P0, 1 / 5.255)));
+}
+
+void lidarCallback(const sensor_msgs::Range::ConstPtr &msg) {
+    h_lidar = msg->range;
 }
 
 void imuCallback(const sensor_msgs::ImuConstPtr &imu_msg) {
@@ -76,8 +78,10 @@ int main(int argc, char **argv) {
 
     ros::Subscriber baro_sub = nh.subscribe<sensor_msgs::FluidPressure>("/baro/data", 5, baroCallback);
     ros::Subscriber sub_imu = nh.subscribe("/imu/9dof", 10, imuCallback);
+    ros::Subscriber sub_lidar = nh.subscribe("/tf02/data", 10, lidarCallback);
 
-    height_pub = nh.advertise<std_msgs::Float64>("/drone/height_estimate", 5);
+    ros::Publisher height_pub = nh.advertise<std_msgs::Float64>("/drone/height_estimate", 5);
+    ros::Publisher ground_height_pub = nh.advertise<std_msgs::Float64>("/drone/height_ground", 5);
 
     altitude = new AltitudeEstimator(1.5518791653745640e-02,    // sigma Accel
                                      1.2863346079614393e-03,    // sigma Gyro
@@ -87,27 +91,27 @@ int main(int argc, char **argv) {
 
     ros::Rate loop_rate(30);
 
-    double rel_init = 0;
-    int init_counter = 0;
-
+    double rel_init = -1;
     while (ros::ok()) {
+        // ground height
+        std_msgs::Float64 fmsg_ground;
+        fmsg_ground.data = h_lidar;
+        ground_height_pub.publish(fmsg_ground);
+
+        // relative flight height
         updateData();
-
         float alt = (float) altitude->getAltitude();
-        if (alt != 0 || init_counter > 200) {
-            if (init_counter < 200) {
-                init_counter++;
-            } else if (init_counter == 200) {
-                rel_init = alt;
-                init_counter++;
-                ROS_WARN("Relative height origin: %f", alt);
-            } else {
-                std_msgs::Float64 fmsg_rel;
-                fmsg_rel.data = alt - rel_init;
-                height_pub.publish(fmsg_rel);
-            }
+        std_msgs::Float64 fmsg_rel;
+        if (rel_init != -1) {
+            fmsg_rel.data = alt - rel_init;
+        } else {
+            fmsg_rel.data = h_lidar;
+            if (alt != 0 && h_lidar > 5)
+                rel_init = alt - h_lidar;
         }
+        height_pub.publish(fmsg_rel);
 
+        // ros functions
         ros::spinOnce();
         loop_rate.sleep();
     }

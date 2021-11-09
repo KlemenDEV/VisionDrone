@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
 
     ros::Subscriber sub_img = nh.subscribe("/camera/orthogonal", 1, callbackImage);
     ros::Subscriber sub_imu = nh.subscribe("/imu/9dof", 10, imuDataCallback);
-    ros::Subscriber sub_height = nh.subscribe("/drone/height_estimate", 10, heightCallback);
+    ros::Subscriber sub_height = nh.subscribe("/drone/height_ground", 10, heightCallback);
 
     publisher_velocity = nh.advertise<geometry_msgs::TwistWithCovarianceStamped>("/optical_flow/velocity_out", 5);
 
