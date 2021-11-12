@@ -5,6 +5,7 @@ from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, TwistWithC
 from sensor_msgs.msg import Imu
 from std_msgs.msg import Float64
 import numpy as np
+import random
 
 pose_pub = None
 vel_pub = None
@@ -25,82 +26,78 @@ lst = None
 last_yaw = None
 
 # init data
-lsy_old = None
-height_old = None
 yaw_offs_init = 0
 
 # ransac variables
 ransac_pairs = []
 ransac_complete = False
 ransac_err = 1
-ransac_m_scale = 0
+ransac_m_k = 0
+ransac_m_n = 0
 
 
-def perform_ransac(err):
-    global ransac_m_scale, ransac_err
+def perform_ransac(err, iter_count):
+    global ransac_m_k, ransac_m_n, ransac_err
 
-    for r_gt_y, r_sp_y in ransac_pairs:
-        if r_sp_y == 0:
+    for _ in range(iter_count):
+        pts = random.sample(ransac_pairs, 2)
+
+        y1, x1 = pts[0]
+        y2, x2 = pts[1]
+
+        if x2 - x1 == 0:  # division by 0 protection
             continue
 
-        new_ransac_m_scale = r_gt_y / r_sp_y
+        new_ransac_m_k = (y2 - y1) / (x2 - x1)
+        new_ransac_m_n = y1 - new_ransac_m_k * x1
 
         err_curr = 0
-        for gt_y, sp_y in ransac_pairs:
-            if abs(gt_y - sp_y * new_ransac_m_scale) > err:
+        for y, x in ransac_pairs:
+            if abs(new_ransac_m_k * x + new_ransac_m_n - y) > err:
                 err_curr = err_curr + 1
-
         err_curr /= float(len(ransac_pairs))
 
         if err_curr < ransac_err:
-            ransac_m_scale = new_ransac_m_scale
+            ransac_m_k = new_ransac_m_k
+            ransac_m_n = new_ransac_m_n
             ransac_err = err_curr
 
 
 # noinspection PyUnresolvedReferences,PyTypeChecker
 def height_callback(height):
-    global lsy, height_old, lsy_old, ransac_complete
+    global lsy, ransac_complete
     if ransac_complete is False and lsy is not None and last_yaw is not None:
-        if height_old is None:
-            height_old = height.data
-            lsy_old = lsy
+        ransac_pairs.append((height.data, lsy))
+
+        if len(ransac_pairs) < 50:
+            print("Collecting data for ransac. Frames: %d" % len(ransac_pairs))
         else:
-            # todo: always use initial height to calculate difference?
-            ransac_pairs.append((height.data - height_old, lsy - lsy_old))
+            perform_ransac(0.3, 5000)
+            print("SLAM RANSAC error: %f" % ransac_err)
 
-            if len(ransac_pairs) < 100:
-                print("Collecting data for ransac. Frames: %d" % len(ransac_pairs))
-            else:
-                perform_ransac(0.2)
-                print("SLAM RANSAC error: %f" % ransac_err)
+        if ransac_err <= 0.2:
+            global yaw_offs_init
+            print("RANSAC scale: %f su/m" % ransac_m_k)
 
-            if ransac_err <= 0.2:
-                global yaw_offs_init
-                print("RANSAC scale: %f su/m" % ransac_m_scale)
+            # determine yaw offset
+            yaw_offs_init = last_yaw - lsyaw
+            yaw_offs_init = np.arctan2(np.sin(yaw_offs_init), np.cos(yaw_offs_init))
+            print("Yaw offset: %f deg" % ((yaw_offs_init * 180) / np.pi))
 
-                # determine yaw offset
-                yaw_offs_init = last_yaw - lsyaw
-                yaw_offs_init = np.arctan2(np.sin(yaw_offs_init), np.cos(yaw_offs_init))
-                print("Yaw offset: %f deg" % ((yaw_offs_init * 180) / np.pi))
+            ransac_complete = True
 
-                ransac_complete = True
-
-            lsy_old = lsy
-            height_old = height.data
-            lsy = None  # reset last slam y
+        lsy = None  # reset last slam y
 
 
 def pose_callback(pose):
     global ransac_pairs
 
     if pose.pose.covariance[0] != 0:
-        global lsy, lsyaw, lsy_old, height_old, yaw_offs_init, \
-            ransac_complete, ransac_err, ransac_m_scale, lsx, lsz, lst
+        global lsy, lsyaw, yaw_offs_init, \
+            ransac_complete, ransac_err, ransac_m_k, lsx, lsz, lst
         # reset estimator
         lsy = None
         lsyaw = 0
-        lsy_old = None
-        height_old = None
         lsx = None
         lsz = None
         lst = None
@@ -108,14 +105,14 @@ def pose_callback(pose):
         ransac_pairs = []
         ransac_complete = False
         ransac_err = 1
-        ransac_m_scale = 0
+        ransac_m_k = 0
         return
 
     if ransac_complete is True:
         global p_off_x, p_off_y
 
-        lg_x = pose.pose.pose.position.x * ransac_m_scale
-        lg_y = pose.pose.pose.position.z * ransac_m_scale
+        lg_x = pose.pose.pose.position.x * ransac_m_k
+        lg_y = pose.pose.pose.position.z * ransac_m_k
 
         if p_off_x is None or p_off_y is None:
             p_off_x = lg_x

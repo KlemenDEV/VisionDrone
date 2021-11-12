@@ -92,6 +92,7 @@ int main(int argc, char **argv) {
     ros::Rate loop_rate(30);
 
     double rel_init = -1;
+    int init_count = 0;
     while (ros::ok()) {
         // ground height
         std_msgs::Float64 fmsg_ground;
@@ -101,14 +102,17 @@ int main(int argc, char **argv) {
         // relative flight height
         updateData();
         float alt = (float) altitude->getAltitude();
+
         std_msgs::Float64 fmsg_rel;
-        if (rel_init != -1) {
+        if (rel_init > 0) {
             fmsg_rel.data = alt - rel_init;
         } else {
             fmsg_rel.data = h_lidar;
-            if (alt != 0 && h_lidar > 5)
+            init_count++;
+            if (alt != 0 && h_lidar > 8 && init_count > 350)
                 rel_init = alt - h_lidar;
         }
+
         height_pub.publish(fmsg_rel);
 
         // ros functions
