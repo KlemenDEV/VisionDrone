@@ -53,8 +53,8 @@ void imuDataCallback(const sensor_msgs::Imu::ConstPtr &imu_msg) {
     tf2::Matrix3x3 est_rot(quat_est_rot);
     est_rot.getRPY(roll, pitch, yaw);
 
-    wx = imu_msg->angular_velocity.x * 0.9 + wx * 0.1;
-    wy = imu_msg->angular_velocity.y * 0.9 + wy * 0.1;
+    wx = imu_msg->angular_velocity.x * 0.5 + wx * 0.5;
+    wy = imu_msg->angular_velocity.y * 0.5 + wy * 0.5;
 }
 
 void callbackImage(const sensor_msgs::ImageConstPtr &msg) {
@@ -71,15 +71,18 @@ void callbackImage(const sensor_msgs::ImageConstPtr &msg) {
 
     double sensor_dist = abs(height_last / (cos(roll) * cos(pitch)));
 
-    double nvx = sensor_dist * (wy - (double) cy / (dtus * 1e-6));
-    double nvy = sensor_dist * (wx - (double) cx / (dtus * 1e-6));
+    double nvx = sensor_dist * (-wy - (double) cy / (dtus * 1e-6));
+    double nvy = sensor_dist * (-wx - (double) cx / (dtus * 1e-6));
+
+    vx = nvx;
+    vy = nvy;
 
     if (use_px4) {
         vx = nvx;
         vy = nvy;
     } else {
-        vx = nvx * 0.9 + vx * 0.1;
-        vy = nvy * 0.9 + vy * 0.1;
+        vx = nvx * 0.8 + vx * 0.2;
+        vy = nvy * 0.8 + vy * 0.2;
     }
 
     geometry_msgs::TwistWithCovarianceStamped velocity;

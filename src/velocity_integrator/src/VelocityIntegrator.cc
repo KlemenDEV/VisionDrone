@@ -43,8 +43,8 @@ void velocityCallback(const geometry_msgs::TwistWithCovarianceStamped::ConstPtr 
     if (vel_y > MAX_VEL) vel_y = MAX_VEL;
     else if (vel_y < -MAX_VEL) vel_y = -MAX_VEL;
 
-    double vel_enu_x = +(vel_x * cos(poseManager->yaw_last) - vel_y * sin(poseManager->yaw_last));
-    double vel_enu_y = -(vel_x * sin(poseManager->yaw_last) + vel_y * cos(poseManager->yaw_last));
+    double vel_enu_x = vel_x * cos(-poseManager->yaw_last) - vel_y * sin(-poseManager->yaw_last);
+    double vel_enu_y = vel_x * sin(-poseManager->yaw_last) + vel_y * cos(-poseManager->yaw_last);
 
     px += vel_enu_x * dt;
     py += vel_enu_y * dt;

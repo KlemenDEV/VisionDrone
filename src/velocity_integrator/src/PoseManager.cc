@@ -18,7 +18,7 @@ PoseManager::PoseManager(ros::NodeHandle *nh) {
     set_datum_client_sim = nh->serviceClient<velocity_integrator::SetDatum>("/datum_sim");
 }
 
-#define ALPHA 0.95
+#define ALPHA 1.0
 
 void PoseManager::imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg) {
     orientation_last = msg->orientation;

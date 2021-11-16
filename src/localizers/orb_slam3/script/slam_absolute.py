@@ -27,6 +27,7 @@ last_yaw = None
 
 # init data
 yaw_offs_init = 0
+yaw_offs_inits = []
 
 # ransac variables
 ransac_pairs = []
@@ -68,6 +69,7 @@ def height_callback(height):
     global lsy, ransac_complete
     if ransac_complete is False and lsy is not None and last_yaw is not None:
         ransac_pairs.append((height.data, lsy))
+        yaw_offs_inits.append(last_yaw - lsyaw)
 
         if len(ransac_pairs) < 50:
             print("Collecting data for ransac. Frames: %d" % len(ransac_pairs))
@@ -80,7 +82,7 @@ def height_callback(height):
             print("RANSAC scale: %f su/m" % ransac_m_k)
 
             # determine yaw offset
-            yaw_offs_init = last_yaw - lsyaw
+            yaw_offs_init = sum(yaw_offs_inits) / len(yaw_offs_inits)
             yaw_offs_init = np.arctan2(np.sin(yaw_offs_init), np.cos(yaw_offs_init))
             print("Yaw offset: %f deg" % ((yaw_offs_init * 180) / np.pi))
 
@@ -93,7 +95,7 @@ def pose_callback(pose):
     global ransac_pairs
 
     if pose.pose.covariance[0] != 0:
-        global lsy, lsyaw, yaw_offs_init, \
+        global lsy, lsyaw, yaw_offs_init, yaw_offs_inits, \
             ransac_complete, ransac_err, ransac_m_k, lsx, lsz, lst
         # reset estimator
         lsy = None
@@ -102,6 +104,7 @@ def pose_callback(pose):
         lsz = None
         lst = None
         yaw_offs_init = 0
+        yaw_offs_inits = []
         ransac_pairs = []
         ransac_complete = False
         ransac_err = 1
@@ -123,8 +126,8 @@ def pose_callback(pose):
 
         pose_absolute = PoseStamped()
         pose_absolute.header.stamp = rospy.get_rostime()
-        pose_absolute.pose.position.y = - (np.cos(yaw_offs_init) * lg_x - np.sin(yaw_offs_init) * lg_y)
-        pose_absolute.pose.position.x = + (np.sin(yaw_offs_init) * lg_x + np.cos(yaw_offs_init) * lg_y)
+        pose_absolute.pose.position.x = - (np.cos(-yaw_offs_init) * lg_x - np.sin(-yaw_offs_init) * lg_y)
+        pose_absolute.pose.position.y = - (np.sin(-yaw_offs_init) * lg_x + np.cos(-yaw_offs_init) * lg_y)
         pose_pub.publish(pose_absolute)
 
         if lsz is None:

@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
         } else {
             fmsg_rel.data = h_lidar;
             init_count++;
-            if (alt != 0 && h_lidar > 8 && init_count > 350)
+            if (alt != 0 && h_lidar > 8 && init_count > 300)
                 rel_init = alt - h_lidar;
         }
 
