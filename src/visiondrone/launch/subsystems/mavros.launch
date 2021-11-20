@@ -11,15 +11,18 @@
 	<arg name="log_output" />
 	<arg name="fcu_protocol" />
 
-	<node pkg="mavros" type="mavros_node" name="mavros" required="true" clear_params="true" output="$(arg log_output)">
-		<param name="fcu_url" value="$(arg fcu_url)" />
-		<param name="gcs_url" value="$(arg gcs_url)" />
-		<param name="target_system_id" value="$(arg tgt_system)" />
-		<param name="target_component_id" value="$(arg tgt_component)" />
-		<param name="fcu_protocol" value="$(arg fcu_protocol)" />
+	<node pkg="mavros" type="mavros_node" name="mavros" required="true" clear_params="true" output="screen">
+		<param name="fcu_url" value="/dev/ttyAMA1:57600" />
+		<param name="gcs_url" value="" />
+		<param name="target_system_id" value="1" />
+		<param name="target_component_id" value="1" />
+		<param name="fcu_protocol" value="v1.0" />
 
 		<!-- load blacklist, config -->
-		<rosparam command="load" file="$(arg pluginlists_yaml)" />
-		<rosparam command="load" file="$(arg config_yaml)" />
+		<rosparam command="load" file="$(find visiondrone)/launch/subsystems/apm_pluginlists.yaml" />
+		<rosparam command="load" file="$(find visiondrone)/launch/subsystems/apm_config.yaml" />
 	</node>
+
+	<node pkg="rosservice" type="rosservice" name="mavros_stream_rate" args="call /mavros/set_stream_rate 0 10 1"
+		  launch-prefix="bash -c 'sleep 6; $0 $@'"/>
 </launch>

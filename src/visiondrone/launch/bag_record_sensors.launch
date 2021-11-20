@@ -24,9 +24,8 @@
     <!-- RECORD ROSBAG -->
     <node pkg="rosbag" type="record" name="data_capture" required="true"
           args="$(eval 'record --tcpnodelay --buffsize 0 -O
-          /media/usb/rosbags/' + raw_input('Enter rec file name: ') + '.bag
-          $(arg topics)
-       ')"/>
+          /media/usb/rosbags/' + raw_input('Enter rec file name: ') + '.bag' +
+          arg('topics'))"/>
 
     <!-- AUTOMATED PREFLIGHT CHECKLIST -->
     <node type="pfchecklists.py" name="pfchecklist" pkg="visiondrone" output="screen">

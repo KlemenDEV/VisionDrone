@@ -11,16 +11,29 @@ sys:
   min_voltage: 10.0   # diagnostics min voltage
   disable_diag: false # disable all sys_status diagnostics, except heartbeat
 
+time:
+  time_ref_source: "fcu"  # time_reference source
+  timesync_mode: MAVLINK
+  timesync_avg_alpha: 0.6 # timesync averaging factor
+
 imu:
   frame_id: "fcu_imu"
+  # need find actual values
   linear_acceleration_stdev: 0.0003
   angular_velocity_stdev: 0.0003490659 // 0.02 degrees
   orientation_stdev: 1.0
   magnetic_stdev: 0.0
 
-time:
-  time_ref_source: "fcu"  # time_reference source
-  timesync_mode: MAVLINK
-  timesync_avg_alpha: 0.6 # timesync averaging factor
+global_position:
+  frame_id: "map"             # origin frame
+  child_frame_id: "base_link" # body-fixed frame
+  rot_covariance: 99999.0   # covariance for attitude?
+  gps_uere: 1.0             # User Equivalent Range Error (UERE) of GPS sensor (m)
+  use_relative_alt: true    # use relative altitude for local coordinates
+  tf:
+    send: false               # send TF?
+    frame_id: "map"  # TF frame_id
+    global_frame_id: "earth"  # TF earth frame_id
+    child_frame_id: "base_link" # TF child_frame_id
 
 rc_io: {}
