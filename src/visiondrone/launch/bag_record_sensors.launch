@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <launch>
+    <arg name="topics" value="
+          /camera/infra1/image_rect_raw
+          /camera/orthogonal
+          /imu/9dof
+          /tf02/data
+          /baro/data
+          /ublox/fix
+          /ublox/fix_velocity
+          /mavros/rc/out
+        "/>
+
     <!-- START SENSORS -->
     <include file="$(find visiondrone)/launch/subsystems/sensors.launch"/>
 
@@ -12,14 +23,13 @@
 
     <!-- RECORD ROSBAG -->
     <node pkg="rosbag" type="record" name="data_capture" required="true"
-          args="$(eval 'record --tcpnodelay --buffsize 0 -O /media/usb/rosbags/' + raw_input('Enter rec file name: ') + '.bag
-          /camera/infra1/image_rect_raw
-          /camera/orthogonal
-          /imu/9dof
-          /tf02/data
-          /baro/data
-          /ublox/fix
-          /ublox/fix_velocity
-          /mavros/rc/out
+          args="$(eval 'record --tcpnodelay --buffsize 0 -O
+          /media/usb/rosbags/' + raw_input('Enter rec file name: ') + '.bag
+          $(arg topics)
        ')"/>
+
+    <!-- AUTOMATED PREFLIGHT CHECKLIST -->
+    <node type="pfchecklists.py" name="pfchecklist" pkg="visiondrone" output="screen">
+        <param name="topics" value="$(arg topics)"/>
+    </node>
 </launch>

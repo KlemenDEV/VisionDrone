@@ -36,3 +36,7 @@ catkin_install_python(PROGRAMS script/pose2matlab.py
 catkin_install_python(PROGRAMS script/imubias.py
         DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
         )
+
+catkin_install_python(PROGRAMS script/pfchecklists.py
+        DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+        )
