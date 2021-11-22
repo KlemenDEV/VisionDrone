@@ -18,8 +18,6 @@ PoseManager::PoseManager(ros::NodeHandle *nh) {
     set_datum_client_sim = nh->serviceClient<velocity_integrator::SetDatum>("/datum_sim");
 }
 
-#define ALPHA 1.0
-
 void PoseManager::imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg) {
     orientation_last = msg->orientation;
 
@@ -29,7 +27,7 @@ void PoseManager::imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg) {
     double r, p, yaw;
     gps_tf2_rot.getRPY(r, p, yaw, 1);
 
-    yaw_mag_curr = (yaw * ALPHA) + (1.0 - ALPHA) * yaw_mag_curr;
+    yaw_mag_curr = yaw;
 
     if (datum_set) yaw_last = yaw_mag_init - yaw_mag_curr;
 }
