@@ -27,7 +27,6 @@ last_yaw = None
 
 # init data
 yaw_offs_init = 0
-yaw_offs_inits = []
 
 # ransac variables
 ransac_pairs = []
@@ -69,21 +68,19 @@ def height_callback(height):
     global lsy, ransac_complete
     if ransac_complete is False and lsy is not None and last_yaw is not None:
         ransac_pairs.append((height.data, lsy))
-        # yaw_offs_inits.append(last_yaw - lsyaw)
-        yaw_offs_inits.append(last_yaw)
 
         if len(ransac_pairs) < 50:
             print("Collecting data for ransac. Frames: %d" % len(ransac_pairs))
         else:
-            perform_ransac(0.3, 5000)
+            perform_ransac(0.2, 5000)
             print("SLAM RANSAC error: %f" % ransac_err)
 
-        if ransac_err <= 0.2:
+        if ransac_err <= 0.3:
             global yaw_offs_init
             print("RANSAC scale: %f su/m" % ransac_m_k)
 
             # determine yaw offset
-            yaw_offs_init = sum(yaw_offs_inits) / len(yaw_offs_inits)
+            yaw_offs_init = lsyaw
             print("Yaw offset: %f deg" % ((yaw_offs_init * 180) / np.pi))
 
             ransac_complete = True
@@ -92,7 +89,7 @@ def height_callback(height):
 
 
 def pose_callback(pose):
-    global ransac_pairs, lsyaw, yaw_offs_init, yaw_offs_inits, p_off_x, p_off_y, \
+    global ransac_pairs, lsyaw, yaw_offs_init, p_off_x, p_off_y, \
         ransac_complete, ransac_err, ransac_m_k, lsx, lsz, lst, lsy
 
     # reset estimator if invalid data
@@ -105,7 +102,6 @@ def pose_callback(pose):
         p_off_x = None
         p_off_y = None
         yaw_offs_init = 0
-        yaw_offs_inits = []
         ransac_pairs = []
         ransac_complete = False
         ransac_err = 1
