@@ -53,14 +53,14 @@ void imuDataCallback(const sensor_msgs::Imu::ConstPtr &imu_msg) {
     double ay = imu_msg->linear_acceleration.y - 0.163474;
     double az = imu_msg->linear_acceleration.z;
 
-    double axl = ax - az * sin(roll);
-    double ayl = ay - az * sin(pitch);
+    double axl = ax * cos(pitch) + ay * sin (roll) * sin(pitch) - az * cos(roll) * sin(pitch);
+    double ayl = ax * 0 + ay * cos(roll) + az * sin(roll);
 
-    if (std::abs(ax) > 0.2)
-        vy += axl * dt * 0.25;
+    if (std::abs(ax) > 0.3)
+        vy += axl * dt;
 
-    if (std::abs(ay) > 0.2)
-        vx -= ayl * dt * 0.25;
+    if (std::abs(ay) > 0.3)
+        vx += ayl * dt;
 
     if (counter % 10 == 0) {
         geometry_msgs::TwistWithCovarianceStamped velocitymsg;

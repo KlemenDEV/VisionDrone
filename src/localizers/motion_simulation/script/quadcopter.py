@@ -53,7 +53,7 @@ class Quadcopter:
         aprop = (self.quads[key]['m1'].thrust + self.quads[key]['m2'].thrust + self.quads[key]['m3'].thrust +
                  self.quads[key]['m4'].thrust) / self.quads[key]['weight']
 
-        dragx = 0.05
+        dragx = 0.008
         dragy = 0.008
 
         state_dot[0] = aprop * abs(math.sin(self.p)) - dragx * pow(self.quads[key]['state'][0], 2)

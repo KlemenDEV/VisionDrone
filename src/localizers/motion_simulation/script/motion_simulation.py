@@ -51,11 +51,11 @@ def orient_cb(msg):
     pose.header.stamp = rospy.get_rostime()
     pose.header.frame_id = "uav_velocity"
     pose.twist.twist.linear.x = linear_rate[0]
-    pose.twist.twist.linear.y = -linear_rate[1]
+    pose.twist.twist.linear.y = linear_rate[1]
     pose.twist.twist.linear.z = 0
 
     rate_total = math.sqrt(pow(linear_rate[0], 2) + pow(linear_rate[1], 2))
-    if rate_total > 50:
+    if rate_total > 60:
         pose.twist.covariance[0] = float("nan")
 
     velocity_pub.publish(pose)
