@@ -69,7 +69,8 @@ def height_callback(height):
     global lsy, ransac_complete
     if ransac_complete is False and lsy is not None and last_yaw is not None:
         ransac_pairs.append((height.data, lsy))
-        yaw_offs_inits.append(last_yaw - lsyaw)
+        # yaw_offs_inits.append(last_yaw - lsyaw)
+        yaw_offs_inits.append(last_yaw)
 
         if len(ransac_pairs) < 50:
             print("Collecting data for ransac. Frames: %d" % len(ransac_pairs))
@@ -83,7 +84,6 @@ def height_callback(height):
 
             # determine yaw offset
             yaw_offs_init = sum(yaw_offs_inits) / len(yaw_offs_inits)
-            yaw_offs_init = np.arctan2(np.sin(yaw_offs_init), np.cos(yaw_offs_init))
             print("Yaw offset: %f deg" % ((yaw_offs_init * 180) / np.pi))
 
             ransac_complete = True
@@ -92,17 +92,18 @@ def height_callback(height):
 
 
 def pose_callback(pose):
-    global ransac_pairs
+    global ransac_pairs, lsyaw, yaw_offs_init, yaw_offs_inits, p_off_x, p_off_y, \
+        ransac_complete, ransac_err, ransac_m_k, lsx, lsz, lst, lsy
 
+    # reset estimator if invalid data
     if pose.pose.covariance[0] != 0:
-        global lsy, lsyaw, yaw_offs_init, yaw_offs_inits, \
-            ransac_complete, ransac_err, ransac_m_k, lsx, lsz, lst
-        # reset estimator
         lsy = None
         lsyaw = 0
         lsx = None
         lsz = None
         lst = None
+        p_off_x = None
+        p_off_y = None
         yaw_offs_init = 0
         yaw_offs_inits = []
         ransac_pairs = []
@@ -112,22 +113,23 @@ def pose_callback(pose):
         return
 
     if ransac_complete is True:
-        global p_off_x, p_off_y
-
         lg_x = pose.pose.pose.position.x * ransac_m_k
         lg_y = pose.pose.pose.position.z * ransac_m_k
 
-        if p_off_x is None or p_off_y is None:
-            p_off_x = lg_x
-            p_off_y = lg_y
+        lg_x_rotated = -(np.cos(-yaw_offs_init) * lg_x - np.sin(-yaw_offs_init) * lg_y)
+        lg_y_rotated = +(np.sin(-yaw_offs_init) * lg_x + np.cos(-yaw_offs_init) * lg_y)
 
-        lg_x -= p_off_x
-        lg_y -= p_off_y
+        if p_off_x is None or p_off_y is None:
+            p_off_x = lg_x_rotated
+            p_off_y = lg_y_rotated
+
+        lg_x = lg_x_rotated - p_off_x
+        lg_y = lg_y_rotated - p_off_y
 
         pose_absolute = PoseStamped()
         pose_absolute.header.stamp = rospy.get_rostime()
-        pose_absolute.pose.position.x = - (np.cos(-yaw_offs_init) * lg_x - np.sin(-yaw_offs_init) * lg_y)
-        pose_absolute.pose.position.y = - (np.sin(-yaw_offs_init) * lg_x + np.cos(-yaw_offs_init) * lg_y)
+        pose_absolute.pose.position.x = lg_y
+        pose_absolute.pose.position.y = lg_x
         pose_pub.publish(pose_absolute)
 
         if lsz is None:
@@ -164,7 +166,6 @@ def pose_callback(pose):
             lsz = pose_absolute.pose.position.y
             lst = pose.header.stamp.to_sec()
     else:
-        global lsy, lsyaw
         lsy = -pose.pose.pose.position.y
         (_, _, lsyaw) = tf.transformations.euler_from_quaternion([
             pose.pose.pose.orientation.x,
