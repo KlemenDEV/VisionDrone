@@ -7,7 +7,7 @@
     <include file="$(find visiondrone)/launch/processing/tf.launch"/>
 
     <!-- Height estimation -->
-    <node pkg="height_estimation" type="height_estimation_node" name="height_estimation" output="screen"
+    <node pkg="height_estimation" type="height_estimation_node" name="height_estimator" output="screen"
           required="true"/>
 
     <!-- ORB_SLAM3 -->
@@ -32,5 +32,5 @@
     <node pkg="velocity_integrator" type="velocity_fusion.py" name="fusion" required="true" output="screen"/>
 
     <!-- Velocity to position -->
-    <node pkg="velocity_integrator" type="velocity_integrator_node" name="integrator" required="true"/>
+    <node pkg="velocity_integrator" type="velocity_integrator_node" name="velocity_integrator" required="true"/>
 </launch>

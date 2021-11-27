@@ -7,17 +7,17 @@
     <include file="$(find visiondrone)/launch/processing/tf.launch"/>
 
     <!-- Height estimation -->
-    <node pkg="height_estimation" type="height_estimation_node" name="height_estimation" output="screen"
+    <node pkg="height_estimation" type="height_estimation_node" name="height_estimator" output="screen"
           required="true"/>
 
     <!-- ORB_SLAM3 -->
-    <node name="Mono" pkg="orb_slam3" type="ORBSLAM3" output="screen">
+    <node name="orb_slam3" pkg="orb_slam3" type="ORBSLAM3" output="screen">
         <param name="path_to_vocabulary" value="$(dirname)/../../../../non_ros/orb_slam3/Vocabulary/ORBvoc.txt"/>
         <param name="path_to_settings" value="$(find orb_slam3)/orb_slam3.yaml"/>
         <param name="visualize" value="$(arg visualize)"/>
     </node>
 
-    <node pkg="orb_slam3" type="slam_absolute.py" name="slam_absolute" required="true" output="screen"/>
+    <node pkg="orb_slam3" type="slam_absolute.py" name="slam_scaler" required="true" output="screen"/>
 
-    <node pkg="velocity_integrator" type="pose_manager_node" name="integrator" required="true"/>
+    <node pkg="velocity_integrator" type="pose_manager_node" name="pose_manager" required="true"/>
 </launch>
