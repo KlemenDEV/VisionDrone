@@ -69,13 +69,13 @@ def height_callback(height):
     if ransac_complete is False and lsy is not None and last_yaw is not None:
         ransac_pairs.append((height.data, lsy))
 
-        if len(ransac_pairs) < 50:
+        if len(ransac_pairs) < 60:
             print("Collecting data for ransac. Frames: %d" % len(ransac_pairs))
         else:
-            perform_ransac(0.2, 5000)
+            perform_ransac(0.18, 5000)
             print("SLAM RANSAC error: %f" % ransac_err)
 
-        if ransac_err <= 0.3:
+        if ransac_err <= 0.25:
             global yaw_offs_init
             print("RANSAC scale: %f su/m" % ransac_m_k)
 

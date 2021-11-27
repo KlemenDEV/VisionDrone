@@ -46,7 +46,7 @@ void imuDataCallback(const sensor_msgs::Imu::ConstPtr &imu_msg) {
         if (height_last > 6)
             hcount++;
 
-        if (hcount > 3000)
+        if (hcount > 50)
             t_last = imu_msg->header.stamp.toSec();
         return;
     }
@@ -70,8 +70,8 @@ void imuDataCallback(const sensor_msgs::Imu::ConstPtr &imu_msg) {
         geometry_msgs::TwistWithCovarianceStamped velocitymsg;
         velocitymsg.header.frame_id = "uav_velocity";
         velocitymsg.header.stamp = imu_msg->header.stamp;
-        velocitymsg.twist.twist.linear.x = -vy;
-        velocitymsg.twist.twist.linear.y = -vx;
+        velocitymsg.twist.twist.linear.x = -vx;
+        velocitymsg.twist.twist.linear.y = -vy;
         publisher_velocity.publish(velocitymsg);
     }
 

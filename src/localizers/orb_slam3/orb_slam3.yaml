@@ -42,7 +42,7 @@ IMU.GyroWalk: 3.6009359675890065e-05
 #--------------------------------------------------------------------------------------------
 
 # ORB Extractor: Number of features per image
-ORBextractor.nFeatures: 1200 # 1000
+ORBextractor.nFeatures: 1100 # 1000
 
 # ORB Extractor: Scale factor between levels in the scale pyramid
 ORBextractor.scaleFactor: 1.3
