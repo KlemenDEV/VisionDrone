@@ -69,21 +69,11 @@ void callbackImage(const sensor_msgs::ImageConstPtr &msg) {
     else
         qty = flow.calcFlow(image->image.data, usec_stamp, dtus, cx, cy);
 
-    double sensor_dist = abs(height_last / (cos(roll) * cos(pitch)));
-
-    double nvx = sensor_dist * (-wy - (double) cy / (dtus * 1e-6));
-    double nvy = sensor_dist * (-wx - (double) cx / (dtus * 1e-6));
+    double nvx = height_last * (-wy - (double) cy / (dtus * 1e-6));
+    double nvy = height_last * (-wx - (double) cx / (dtus * 1e-6));
 
     vx = nvx;
     vy = nvy;
-
-    if (use_px4) {
-        vx = nvx;
-        vy = nvy;
-    } else {
-        vx = nvx * 0.8 + vx * 0.2;
-        vy = nvy * 0.8 + vy * 0.2;
-    }
 
     geometry_msgs::TwistWithCovarianceStamped velocity;
     velocity.header.frame_id = "uav_velocity";
