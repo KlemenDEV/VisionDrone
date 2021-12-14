@@ -6,20 +6,24 @@
 #include "algebra.h"
 #include "altitude.h"
 
-AltitudeEstimator::AltitudeEstimator(float sigmaAccel, float sigmaGyro, float sigmaBaro,
-                                     float ca, float accelThreshold)
-        : kalman(ca, sigmaGyro, sigmaAccel), complementary(sigmaAccel, sigmaBaro, accelThreshold) {
+AltitudeEstimator::AltitudeEstimator(float sigmaAccel, float sigmaBaro, float accelThreshold) : complementary(
+        sigmaAccel, sigmaBaro, accelThreshold) {
     this->sigmaAccel = sigmaAccel;
-    this->sigmaGyro = sigmaGyro;
     this->sigmaBaro = sigmaBaro;
-    this->ca = ca;
     this->accelThreshold = accelThreshold;
 }
 
-void AltitudeEstimator::estimate(float accel[3], float gyro[3], float baroHeight, float dt) {
-    float verticalAccel = kalman.estimate(pastGyro,
-                                          pastAccel,
-                                          dt);
+void AltitudeEstimator::estimate(geometry_msgs::Quaternion orient, float accel[3], float baroHeight, float dt) {
+    tf2::Quaternion tf_orient;
+    tf2::fromMsg(orient, tf_orient);
+    tf_orient.normalize();
+    tf2::Matrix3x3 R(tf_orient);
+    tf2::Vector3 tf_accel(accel[0], accel[1], accel[2]);
+
+    tf2::Vector3 tf_accel_earth = tf_accel * R;
+
+    float verticalAccel = tf_accel_earth[2] - 1;
+
     complementary.estimate(&estimatedVelocity,
                            &estimatedAltitude,
                            baroHeight,
@@ -27,9 +31,7 @@ void AltitudeEstimator::estimate(float accel[3], float gyro[3], float baroHeight
                            pastVerticalVelocity,
                            pastVerticalAccel,
                            dt);
-    // update values for next iteration
-    copyVector(pastGyro, gyro);
-    copyVector(pastAccel, accel);
+
     pastAltitude = estimatedAltitude;
     pastVerticalVelocity = estimatedVelocity;
     pastVerticalAccel = verticalAccel;
