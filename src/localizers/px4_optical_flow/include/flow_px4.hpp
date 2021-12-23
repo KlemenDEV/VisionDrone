@@ -44,7 +44,7 @@
 #include "px4flow.hpp"
 #include <memory.h>
 
-#define DEFAULT_SEARCH_SIZE 60
+#define DEFAULT_SEARCH_SIZE 50
 #define DEFAULT_FLOW_FEATURE_THRESHOLD 40
 #define DEFAULT_FLOW_VALUE_THRESHOLD 4000
 
