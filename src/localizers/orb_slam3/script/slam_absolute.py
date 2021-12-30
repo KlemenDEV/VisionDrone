@@ -12,21 +12,18 @@ vel_pub = None
 vel_enu_pub = None
 p_off_x = None
 p_off_y = None
-
-# slam last values
-lsy = None
-lsyaw = 0
+p_off_z = None
 
 # slam old values
+lsy = None
 lsx = None
 lsz = None
 lst = None
 
-# imu last yaw
+# orientation correction
 last_yaw = None
-
-# init data
-yaw_offs_init = 0
+orient_slam = None
+R_sw = 0
 
 # ransac variables
 ransac_pairs = []
@@ -66,22 +63,20 @@ def perform_ransac(err, iter_count):
 # noinspection PyUnresolvedReferences,PyTypeChecker
 def height_callback(height):
     global lsy, ransac_complete
-    if ransac_complete is False and lsy is not None and last_yaw is not None:
+    if ransac_complete is False and lsy is not None and orient_slam is not None:
         ransac_pairs.append((height.data, lsy))
 
-        if len(ransac_pairs) < 60:
+        if len(ransac_pairs) < 55:
             print("Collecting data for ransac. Frames: %d" % len(ransac_pairs))
         else:
-            perform_ransac(0.18, 5000)
+            perform_ransac(0.17, 5000)
             print("SLAM RANSAC error: %f" % ransac_err)
 
-        if ransac_err <= 0.25:
-            global yaw_offs_init
+        if ransac_err <= 0.23:
             print("RANSAC scale: %f su/m" % ransac_m_k)
 
-            # determine yaw offset
-            yaw_offs_init = lsyaw
-            print("Yaw offset: %f deg" % ((yaw_offs_init * 180) / np.pi))
+            global R_sw
+            R_sw = tf.transformations.quaternion_inverse(orient_slam)
 
             ransac_complete = True
 
@@ -89,19 +84,20 @@ def height_callback(height):
 
 
 def pose_callback(pose):
-    global ransac_pairs, lsyaw, yaw_offs_init, p_off_x, p_off_y, \
+    global ransac_pairs, orient_slam, R_sw, p_off_x, p_off_y, p_off_z, \
         ransac_complete, ransac_err, ransac_m_k, lsx, lsz, lst, lsy
 
     # reset estimator if invalid data
     if pose.pose.covariance[0] != 0:
         lsy = None
-        lsyaw = 0
+        orient_slam = None
         lsx = None
         lsz = None
         lst = None
         p_off_x = None
         p_off_y = None
-        yaw_offs_init = 0
+        p_off_z = None
+        R_sw = None
         ransac_pairs = []
         ransac_complete = False
         ransac_err = 1
@@ -109,32 +105,39 @@ def pose_callback(pose):
         return
 
     if ransac_complete is True:
-        lg_x = pose.pose.pose.position.x * ransac_m_k
-        lg_y = pose.pose.pose.position.z * ransac_m_k
-
-        lg_x_rotated = -(np.cos(-yaw_offs_init) * lg_x - np.sin(-yaw_offs_init) * lg_y)
-        lg_y_rotated = +(np.sin(-yaw_offs_init) * lg_x + np.cos(-yaw_offs_init) * lg_y)
+        lg_x = pose.pose.pose.position.x * ransac_m_k * 1.5
+        lg_y = pose.pose.pose.position.y * ransac_m_k * 1.5
+        lg_z = pose.pose.pose.position.z * ransac_m_k * 1.5
 
         if p_off_x is None or p_off_y is None:
-            p_off_x = lg_x_rotated
-            p_off_y = lg_y_rotated
+            p_off_x = lg_x
+            p_off_y = lg_y
+            p_off_z = lg_z
 
-        lg_x = lg_x_rotated - p_off_x
-        lg_y = lg_y_rotated - p_off_y
+        lg_x = lg_x - p_off_x
+        lg_y = lg_y - p_off_y
+        lg_z = lg_z - p_off_z
+
+        lg = [lg_x, lg_y, lg_z, 0]
+        lg_rotated = tf.transformations.quaternion_multiply(tf.transformations.quaternion_multiply(R_sw, lg),
+                                                            tf.transformations.quaternion_conjugate(R_sw))
 
         pose_absolute = PoseStamped()
         pose_absolute.header.stamp = rospy.get_rostime()
-        pose_absolute.pose.position.x = lg_y
-        pose_absolute.pose.position.y = lg_x
+        pose_absolute.pose.position.x = lg_rotated[2]
+        pose_absolute.pose.position.y = -lg_rotated[0]
+        pose_absolute.pose.position.z = lg_rotated[1]
         pose_pub.publish(pose_absolute)
 
         if lsz is None:
             lsx = pose_absolute.pose.position.x
-            lsz = pose_absolute.pose.position.y
+            lsy = pose_absolute.pose.position.y
+            lsz = pose_absolute.pose.position.z
             lst = pose.header.stamp.to_sec()
         else:
             dx = pose_absolute.pose.position.x - lsx
-            dy = pose_absolute.pose.position.y - lsz
+            dy = pose_absolute.pose.position.y - lsy
+            dz = pose_absolute.pose.position.z - lsz
             dt = pose.header.stamp.to_sec() - lst
 
             if dt > 0:
@@ -148,6 +151,7 @@ def pose_callback(pose):
                 vel_enu.twist.twist.linear.z = 0
                 vel_enu_pub.publish(vel_enu)
 
+                last_yaw = 0
                 vx = np.cos(-last_yaw) * vx_enu - np.sin(-last_yaw) * vy_enu
                 vy = np.sin(-last_yaw) * vx_enu + np.cos(-last_yaw) * vy_enu
                 vel = TwistWithCovarianceStamped()
@@ -163,12 +167,12 @@ def pose_callback(pose):
             lst = pose.header.stamp.to_sec()
     else:
         lsy = -pose.pose.pose.position.y
-        (_, _, lsyaw) = tf.transformations.euler_from_quaternion([
+        orient_slam = [
             pose.pose.pose.orientation.x,
             pose.pose.pose.orientation.y,
             pose.pose.pose.orientation.z,
-            pose.pose.pose.orientation.w,
-        ])
+            pose.pose.pose.orientation.w
+        ]
 
 
 def orient_cb(msg):
