@@ -6,40 +6,31 @@ clc;
 load(strcat(path, file));
 
 %%%%% INTERPOLATIONS START
-
-% interpolate GPS to estimate (not really ok)
-
-% interpolate gt_pose to estimate_pose
-%gt_interp = interp1(gt_pose(:,1), gt_pose(:,2:4), estimate_pose(:, 1));
-%gt_pose = estimate_pose;
-%gt_pose(:,2:4) = gt_interp;
-% interpolate gt_vel to estimate_vel
-%gt_vel_interp = interp1(gt_vel(:,1), gt_vel(:,2:4), estimate_vel(:, 1));
-%gt_vel = estimate_vel;
-%gt_vel(:,2:4) = gt_vel_interp;
-% interpolate gt_vel_enu to estimate_vel
-%gt_vel_enu_interp = interp1(gt_vel_enu(:,1), gt_vel_enu(:,2:4), estimate_vel_enu(:, 1));
-%gt_vel_enu = estimate_vel_enu;
-%gt_vel_enu(:,2:4) = gt_vel_enu_interp;
-
 % interpolate estimate to GPS
 
 % interpolate gt_pose to estimate_pose
-estimate_pose_interp = interp1(estimate_pose(:,1), estimate_pose(:,2:4), gt_pose(:, 1), 'nearest');
-estimate_pose = gt_pose;
-estimate_pose(:,2:4) = estimate_pose_interp;
-% interpolate gt_vel to estimate_vel
-estimate_vel_interp = interp1(estimate_vel(:,1), estimate_vel(:,2:4), gt_vel(:, 1), 'nearest');
-estimate_vel = gt_vel;
-estimate_vel(:,2:4) = estimate_vel_interp;
-% interpolate gt_vel_enu to estimate_vel
-estimate_vel_enu_interp = interp1(estimate_vel_enu(:,1), estimate_vel_enu(:,2:4), gt_vel_enu(:, 1), 'nearest');
-estimate_vel_enu = gt_vel_enu;
-estimate_vel_enu(:,2:4) = estimate_vel_enu_interp;
+estimate_pose_interp = gt_pose;
+for i=1:1:size(gt_pose, 1)
+    idx = size(estimate_pose, 1) * i / size(gt_pose, 1);
+    estimate_pose_interp(i, 2:4) = estimate_pose(int32(round(idx)), 2:4);
+end
+estimate_pose = estimate_pose_interp;
 
-% NaN removal
-gt_pose(any(isnan(estimate_pose), 2), :) = [];
-estimate_pose(any(isnan(estimate_pose), 2), :) = [];
+% interpolate gt_vel to estimate_vel
+estimate_vel_interp = gt_vel;
+for i=1:1:size(gt_vel, 1)
+    idx = size(estimate_vel, 1) * i / size(gt_vel, 1);
+    estimate_vel_interp(i, 2:4) = estimate_vel(int32(round(idx)), 2:4);
+end
+estimate_vel = estimate_vel_interp;
+
+% interpolate gt_vel_enu to estimate_vel
+estimate_vel_enu_interp = gt_vel_enu;
+for i=1:1:size(gt_vel_enu, 1)
+    idx = size(estimate_vel_enu, 1) * i / size(gt_vel_enu, 1);
+    estimate_vel_enu_interp(i, 2:4) = estimate_vel_enu(int32(round(idx)), 2:4);
+end
+estimate_vel_enu = estimate_vel_enu_interp;
 
 %%%%% INTERPOLATIONS END
 
