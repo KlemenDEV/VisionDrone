@@ -293,11 +293,11 @@ t.Padding = 'tight';
 % trajectory shape estimation
 
 % rotate trajectory to match GT
-rot = fminsearch(@(x) costf(x, gt_pose, estimate_pose), 0);
+rot = fminsearch(@(x) costf(x, gt_pose(1:100, :), estimate_pose(1:100, :)), 0);
 estimate_pose2 = cos(rot)*estimate_pose(:, 2) - sin(rot)*estimate_pose(:, 3);
 estimate_pose3 = sin(rot)*estimate_pose(:, 2) + cos(rot)*estimate_pose(:, 3);
-estimate_pose(:, 2) = estimate_pose2;
-estimate_pose(:, 3) = estimate_pose3;
+estimate_pose(:, 2) = estimate_pose3;
+estimate_pose(:, 3) = -estimate_pose2;
 
 % scale trajectory to match GT
 k = fminsearch(@(x) costf2(x, gt_pose, estimate_pose), 1);
@@ -327,9 +327,8 @@ data = {
     sprintf('Average 2D error: %.3f m std=%.3f m', mean(err2d), std(err2d))
     sprintf('Relative average 2D error: %.3f %% std=%.3f %% of max. distance from st. pt.', mean(err2d / diff_maxptostart) * 100, std(err2d / diff_maxptostart) * 100)
     ""
-    sprintf('Scale error: %.3f %%', abs(1-k) * 100)
-    sprintf('Rotation error: %.3f rad, %.3f deg,', rot, rad2deg(rot))
+    sprintf('Scale error: %.3f %%', abs(1-))
 };
-uicontrol(tab8, 'Style', 'text', 'String', data, 'units', 'normalized', 'Position', [0.01 0.38 0.6 0.6], 'FontSize', 14, 'HorizontalAlignment', 'left', 'FontName', 'FixedWidth');
+uicontrol(tab6, 'Style', 'text', 'String', data, 'units', 'normalized', 'Position', [0.01 0.38 0.6 0.6], 'FontSize', 14, 'HorizontalAlignment', 'left', 'FontName', 'FixedWidth');
 
 % EOF
