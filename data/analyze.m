@@ -5,28 +5,43 @@ clc;
 [file, path] = uigetfile("*.mat", "Select estimate_pose file");
 load(strcat(path, file));
 
+%%%%% INTERPOLATIONS START
+
+% interpolate GPS to estimate (not really ok)
+
 % interpolate gt_pose to estimate_pose
-gt_interp = interp1(gt_pose(:,1), gt_pose(:,2:4), estimate_pose(:, 1));
-gt_pose = estimate_pose;
-gt_pose(:,2:4) = gt_interp;
-
+%gt_interp = interp1(gt_pose(:,1), gt_pose(:,2:4), estimate_pose(:, 1));
+%gt_pose = estimate_pose;
+%gt_pose(:,2:4) = gt_interp;
 % interpolate gt_vel to estimate_vel
-gt_vel_interp = interp1(gt_vel(:,1), gt_vel(:,2:4), estimate_vel(:, 1));
-gt_vel = estimate_vel;
-gt_vel(:,2:4) = gt_vel_interp;
-
+%gt_vel_interp = interp1(gt_vel(:,1), gt_vel(:,2:4), estimate_vel(:, 1));
+%gt_vel = estimate_vel;
+%gt_vel(:,2:4) = gt_vel_interp;
 % interpolate gt_vel_enu to estimate_vel
-gt_vel_enu_interp = interp1(gt_vel_enu(:,1), gt_vel_enu(:,2:4), estimate_vel_enu(:, 1));
-gt_vel_enu = estimate_vel_enu;
-gt_vel_enu(:,2:4) = gt_vel_enu_interp;
+%gt_vel_enu_interp = interp1(gt_vel_enu(:,1), gt_vel_enu(:,2:4), estimate_vel_enu(:, 1));
+%gt_vel_enu = estimate_vel_enu;
+%gt_vel_enu(:,2:4) = gt_vel_enu_interp;
 
-% nan checks
-estimate_pose(isnan(estimate_pose))=0;
-estimate_vel(isnan(estimate_vel))=0;
-estimate_vel_enu(isnan(estimate_vel_enu))=0;
-gt_pose(isnan(gt_pose))=0;
-gt_vel(isnan(gt_vel))=0;
-gt_vel_enu(isnan(gt_vel_enu))=0;
+% interpolate estimate to GPS
+
+% interpolate gt_pose to estimate_pose
+estimate_pose_interp = interp1(estimate_pose(:,1), estimate_pose(:,2:4), gt_pose(:, 1), 'nearest');
+estimate_pose = gt_pose;
+estimate_pose(:,2:4) = estimate_pose_interp;
+% interpolate gt_vel to estimate_vel
+estimate_vel_interp = interp1(estimate_vel(:,1), estimate_vel(:,2:4), gt_vel(:, 1), 'nearest');
+estimate_vel = gt_vel;
+estimate_vel(:,2:4) = estimate_vel_interp;
+% interpolate gt_vel_enu to estimate_vel
+estimate_vel_enu_interp = interp1(estimate_vel_enu(:,1), estimate_vel_enu(:,2:4), gt_vel_enu(:, 1), 'nearest');
+estimate_vel_enu = gt_vel_enu;
+estimate_vel_enu(:,2:4) = estimate_vel_enu_interp;
+
+% NaN removal
+gt_pose(any(isnan(estimate_pose), 2), :) = [];
+estimate_pose(any(isnan(estimate_pose), 2), :) = [];
+
+%%%%% INTERPOLATIONS END
 
 % 2D estimate error
 err2d = sqrt((gt_pose(:,2) - estimate_pose(:,2)).^2 + (gt_pose(:,3) - estimate_pose(:,3)).^2);
@@ -170,8 +185,8 @@ t2.Padding = 'tight';
 
 ax = nexttile(t2);
 hold (ax, 'on')
-plot(ax, gt_vel_enu(:, 1), -smooth(gt_vel_enu(:, 3), 5));
-plot(ax, estimate_vel_enu(:, 1), -smooth(estimate_vel_enu(:, 2), 75));
+plot(ax, gt_vel_enu(:, 1), -(gt_vel_enu(:, 3)));
+plot(ax, estimate_vel_enu(:, 1), -(estimate_vel_enu(:, 2)));
 title(ax, "X velocity over time");
 xlabel(ax, "time / s");
 ylabel(ax, "v / m/s");
@@ -180,16 +195,16 @@ hold (ax, 'off')
 
 ax = nexttile(t2);
 hold (ax, 'on')
-plot(ax, gt_vel_enu(:, 1), smooth(gt_vel_enu(:, 2), 5));
-plot(ax, estimate_vel_enu(:, 1), -smooth(estimate_vel_enu(:, 3), 75));
+plot(ax, gt_vel_enu(:, 1), (gt_vel_enu(:, 2)));
+plot(ax, estimate_vel_enu(:, 1), -(estimate_vel_enu(:, 3)));
 title(ax, "Y velocity over time");
 xlabel(ax, "time / s");
 ylabel(ax, "v / m/s");
 legend(ax, "GPS GT", "Estimate");
 hold (ax, 'off')
 
-enu_velerr_x = abs(smooth(gt_vel_enu(:, 3), 5) - smooth(estimate_vel_enu(:, 2), 75));
-enu_velerr_y = abs(smooth(gt_vel_enu(:, 2), 5) - smooth(estimate_vel_enu(:, 3), 75));
+enu_velerr_x = abs((gt_vel_enu(:, 3)) - (estimate_vel_enu(:, 2)));
+enu_velerr_y = abs((gt_vel_enu(:, 2)) - (estimate_vel_enu(:, 3)));
 
 ax = nexttile(t2);
 hold (ax, 'on')
@@ -218,8 +233,8 @@ t3.Padding = 'tight';
 
 ax = nexttile(t3);
 hold (ax, 'on')
-plot(ax, gt_vel(:, 1), smooth(gt_vel(:, 3), 5));
-plot(ax, estimate_vel(:, 1), smooth(estimate_vel(:, 2), 75));
+plot(ax, gt_vel(:, 1), gt_vel(:, 3));
+plot(ax, estimate_vel(:, 1), estimate_vel(:, 2));
 title(ax, "X velocity over time");
 xlabel(ax, "time / s");
 ylabel(ax, "v / m/s");
@@ -228,16 +243,16 @@ hold (ax, 'off')
 
 ax = nexttile(t3);
 hold (ax, 'on')
-plot(ax, gt_vel(:, 1), -smooth(gt_vel(:, 2), 5));
-plot(ax, estimate_vel(:, 1), smooth(estimate_vel(:, 3), 75));
+plot(ax, gt_vel(:, 1), -(gt_vel(:, 2)));
+plot(ax, estimate_vel(:, 1), (estimate_vel(:, 3)));
 title(ax, "Y velocity over time");
 xlabel(ax, "time / s");
 ylabel(ax, "v / m/s");
 legend(ax, "GPS GT", "Estimate");
 hold (ax, 'off')
 
-velerr_x = abs(smooth(gt_vel(:, 3), 5) - smooth(estimate_vel(:, 2), 75));
-velerr_y = abs(smooth(gt_vel(:, 2), 5) - smooth(estimate_vel(:, 3), 75));
+velerr_x = abs((gt_vel(:, 3)) - (estimate_vel(:, 2)));
+velerr_y = abs((gt_vel(:, 2)) - (estimate_vel(:, 3)));
 
 ax = nexttile(t3);
 hold (ax, 'on')
