@@ -298,15 +298,17 @@ t.Padding = 'tight';
 
 % trajectory shape estimation
 
-% rotate trajectory to match GT
-rot = fminsearch(@(x) costf(x, gt_pose, estimate_pose), 0);
+% rotate and scale trajectory to match GT
+par = fminsearch(@(x) costf(x, gt_pose, estimate_pose), [0 1]);
+
+rot = par(1);
+k = par(2);
+
 estimate_pose2 = cos(rot)*estimate_pose(:, 2) - sin(rot)*estimate_pose(:, 3);
 estimate_pose3 = sin(rot)*estimate_pose(:, 2) + cos(rot)*estimate_pose(:, 3);
 estimate_pose(:, 2) = estimate_pose2;
 estimate_pose(:, 3) = estimate_pose3;
 
-% scale trajectory to match GT
-k = fminsearch(@(x) costf2(x, gt_pose, estimate_pose), 1);
 estimate_pose(:, 2) = k * estimate_pose(:, 2);
 estimate_pose(:, 3) = k * estimate_pose(:, 3);
 
