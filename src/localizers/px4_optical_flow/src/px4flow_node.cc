@@ -17,6 +17,8 @@
 #include "flow_opencv.hpp"
 #include "flow_px4.hpp"
 
+#include "filter.hpp"
+
 OpticalFlowPX4 flowpx4(477.78586954352323, 480.6678820118329,
                        -1, // image rate
                        640, 480
@@ -32,29 +34,26 @@ OpticalFlowOpenCV flow(477.78586954352323, 480.6678820118329,
 ros::Publisher publisher_velocity;
 
 double height_last = 0;
-
-double roll = 0, pitch = 0, yaw = 0;
-
-double wx, wy;
-
-double vx = 0, vy = 0;
+double wx = 0, wy = 0;
+double scx, scy;
 
 int init_counter = 0;
 
 bool use_px4;
 
+SMA<50> fx;
+SMA<50> fy;
+
+SMA<15> fx_p;
+SMA<15> fy_p;
+
 void heightCallback(const std_msgs::Float64::ConstPtr &msg) {
-    height_last = msg->data;
+    height_last = 0.3 * height_last + 0.7 * msg->data;
 }
 
 void imuDataCallback(const sensor_msgs::Imu::ConstPtr &imu_msg) {
-    tf2::Quaternion quat_est_rot;
-    tf2::fromMsg(imu_msg->orientation, quat_est_rot);
-    tf2::Matrix3x3 est_rot(quat_est_rot);
-    est_rot.getRPY(roll, pitch, yaw);
-
-    wx = imu_msg->angular_velocity.x * 0.5 + wx * 0.5;
-    wy = imu_msg->angular_velocity.y * 0.5 + wy * 0.5;
+    wx = 0.3 * wx + 0.7 * imu_msg->angular_velocity.x;
+    wy = 0.3 * wy + 0.7 * imu_msg->angular_velocity.y;
 }
 
 void callbackImage(const sensor_msgs::ImageConstPtr &msg) {
@@ -69,17 +68,17 @@ void callbackImage(const sensor_msgs::ImageConstPtr &msg) {
     else
         qty = flow.calcFlow(image->image.data, usec_stamp, dtus, cx, cy);
 
-    double nvx = height_last * (-wy - (double) cy / (dtus * 1e-6));
-    double nvy = height_last * (-wx - (double) cx / (dtus * 1e-6));
+    scx = 0 * scx + 1 * cx;
+    scy = 0 * scy + 1 * cy;
 
-    vx = nvx;
-    vy = nvy;
+    double vx = height_last * (-wy - scy / (dtus * 1e-6));
+    double vy = height_last * (-wx - scx / (dtus * 1e-6));
 
     geometry_msgs::TwistWithCovarianceStamped velocity;
     velocity.header.frame_id = "uav_velocity";
     velocity.header.stamp = msg->header.stamp;
-    velocity.twist.twist.linear.x = vx;
-    velocity.twist.twist.linear.y = vy;
+    velocity.twist.twist.linear.x = use_px4 ? fx_p(vx) : fx(vx);
+    velocity.twist.twist.linear.y = use_px4 ? fy_p(vy) : fy(vy);
 
     if (qty < 0)
         velocity.twist.covariance[0] = NAN;

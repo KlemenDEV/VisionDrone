@@ -7,6 +7,21 @@ from std_msgs.msg import Float64
 import numpy as np
 import random
 
+
+class LPF:
+    def __init__(self, window_size):
+        self.window_size = window_size
+        self.values = []
+        self.sum = 0
+
+    def filter(self, value):
+        self.values.append(value)
+        self.sum += value
+        if len(self.values) > self.window_size:
+            self.sum -= self.values.pop(0)
+        return float(self.sum) / len(self.values)
+
+
 pose_pub = None
 vel_pub = None
 vel_enu_pub = None
@@ -31,6 +46,9 @@ ransac_complete = False
 ransac_err = 1
 ransac_m_k = 0
 ransac_m_n = 0
+
+f_enu_x = LPF(10)
+f_enu_y = LPF(10)
 
 
 def perform_ransac(err, iter_count):
@@ -131,18 +149,16 @@ def pose_callback(pose):
 
         if lsz is None:
             lsx = pose_absolute.pose.position.x
-            lsy = pose_absolute.pose.position.y
-            lsz = pose_absolute.pose.position.z
+            lsz = pose_absolute.pose.position.y
             lst = pose.header.stamp.to_sec()
         else:
             dx = pose_absolute.pose.position.x - lsx
-            dy = pose_absolute.pose.position.y - lsy
-            dz = pose_absolute.pose.position.z - lsz
+            dy = pose_absolute.pose.position.y - lsz
             dt = pose.header.stamp.to_sec() - lst
 
             if dt > 0:
-                vx_enu = dx / dt
-                vy_enu = dy / dt
+                vx_enu = f_enu_x.filter(dy / dt)
+                vy_enu = -f_enu_y.filter(dx / dt)
                 vel_enu = TwistWithCovarianceStamped()
                 vel_enu.header.stamp = rospy.get_rostime()
                 vel_enu.header.frame_id = "uav_velocity_enu"
@@ -151,14 +167,11 @@ def pose_callback(pose):
                 vel_enu.twist.twist.linear.z = 0
                 vel_enu_pub.publish(vel_enu)
 
-                last_yaw = 0
-                vx = np.cos(-last_yaw) * vx_enu - np.sin(-last_yaw) * vy_enu
-                vy = np.sin(-last_yaw) * vx_enu + np.cos(-last_yaw) * vy_enu
                 vel = TwistWithCovarianceStamped()
                 vel.header.stamp = rospy.get_rostime()
                 vel.header.frame_id = "uav_velocity"
-                vel.twist.twist.linear.x = vx
-                vel.twist.twist.linear.y = vy
+                vel.twist.twist.linear.x = (np.cos(-last_yaw) * vx_enu - np.sin(-last_yaw) * vy_enu)
+                vel.twist.twist.linear.y = (np.sin(-last_yaw) * vx_enu + np.cos(-last_yaw) * vy_enu)
                 vel.twist.twist.linear.z = 0
                 vel_pub.publish(vel)
 
