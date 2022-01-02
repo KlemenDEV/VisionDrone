@@ -47,8 +47,8 @@ ransac_err = 1
 ransac_m_k = 0
 ransac_m_n = 0
 
-f_enu_x = LPF(10)
-f_enu_y = LPF(10)
+f_enu_x = LPF(15)
+f_enu_y = LPF(15)
 
 
 def perform_ransac(err, iter_count):
@@ -147,18 +147,11 @@ def pose_callback(pose):
         pose_absolute.pose.position.z = lg_rotated[1]
         pose_pub.publish(pose_absolute)
 
-        if lsz is None:
-            lsx = pose_absolute.pose.position.x
-            lsz = pose_absolute.pose.position.y
-            lst = pose.header.stamp.to_sec()
-        else:
-            dx = pose_absolute.pose.position.x - lsx
-            dy = pose_absolute.pose.position.y - lsz
+        if lsz is not None:
             dt = pose.header.stamp.to_sec() - lst
-
             if dt > 0:
-                vx_enu = f_enu_x.filter(dy / dt)
-                vy_enu = -f_enu_y.filter(dx / dt)
+                vx_enu = f_enu_x.filter((pose_absolute.pose.position.y - lsz) / dt)
+                vy_enu = -f_enu_y.filter((pose_absolute.pose.position.x - lsx) / dt)
                 vel_enu = TwistWithCovarianceStamped()
                 vel_enu.header.stamp = rospy.get_rostime()
                 vel_enu.header.frame_id = "uav_velocity_enu"
@@ -175,9 +168,9 @@ def pose_callback(pose):
                 vel.twist.twist.linear.z = 0
                 vel_pub.publish(vel)
 
-            lsx = pose_absolute.pose.position.x
-            lsz = pose_absolute.pose.position.y
-            lst = pose.header.stamp.to_sec()
+        lsx = pose_absolute.pose.position.x
+        lsz = pose_absolute.pose.position.y
+        lst = pose.header.stamp.to_sec()
     else:
         lsy = -pose.pose.pose.position.y
         orient_slam = [
