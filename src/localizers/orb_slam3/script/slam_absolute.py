@@ -84,13 +84,13 @@ def height_callback(height):
     if ransac_complete is False and lsy is not None and orient_slam is not None:
         ransac_pairs.append((height.data, lsy))
 
-        if len(ransac_pairs) < 55:
+        if len(ransac_pairs) < 60:
             print("Collecting data for ransac. Frames: %d" % len(ransac_pairs))
         else:
-            perform_ransac(0.17, 5000)
+            perform_ransac(0.4, 5000)
             print("SLAM RANSAC error: %f" % ransac_err)
 
-        if ransac_err <= 0.23:
+        if ransac_err <= 0.15:
             print("RANSAC scale: %f su/m" % ransac_m_k)
 
             global R_sw
