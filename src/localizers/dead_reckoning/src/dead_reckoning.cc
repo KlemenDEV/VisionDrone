@@ -24,7 +24,6 @@
 ros::Publisher publisher_velocity;
 
 double t_last = -1;
-int counter = 0;
 
 double vx = 0, vy = 0;
 
@@ -60,22 +59,19 @@ void imuDataCallback(const sensor_msgs::Imu::ConstPtr &imu_msg) {
     double axl = ax * cos(pitch) + ay * sin(roll) * sin(pitch) - az * cos(roll) * sin(pitch);
     double ayl = ax * 0 + ay * cos(roll) + az * sin(roll);
 
-    if (std::abs(ax) > 0.3)
+    if (std::abs(ax) > 0.4)
         vy += axl * dt;
 
-    if (std::abs(ay) > 0.3)
+    if (std::abs(ay) > 0.4)
         vx += ayl * dt;
 
-    if (counter % 10 == 0) {
-        geometry_msgs::TwistWithCovarianceStamped velocitymsg;
-        velocitymsg.header.frame_id = "uav_velocity";
-        velocitymsg.header.stamp = imu_msg->header.stamp;
-        velocitymsg.twist.twist.linear.x = -vx;
-        velocitymsg.twist.twist.linear.y = -vy;
-        publisher_velocity.publish(velocitymsg);
-    }
+    geometry_msgs::TwistWithCovarianceStamped velocitymsg;
+    velocitymsg.header.frame_id = "uav_velocity";
+    velocitymsg.header.stamp = imu_msg->header.stamp;
+    velocitymsg.twist.twist.linear.x = -vx;
+    velocitymsg.twist.twist.linear.y = -vy;
+    publisher_velocity.publish(velocitymsg);
 
-    counter++;
     t_last = imu_msg->header.stamp.toSec();
 }
 
