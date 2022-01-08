@@ -70,6 +70,7 @@ include_directories(
         ${PROJECT_SOURCE_DIR}/../../../non_ros/orb_slam3/
         ${PROJECT_SOURCE_DIR}/../../../non_ros/orb_slam3/include
         ${PROJECT_SOURCE_DIR}/../../../non_ros/orb_slam3/include/CameraModels
+        ${PROJECT_SOURCE_DIR}/../../../non_ros/orb_slam3/Thirdparty/Sophus
         ${Pangolin_INCLUDE_DIRS}
 )
 
