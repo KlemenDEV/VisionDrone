@@ -68,8 +68,8 @@ void imuDataCallback(const sensor_msgs::Imu::ConstPtr &imu_msg) {
     geometry_msgs::TwistWithCovarianceStamped velocitymsg;
     velocitymsg.header.frame_id = "uav_velocity";
     velocitymsg.header.stamp = imu_msg->header.stamp;
-    velocitymsg.twist.twist.linear.x = -vx;
-    velocitymsg.twist.twist.linear.y = -vy;
+    velocitymsg.twist.twist.linear.x = -vy;
+    velocitymsg.twist.twist.linear.y = -vx;
     publisher_velocity.publish(velocitymsg);
 
     t_last = imu_msg->header.stamp.toSec();

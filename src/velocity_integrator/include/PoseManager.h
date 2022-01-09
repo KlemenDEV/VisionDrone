@@ -49,6 +49,7 @@ private:
     volatile double height_last = 0;
 
     volatile bool datum_set = false;
+    volatile bool gps_data = false;
 public:
     volatile double yaw_last = 0;
 

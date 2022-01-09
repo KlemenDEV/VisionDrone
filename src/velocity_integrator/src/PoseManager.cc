@@ -34,6 +34,7 @@ void PoseManager::imuDataCallback(const sensor_msgs::Imu::ConstPtr &msg) {
 
 void PoseManager::gpsDataCallback(const sensor_msgs::NavSatFix::ConstPtr &msg) {
     gps_last = msg;
+    gps_data = true;
     if (datum_set) this->gps_pub.publish(msg);
 }
 
@@ -42,6 +43,9 @@ void PoseManager::heightCallback(const std_msgs::Float64::ConstPtr &msg) {
 }
 
 void PoseManager::publishData(double px, double py) {
+    if(!gps_data)
+        return;
+
     if (!datum_set) setGPSDatum();
 
     geometry_msgs::PoseStamped posest;
