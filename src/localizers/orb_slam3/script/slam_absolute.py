@@ -155,8 +155,8 @@ def pose_callback(pose):
                 vel_enu = TwistWithCovarianceStamped()
                 vel_enu.header.stamp = rospy.get_rostime()
                 vel_enu.header.frame_id = "uav_velocity_enu"
-                vel_enu.twist.twist.linear.x = vx_enu
-                vel_enu.twist.twist.linear.y = vy_enu
+                vel_enu.twist.twist.linear.x = -vy_enu
+                vel_enu.twist.twist.linear.y = -vx_enu
                 vel_enu.twist.twist.linear.z = 0
                 vel_enu_pub.publish(vel_enu)
 
