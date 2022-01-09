@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "dead_reckoning");
     ros::NodeHandle nh;
 
-    ros::Subscriber sub_imu2 = nh.subscribe("/imu/9dof", 15, imuDataCallback);
+    ros::Subscriber sub_imu2 = nh.subscribe("/imu/9dof", 10, imuDataCallback);
     publisher_velocity = nh.advertise<geometry_msgs::TwistWithCovarianceStamped>("/dead_reckoning/velocity_out", 1);
 
     ros::Subscriber sub_height = nh.subscribe("/drone/height_estimate", 1, heightCallback);

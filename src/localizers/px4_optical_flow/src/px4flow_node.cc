@@ -35,7 +35,6 @@ ros::Publisher publisher_velocity;
 
 double height_last = 0;
 double wx = 0, wy = 0;
-double scx, scy;
 
 int init_counter = 0;
 
@@ -48,12 +47,12 @@ SMA<15> fx_p;
 SMA<15> fy_p;
 
 void heightCallback(const std_msgs::Float64::ConstPtr &msg) {
-    height_last = 0.3 * height_last + 0.7 * msg->data;
+    height_last = msg->data;
 }
 
 void imuDataCallback(const sensor_msgs::Imu::ConstPtr &imu_msg) {
-    wx = 0.3 * wx + 0.7 * imu_msg->angular_velocity.x;
-    wy = 0.3 * wy + 0.7 * imu_msg->angular_velocity.y;
+    wx = 0.4 * wx + 0.4 * imu_msg->angular_velocity.x;
+    wy = 0.4 * wy + 0.4 * imu_msg->angular_velocity.y;
 }
 
 void callbackImage(const sensor_msgs::ImageConstPtr &msg) {
@@ -68,11 +67,8 @@ void callbackImage(const sensor_msgs::ImageConstPtr &msg) {
     else
         qty = flow.calcFlow(image->image.data, usec_stamp, dtus, cx, cy);
 
-    scx = 0 * scx + 1 * cx;
-    scy = 0 * scy + 1 * cy;
-
-    double vx = height_last * (-wy - scy / (dtus * 1e-6));
-    double vy = height_last * (-wx - scx / (dtus * 1e-6));
+    double vx = height_last * (-wy - (double) cy / (dtus * 1e-6));
+    double vy = height_last * (-wx - (double) cx / (dtus * 1e-6));
 
     geometry_msgs::TwistWithCovarianceStamped velocity;
     velocity.header.frame_id = "uav_velocity";
@@ -104,7 +100,7 @@ int main(int argc, char **argv) {
     flow.setCameraMatrix(477.78586954352323, 480.6678820118329, 322.72767560819693, 258.974159781733);
     flow.setCameraDistortion(0.11906203790630414, -0.23224501485827584, 0.002897948377514225, -0.0026544348133675866);
 
-    ros::Subscriber sub_img = nh.subscribe("/camera/orthogonal", 1, callbackImage);
+    ros::Subscriber sub_img = nh.subscribe("/camera/orthogonal", 2, callbackImage, ros::TransportHints().tcpNoDelay(true));
     ros::Subscriber sub_imu = nh.subscribe("/imu/9dof", 10, imuDataCallback);
     ros::Subscriber sub_height = nh.subscribe("/drone/height_ground", 10, heightCallback);
 

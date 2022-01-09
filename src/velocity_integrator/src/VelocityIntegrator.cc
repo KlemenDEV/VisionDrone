@@ -68,7 +68,8 @@ int main(int argc, char **argv) {
     PoseManager poseManagerObj(&nh);
     poseManager = &poseManagerObj;
 
-    ros::Subscriber velocity_sub = nh.subscribe("/estimate/velocity", 5, velocityCallback);
+    ros::Subscriber velocity_sub = nh.subscribe("/estimate/velocity", 5, velocityCallback,
+                                                ros::TransportHints().tcpNoDelay(true));
 
     pub_vel_enu = nh.advertise<geometry_msgs::TwistWithCovarianceStamped>("/estimate/velocity_enu", 5);
 

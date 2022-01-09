@@ -77,10 +77,10 @@ def rc_out_cb(msg):
 if __name__ == "__main__":
     rospy.init_node('simulator')
 
-    velocity_pub = rospy.Publisher('/motion_simulation/velocity_out', TwistWithCovarianceStamped, queue_size=15)
+    velocity_pub = rospy.Publisher('/motion_simulation/velocity_out', TwistWithCovarianceStamped, queue_size=10)
 
-    rc_out_sub = rospy.Subscriber('/mavros/rc/out', RCOut, rc_out_cb, queue_size=15)
-    height_sub = rospy.Subscriber('/drone/height_estimate', Float64, height_cb, queue_size=15)
-    orient_sub = rospy.Subscriber('/imu/9dof', Imu, orient_cb, queue_size=15)
+    rc_out_sub = rospy.Subscriber('/mavros/rc/out', RCOut, rc_out_cb, queue_size=10)
+    height_sub = rospy.Subscriber('/drone/height_estimate', Float64, height_cb, queue_size=10)
+    orient_sub = rospy.Subscriber('/imu/9dof', Imu, orient_cb, queue_size=10)
 
     rospy.spin()

@@ -76,8 +76,8 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
 
     ros::Subscriber baro_sub = nh.subscribe<sensor_msgs::FluidPressure>("/baro/data", 5, baroCallback);
-    ros::Subscriber sub_imu = nh.subscribe("/imu/9dof", 10, imuCallback);
-    ros::Subscriber sub_lidar = nh.subscribe("/tf02/data", 10, lidarCallback);
+    ros::Subscriber sub_imu = nh.subscribe("/imu/9dof", 5, imuCallback);
+    ros::Subscriber sub_lidar = nh.subscribe("/tf02/data", 5, lidarCallback);
 
     ros::Publisher height_pub = nh.advertise<std_msgs::Float64>("/drone/height_estimate", 5);
     ros::Publisher ground_height_pub = nh.advertise<std_msgs::Float64>("/drone/height_ground", 5);

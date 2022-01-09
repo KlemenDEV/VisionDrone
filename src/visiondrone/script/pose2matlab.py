@@ -1,5 +1,7 @@
 #!/usr/bin/env python
+import struct
 
+import genpy
 import rospy
 import tf.transformations
 from scipy import io
@@ -23,6 +25,7 @@ gt_vel = np.empty((0, 4), float)
 gt_vel_enu = np.empty((0, 4), float)
 
 current_time = None
+start_time = None
 datum = None
 yaw = 0
 
@@ -32,7 +35,6 @@ def odom_cb(msg):
         return
 
     global estimate_pose
-
     estimate_pose = np.vstack(
         (estimate_pose,
          np.array([current_time, msg.pose.position.x, msg.pose.position.y, msg.pose.position.z])))
@@ -80,8 +82,14 @@ def gt_velocity_cb(msg):
 
 
 def imu_cb(msg):
-    global yaw, current_time
-    current_time = msg.header.stamp.secs
+    global yaw, current_time, start_time
+
+    if start_time is None:
+        start_time = msg.header.stamp.to_sec()
+        current_time = 0
+    else:
+        current_time = msg.header.stamp.to_sec() - start_time
+
     quaternion = (msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w)
     euler = tf.transformations.euler_from_quaternion(quaternion)
     yaw = euler[2]
