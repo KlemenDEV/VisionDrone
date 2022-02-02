@@ -30,10 +30,10 @@ if __name__ == "__main__":
     ros_rate = rospy.Rate(1)  # 1 Hz
     while not rospy.is_shutdown():
         if all(active_topics.values()):
-            rospy.logerror("######################################")
-            rospy.logerror("#       GPS SV number: %02d            #" % num_sv)
-            rospy.logerror("#   PFC DONE, ALL TOPICS ARE READY   #")
-            rospy.logerror("######################################")
+            rospy.logfatal("######################################")
+            rospy.logfatal("#       GPS SV number: %02d            #" % num_sv)
+            rospy.logfatal("#   PFC DONE, ALL TOPICS ARE READY   #")
+            rospy.logfatal("######################################")
             rospy.signal_shutdown("Preflight checklist done")
 
         ros_rate.sleep()
