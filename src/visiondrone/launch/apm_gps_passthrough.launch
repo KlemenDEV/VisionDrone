@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<launch>
+    <!-- GPS MODULE -->
+    <node pkg="ublox_gps" type="ublox_gps" name="ublox" output="screen" clear_params="false" required="true">
+        <param name="device" type="string" value="/dev/ttyAMA4"/>
+        <rosparam command="load" file="$(find gps_injection)/config/gps_config.yaml"/>
+    </node>
+
+    <!-- GPS INJECTION -->
+    <node pkg="gps_injection" type="gps_injection_node" name="gps_passthrough" output="screen" required="true">
+        <param name="enable_injection" value="false"/>
+    </node>
+</launch>
