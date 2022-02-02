@@ -17,6 +17,8 @@
 #include "flow_opencv.hpp"
 #include "flow_px4.hpp"
 
+#include "filter.hpp"
+
 OpticalFlowPX4 flowpx4(477.78586954352323, 480.6678820118329,
                        -1, // image rate
                        640, 480
@@ -32,29 +34,25 @@ OpticalFlowOpenCV flow(477.78586954352323, 480.6678820118329,
 ros::Publisher publisher_velocity;
 
 double height_last = 0;
-
-double roll = 0, pitch = 0, yaw = 0;
-
-double wx, wy;
-
-double vx = 0, vy = 0;
+double wx = 0, wy = 0;
 
 int init_counter = 0;
 
 bool use_px4;
+
+SMA<50> fx;
+SMA<50> fy;
+
+SMA<15> fx_p;
+SMA<15> fy_p;
 
 void heightCallback(const std_msgs::Float64::ConstPtr &msg) {
     height_last = msg->data;
 }
 
 void imuDataCallback(const sensor_msgs::Imu::ConstPtr &imu_msg) {
-    tf2::Quaternion quat_est_rot;
-    tf2::fromMsg(imu_msg->orientation, quat_est_rot);
-    tf2::Matrix3x3 est_rot(quat_est_rot);
-    est_rot.getRPY(roll, pitch, yaw);
-
-    wx = imu_msg->angular_velocity.x * 0.5 + wx * 0.5;
-    wy = imu_msg->angular_velocity.y * 0.5 + wy * 0.5;
+    wx = 0.4 * wx + 0.4 * imu_msg->angular_velocity.x;
+    wy = 0.4 * wy + 0.4 * imu_msg->angular_velocity.y;
 }
 
 void callbackImage(const sensor_msgs::ImageConstPtr &msg) {
@@ -69,27 +67,14 @@ void callbackImage(const sensor_msgs::ImageConstPtr &msg) {
     else
         qty = flow.calcFlow(image->image.data, usec_stamp, dtus, cx, cy);
 
-    double sensor_dist = abs(height_last / (cos(roll) * cos(pitch)));
-
-    double nvx = sensor_dist * (-wy - (double) cy / (dtus * 1e-6));
-    double nvy = sensor_dist * (-wx - (double) cx / (dtus * 1e-6));
-
-    vx = nvx;
-    vy = nvy;
-
-    if (use_px4) {
-        vx = nvx;
-        vy = nvy;
-    } else {
-        vx = nvx * 0.8 + vx * 0.2;
-        vy = nvy * 0.8 + vy * 0.2;
-    }
+    double vx = height_last * (-wy - (double) cy / (dtus * 1e-6));
+    double vy = height_last * (-wx - (double) cx / (dtus * 1e-6));
 
     geometry_msgs::TwistWithCovarianceStamped velocity;
     velocity.header.frame_id = "uav_velocity";
     velocity.header.stamp = msg->header.stamp;
-    velocity.twist.twist.linear.x = vx;
-    velocity.twist.twist.linear.y = vy;
+    velocity.twist.twist.linear.x = use_px4 ? fx_p(vx) : fx(vx);
+    velocity.twist.twist.linear.y = use_px4 ? fy_p(vy) : fy(vy);
 
     if (qty < 0)
         velocity.twist.covariance[0] = NAN;
@@ -115,7 +100,7 @@ int main(int argc, char **argv) {
     flow.setCameraMatrix(477.78586954352323, 480.6678820118329, 322.72767560819693, 258.974159781733);
     flow.setCameraDistortion(0.11906203790630414, -0.23224501485827584, 0.002897948377514225, -0.0026544348133675866);
 
-    ros::Subscriber sub_img = nh.subscribe("/camera/orthogonal", 1, callbackImage);
+    ros::Subscriber sub_img = nh.subscribe("/camera/orthogonal", 2, callbackImage, ros::TransportHints().tcpNoDelay(true));
     ros::Subscriber sub_imu = nh.subscribe("/imu/9dof", 10, imuDataCallback);
     ros::Subscriber sub_height = nh.subscribe("/drone/height_ground", 10, heightCallback);
 

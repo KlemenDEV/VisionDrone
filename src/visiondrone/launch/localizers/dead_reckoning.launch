@@ -5,7 +5,7 @@
     <include file="$(find visiondrone)/launch/processing/tf.launch"/>
 
     <!-- Height estimation -->
-    <node pkg="height_estimation" type="height_estimation_node" name="height_estimation" output="screen"
+    <node pkg="height_estimation" type="height_estimation_node" name="height_estimator" output="screen"
           required="true">
         <param name="relative" value="true"/>
     </node>
@@ -16,5 +16,5 @@
     <remap from="/estimate/velocity" to="/dead_reckoning/velocity_out"/>
 
     <!-- Velocity to position -->
-    <node pkg="velocity_integrator" type="velocity_integrator_node" name="integrator" required="true"/>
+    <node pkg="velocity_integrator" type="velocity_integrator_node" name="velocity_integrator" required="true"/>
 </launch>

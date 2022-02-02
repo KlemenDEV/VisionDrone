@@ -40,6 +40,8 @@
 
 #include "flow_opencv.hpp"
 
+// #define VISUALISE_KLT
+
 /****************************************************************************
  * OpenCV optical flow calculation
  ****************************************************************************/
@@ -119,6 +121,24 @@ int OpticalFlowOpenCV::calcFlow(uint8_t *img_current, const uint32_t &img_time_u
 	}
 
 	if (!features_current.empty() && !features_previous.empty()) {
+#ifdef VISUALISE_KLT
+        cv::Mat img_rgb(frame_gray.size(), CV_8UC3);
+        cv::cvtColor(frame_gray, img_rgb, CV_GRAY2RGB);
+        for (int i=0;i<features_current.size();i++) {
+            if (updateVector[i] == 1) {
+                cv::circle(img_rgb, cvPoint(features_previous[i].x, features_previous[i].y), 3, CV_RGB(0, 255, 0), 1, 8, 0);
+                cv::line(img_rgb, cvPoint(features_current[i].x, features_current[i].y),
+                         cvPoint(features_previous[i].x, features_previous[i].y), CV_RGB(0,255,0), 1);
+            } else if (updateVector[i] == 0) {
+                cv::circle(img_rgb, cvPoint(features_current[i].x, features_current[i].y), 3, CV_RGB(255, 0, 0), 1, 8, 0);
+            } else if (updateVector[i] == 2) {
+                cv::circle(img_rgb, cvPoint(features_current[i].x, features_current[i].y), 3, CV_RGB(255, 0, 255), 1, 8, 0);
+            }
+        }
+        cv::imshow("KLT", img_rgb);
+        cv::waitKey(1);
+#endif
+
 		//calculate pixel flow
 		for (int i = 0; i < updateVector.size(); i++) {
 			//just use active features

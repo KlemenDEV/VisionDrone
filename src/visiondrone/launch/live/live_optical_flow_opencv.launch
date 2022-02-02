@@ -11,7 +11,7 @@
     <include file="$(find visiondrone)/launch/localizers/optical_flow_opencv.launch"/>
 
     <!-- MAP GPS LOCATION TO LOCAL -->
-    <node pkg="geonav_transform" type="geonav_transform_node" name="gt_to_local" required="true">
+    <node pkg="geonav_transform" type="geonav_transform_node" name="gps_to_local" required="true">
         <param name="pub_odom" value="/ublox/fix/local"/>
         <param name="sub_fix" value="/ublox/fix_tracking"/>
         <param name="odom_frame_id" value="map"/>

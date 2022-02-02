@@ -25,39 +25,33 @@ ros::Publisher publisher;
 
 void grabImage(const sensor_msgs::ImageConstPtr &msg) {
     cv_bridge::CvImageConstPtr cv_ptr = cv_bridge::toCvShare(msg, sensor_msgs::image_encodings::MONO8);
+    Sophus::SE3f Twc = mpSLAM->TrackMonocular(cv_ptr->image, cv_ptr->header.stamp.toSec()).inverse();
+    Twc.normalize();
 
-    const cv::Mat &Tcw = mpSLAM->TrackMonocular(cv_ptr->image, cv_ptr->header.stamp.toSec());
-    if (Tcw.rows == 4 && Tcw.cols == 4) {
-        cv::Mat Twc(4, 4, CV_32F);
-        cv::invert(Tcw, Twc);
+    geometry_msgs::PoseWithCovarianceStamped pose;
+    pose.header.frame_id = "slam";
+    pose.header.stamp = cv_ptr->header.stamp;
 
-        geometry_msgs::PoseWithCovarianceStamped pose;
-        pose.header.frame_id = "slam";
-        pose.header.stamp = cv_ptr->header.stamp;
+    pose.pose.pose.position.x = (double) Twc.translation()(0);
+    pose.pose.pose.position.y = (double) Twc.translation()(1);
+    pose.pose.pose.position.z = (double) Twc.translation()(2);
 
-        pose.pose.pose.position.x = Twc.at<float>(0, 3);
-        pose.pose.pose.position.y = Twc.at<float>(1, 3);
-        pose.pose.pose.position.z = Twc.at<float>(2, 3);
 
-        tf2::Matrix3x3 tf2_rot(Twc.at<double>(0, 0), Twc.at<double>(0, 1), Twc.at<double>(0, 2),
-                               Twc.at<double>(1, 0), Twc.at<double>(1, 1), Twc.at<double>(1, 2),
-                               Twc.at<double>(2, 0), Twc.at<double>(2, 1), Twc.at<double>(2, 2));
-        tf2::Quaternion tf2_quat_rot;
-        tf2_rot.getRotation(tf2_quat_rot);
-        pose.pose.pose.orientation = tf2::toMsg(tf2_quat_rot);
 
-        if (mpSLAM->mpTracker->mState == ORB_SLAM3::Tracking::OK) {
-            pose.pose.covariance[0] = 0;
-        } else {
-            pose.pose.covariance[0] = 1;
-        }
+    tf2::Matrix3x3 tf2_rot((double) Twc.rotationMatrix()(0, 0), (double) Twc.rotationMatrix()(0, 1), (double) Twc.rotationMatrix()(0, 2),
+                           (double) Twc.rotationMatrix()(1, 0), (double) Twc.rotationMatrix()(1, 1), (double) Twc.rotationMatrix()(1, 2),
+                           (double) Twc.rotationMatrix()(2, 0), (double) Twc.rotationMatrix()(2, 1), (double) Twc.rotationMatrix()(2, 2));
+    tf2::Quaternion tf2_quat_rot;
+    tf2_rot.getRotation(tf2_quat_rot);
+    pose.pose.pose.orientation = tf2::toMsg(tf2_quat_rot);
 
-        publisher.publish(pose);
+    if (mpSLAM->mpTracker->mState == ORB_SLAM3::Tracking::OK) {
+        pose.pose.covariance[0] = 0;
     } else {
-        geometry_msgs::PoseWithCovarianceStamped pose;
         pose.pose.covariance[0] = 1;
-        publisher.publish(pose);
     }
+
+    publisher.publish(pose);
 }
 
 int main(int argc, char **argv) {
@@ -78,7 +72,7 @@ int main(int argc, char **argv) {
 
     std::string topic_img;
     nh.param<std::string>("topic_img", topic_img, "/camera/infra1/image_rect_raw");
-    ros::Subscriber sub_img = nh.subscribe(topic_img, 5, grabImage);
+    ros::Subscriber sub_img = nh.subscribe(topic_img, 2, grabImage, ros::TransportHints().tcpNoDelay(true));
 
     publisher = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("/orb_slam3/pose_out", 10);
 

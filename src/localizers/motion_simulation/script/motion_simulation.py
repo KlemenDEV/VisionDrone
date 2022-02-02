@@ -51,11 +51,11 @@ def orient_cb(msg):
     pose.header.stamp = rospy.get_rostime()
     pose.header.frame_id = "uav_velocity"
     pose.twist.twist.linear.x = linear_rate[0]
-    pose.twist.twist.linear.y = -linear_rate[1]
+    pose.twist.twist.linear.y = linear_rate[1]
     pose.twist.twist.linear.z = 0
 
     rate_total = math.sqrt(pow(linear_rate[0], 2) + pow(linear_rate[1], 2))
-    if rate_total > 50:
+    if rate_total > 60:
         pose.twist.covariance[0] = float("nan")
 
     velocity_pub.publish(pose)
@@ -77,10 +77,10 @@ def rc_out_cb(msg):
 if __name__ == "__main__":
     rospy.init_node('simulator')
 
-    velocity_pub = rospy.Publisher('/motion_simulation/velocity_out', TwistWithCovarianceStamped, queue_size=15)
+    velocity_pub = rospy.Publisher('/motion_simulation/velocity_out', TwistWithCovarianceStamped, queue_size=10)
 
-    rc_out_sub = rospy.Subscriber('/mavros/rc/out', RCOut, rc_out_cb, queue_size=15)
-    height_sub = rospy.Subscriber('/drone/height_estimate', Float64, height_cb, queue_size=15)
-    orient_sub = rospy.Subscriber('/imu/9dof', Imu, orient_cb, queue_size=15)
+    rc_out_sub = rospy.Subscriber('/mavros/rc/out', RCOut, rc_out_cb, queue_size=10)
+    height_sub = rospy.Subscriber('/drone/height_estimate', Float64, height_cb, queue_size=10)
+    orient_sub = rospy.Subscriber('/imu/9dof', Imu, orient_cb, queue_size=10)
 
     rospy.spin()

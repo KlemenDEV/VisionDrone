@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 
 #include <sensor_msgs/FluidPressure.h>
+#include <geometry_msgs/Quaternion.h>
 #include <std_msgs/Float64.h>
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/Range.h>
@@ -30,7 +31,7 @@ volatile double h_baro = 0;
 volatile double h_lidar = 0;
 
 volatile float accel[3] = {0};
-volatile float gyro[3] = {0};
+geometry_msgs::Quaternion orient;
 
 bool imu_data = false;
 
@@ -47,7 +48,7 @@ void updateData() {
     }
 
     std::chrono::duration<float> dt = new_time - time_last;
-    altitude->estimate(const_cast<float *>(accel), const_cast<float *>(gyro), (float) h_baro, dt.count());
+    altitude->estimate(orient, const_cast<float *>(accel), (float) h_baro, dt.count());
 
     time_last = new_time;
 }
@@ -65,9 +66,7 @@ void imuCallback(const sensor_msgs::ImuConstPtr &imu_msg) {
     accel[1] = (float) (imu_msg->linear_acceleration.y - ACC_B_Y) / G; // y
     accel[2] = (float) (imu_msg->linear_acceleration.z - ACC_B_Z) / G; // z
 
-    gyro[0] = (float) (imu_msg->angular_velocity.x - GYR_B_X); // x
-    gyro[1] = (float) (imu_msg->angular_velocity.y - GYR_B_Y); // y
-    gyro[2] = (float) (imu_msg->angular_velocity.z - GYR_B_Z); // z
+    orient = imu_msg->orientation;
 
     imu_data = true;
 }
@@ -77,17 +76,15 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
 
     ros::Subscriber baro_sub = nh.subscribe<sensor_msgs::FluidPressure>("/baro/data", 5, baroCallback);
-    ros::Subscriber sub_imu = nh.subscribe("/imu/9dof", 10, imuCallback);
-    ros::Subscriber sub_lidar = nh.subscribe("/tf02/data", 10, lidarCallback);
+    ros::Subscriber sub_imu = nh.subscribe("/imu/9dof", 5, imuCallback);
+    ros::Subscriber sub_lidar = nh.subscribe("/tf02/data", 5, lidarCallback);
 
     ros::Publisher height_pub = nh.advertise<std_msgs::Float64>("/drone/height_estimate", 5);
     ros::Publisher ground_height_pub = nh.advertise<std_msgs::Float64>("/drone/height_ground", 5);
 
     altitude = new AltitudeEstimator(1.5518791653745640e-02,    // sigma Accel
-                                     1.2863346079614393e-03,    // sigma Gyro
-                                     0.0005,   // sigma Baro
-                                     0.5,    // ca
-                                     0.6);    // accelThreshold
+                                     0.015,   // sigma Baro
+                                     0.05);    // accelThreshold
 
     ros::Rate loop_rate(30);
 
@@ -109,7 +106,7 @@ int main(int argc, char **argv) {
         } else {
             fmsg_rel.data = h_lidar;
             init_count++;
-            if (alt != 0 && h_lidar > 8 && init_count > 300)
+            if (alt != 0 && h_lidar > 10 && init_count > 450)
                 rel_init = alt - h_lidar;
         }
 

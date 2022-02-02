@@ -7,27 +7,38 @@ from std_msgs.msg import Float64
 import numpy as np
 import random
 
+
+class LPF:
+    def __init__(self, window_size):
+        self.window_size = window_size
+        self.values = []
+        self.sum = 0
+
+    def filter(self, value):
+        self.values.append(value)
+        self.sum += value
+        if len(self.values) > self.window_size:
+            self.sum -= self.values.pop(0)
+        return float(self.sum) / len(self.values)
+
+
 pose_pub = None
 vel_pub = None
 vel_enu_pub = None
 p_off_x = None
 p_off_y = None
-
-# slam last values
-lsy = None
-lsyaw = 0
+p_off_z = None
 
 # slam old values
+lsy = None
 lsx = None
 lsz = None
 lst = None
 
-# imu last yaw
+# orientation correction
 last_yaw = None
-
-# init data
-yaw_offs_init = 0
-yaw_offs_inits = []
+orient_slam = None
+R_sw = 0
 
 # ransac variables
 ransac_pairs = []
@@ -35,6 +46,9 @@ ransac_complete = False
 ransac_err = 1
 ransac_m_k = 0
 ransac_m_n = 0
+
+f_enu_x = LPF(15)
+f_enu_y = LPF(15)
 
 
 def perform_ransac(err, iter_count):
@@ -67,24 +81,20 @@ def perform_ransac(err, iter_count):
 # noinspection PyUnresolvedReferences,PyTypeChecker
 def height_callback(height):
     global lsy, ransac_complete
-    if ransac_complete is False and lsy is not None and last_yaw is not None:
+    if ransac_complete is False and lsy is not None and orient_slam is not None:
         ransac_pairs.append((height.data, lsy))
-        yaw_offs_inits.append(last_yaw - lsyaw)
 
-        if len(ransac_pairs) < 50:
+        if len(ransac_pairs) < 60:
             print("Collecting data for ransac. Frames: %d" % len(ransac_pairs))
         else:
-            perform_ransac(0.3, 5000)
+            perform_ransac(0.4, 5000)
             print("SLAM RANSAC error: %f" % ransac_err)
 
-        if ransac_err <= 0.2:
-            global yaw_offs_init
+        if ransac_err <= 0.15:
             print("RANSAC scale: %f su/m" % ransac_m_k)
 
-            # determine yaw offset
-            yaw_offs_init = sum(yaw_offs_inits) / len(yaw_offs_inits)
-            yaw_offs_init = np.arctan2(np.sin(yaw_offs_init), np.cos(yaw_offs_init))
-            print("Yaw offset: %f deg" % ((yaw_offs_init * 180) / np.pi))
+            global R_sw
+            R_sw = tf.transformations.quaternion_inverse(orient_slam)
 
             ransac_complete = True
 
@@ -92,19 +102,20 @@ def height_callback(height):
 
 
 def pose_callback(pose):
-    global ransac_pairs
+    global ransac_pairs, orient_slam, R_sw, p_off_x, p_off_y, p_off_z, \
+        ransac_complete, ransac_err, ransac_m_k, lsx, lsz, lst, lsy
 
+    # reset estimator if invalid data
     if pose.pose.covariance[0] != 0:
-        global lsy, lsyaw, yaw_offs_init, yaw_offs_inits, \
-            ransac_complete, ransac_err, ransac_m_k, lsx, lsz, lst
-        # reset estimator
         lsy = None
-        lsyaw = 0
+        orient_slam = None
         lsx = None
         lsz = None
         lst = None
-        yaw_offs_init = 0
-        yaw_offs_inits = []
+        p_off_x = None
+        p_off_y = None
+        p_off_z = None
+        R_sw = None
         ransac_pairs = []
         ransac_complete = False
         ransac_err = 1
@@ -112,66 +123,62 @@ def pose_callback(pose):
         return
 
     if ransac_complete is True:
-        global p_off_x, p_off_y
-
-        lg_x = pose.pose.pose.position.x * ransac_m_k
-        lg_y = pose.pose.pose.position.z * ransac_m_k
+        lg_x = pose.pose.pose.position.x * ransac_m_k * 1.5
+        lg_y = pose.pose.pose.position.y * ransac_m_k * 1.5
+        lg_z = pose.pose.pose.position.z * ransac_m_k * 1.5
 
         if p_off_x is None or p_off_y is None:
             p_off_x = lg_x
             p_off_y = lg_y
+            p_off_z = lg_z
 
-        lg_x -= p_off_x
-        lg_y -= p_off_y
+        lg_x = lg_x - p_off_x
+        lg_y = lg_y - p_off_y
+        lg_z = lg_z - p_off_z
+
+        lg = [lg_x, lg_y, lg_z, 0]
+        lg_rotated = tf.transformations.quaternion_multiply(tf.transformations.quaternion_multiply(R_sw, lg),
+                                                            tf.transformations.quaternion_conjugate(R_sw))
 
         pose_absolute = PoseStamped()
         pose_absolute.header.stamp = rospy.get_rostime()
-        pose_absolute.pose.position.x = - (np.cos(-yaw_offs_init) * lg_x - np.sin(-yaw_offs_init) * lg_y)
-        pose_absolute.pose.position.y = - (np.sin(-yaw_offs_init) * lg_x + np.cos(-yaw_offs_init) * lg_y)
+        pose_absolute.pose.position.x = lg_rotated[2]
+        pose_absolute.pose.position.y = -lg_rotated[0]
+        pose_absolute.pose.position.z = lg_rotated[1]
         pose_pub.publish(pose_absolute)
 
-        if lsz is None:
-            lsx = pose_absolute.pose.position.x
-            lsz = pose_absolute.pose.position.y
-            lst = pose.header.stamp.to_sec()
-        else:
-            dx = pose_absolute.pose.position.x - lsx
-            dy = pose_absolute.pose.position.y - lsz
+        if lsz is not None:
             dt = pose.header.stamp.to_sec() - lst
-
             if dt > 0:
-                vx_enu = dx / dt
-                vy_enu = dy / dt
+                vx_enu = f_enu_x.filter((pose_absolute.pose.position.y - lsz) / dt)
+                vy_enu = -f_enu_y.filter((pose_absolute.pose.position.x - lsx) / dt)
                 vel_enu = TwistWithCovarianceStamped()
                 vel_enu.header.stamp = rospy.get_rostime()
                 vel_enu.header.frame_id = "uav_velocity_enu"
-                vel_enu.twist.twist.linear.x = vx_enu
-                vel_enu.twist.twist.linear.y = vy_enu
+                vel_enu.twist.twist.linear.x = -vy_enu
+                vel_enu.twist.twist.linear.y = -vx_enu
                 vel_enu.twist.twist.linear.z = 0
                 vel_enu_pub.publish(vel_enu)
 
-                vx = np.cos(-last_yaw) * vx_enu - np.sin(-last_yaw) * vy_enu
-                vy = np.sin(-last_yaw) * vx_enu + np.cos(-last_yaw) * vy_enu
                 vel = TwistWithCovarianceStamped()
                 vel.header.stamp = rospy.get_rostime()
                 vel.header.frame_id = "uav_velocity"
-                vel.twist.twist.linear.x = vx
-                vel.twist.twist.linear.y = vy
+                vel.twist.twist.linear.x = (np.cos(-last_yaw) * vx_enu - np.sin(-last_yaw) * vy_enu)
+                vel.twist.twist.linear.y = (np.sin(-last_yaw) * vx_enu + np.cos(-last_yaw) * vy_enu)
                 vel.twist.twist.linear.z = 0
                 vel_pub.publish(vel)
 
-            lsx = pose_absolute.pose.position.x
-            lsz = pose_absolute.pose.position.y
-            lst = pose.header.stamp.to_sec()
+        lsx = pose_absolute.pose.position.x
+        lsz = pose_absolute.pose.position.y
+        lst = pose.header.stamp.to_sec()
     else:
-        global lsy, lsyaw
         lsy = -pose.pose.pose.position.y
-        (_, _, lsyaw) = tf.transformations.euler_from_quaternion([
+        orient_slam = [
             pose.pose.pose.orientation.x,
             pose.pose.pose.orientation.y,
             pose.pose.pose.orientation.z,
-            pose.pose.pose.orientation.w,
-        ])
+            pose.pose.pose.orientation.w
+        ]
 
 
 def orient_cb(msg):
