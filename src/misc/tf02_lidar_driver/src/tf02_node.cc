@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
 
     ros::Publisher lidar_pub = nh.advertise<sensor_msgs::Range>("/tf02/data", 10);
 
-    int fd = open("/dev/ttyAMA3", O_RDWR | O_NOCTTY | O_NDELAY);
+    int fd = open("/dev/ttyAMA2", O_RDWR | O_NOCTTY | O_NDELAY);
     if (fd < 0) {
         std::cerr << "Error opening sonar tty\n";
         return -1;
@@ -20,7 +20,6 @@ int main(int argc, char **argv) {
 
     // Create new termios structure
     struct termios tty;
-
     tty.c_cflag &= ~PARENB; // Clear parity bit, disabling parity (most common)
     tty.c_cflag &= ~CSTOPB; // Clear stop field, only one stop bit used in communication (most common)
     tty.c_cflag &= ~CSIZE; // Clear all bits that set the data size
@@ -41,12 +40,15 @@ int main(int argc, char **argv) {
 
     if (tcsetattr(fd, TCSANOW, &tty) != 0) {
         printf("Error %i from tcsetattr: %s\n", errno, strerror(errno));
+        return -2;
     }
 
     char data[2];
     bool data_next_pair = false;
     bool validData = false;
     uint16_t range_cm = 0;
+
+    std::cout << "TF-02 Lidar ready\n";
     
     while (ros::ok()) {
         while (read(fd, &data, 2)) {
