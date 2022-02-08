@@ -1,6 +1,7 @@
 clc;
 close all;
 
+
 [files, path] = uigetfile("*.mat", "Select estimate_pose file", 'Multiselect', 'on');
 
 for k=1:length(files)
@@ -290,20 +291,14 @@ hold off;
 %%% Izpis tabele za latex %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 fprintf("\\hline\n");
-fprintf("\\multicolumn{1}{|l||}{\\backslashbox{Metrika}{Metoda}} ");
-for i = 1:length(results)
-    names{i} = localization_type(mkey{i});
-    fprintf("& %s ", names{i});
-end
-fprintf("\\\\\n");
-
+fprintf("\\multicolumn{1}{|l||}{\\backslashbox{Metrika}{Metoda}} & IMU & MOD & KLT & PX4 & SLAM \\\\\n");
 fprintf("\\hline\\hline\n");
 
 fprintf("$p_{err}$~~~~~~~~~~[$m$]\n");
 for i = 1:length(results)
     names{i} = localization_type(mkey{i});
     metrics = mvalue{i}.metrics;
-    fprintf("%s", strrep(sprintf("& %.2f ", metrics(1)),'.',','));
+    fprintf("& %.2f ", metrics(1));
 end
 fprintf("\\\\\n");
 
@@ -311,7 +306,7 @@ fprintf("$\\sigma_{p_{err}}$~~~~~~~~~[$m$]\n");
 for i = 1:length(results)
     names{i} = localization_type(mkey{i});
     metrics = mvalue{i}.metrics;
-    fprintf("%s", strrep(sprintf("& %.2f ", metrics(2)),'.',','));
+    fprintf("& %.2f ", metrics(2));
 end
 fprintf("\\\\\n");
 
@@ -319,7 +314,7 @@ fprintf("$p_{err,rel}$~~~~~~~[$\\%%$]\n");
 for i = 1:length(results)
     names{i} = localization_type(mkey{i});
     metrics = mvalue{i}.metrics;
-    fprintf("%s", strrep(sprintf("& %.2f ", metrics(3)),'.',','));
+    fprintf("& %.2f ", metrics(3));
 end
 fprintf("\\\\\n");
 
@@ -328,7 +323,7 @@ fprintf("$D_{err}$~~~~~~~~~[$m$]\n");
 for i = 1:length(results)
     names{i} = localization_type(mkey{i});
     metrics = mvalue{i}.metrics;
-    fprintf("%s", strrep(sprintf("& %.2f ", metrics(4)),'.',','));
+    fprintf("& %.2f ", metrics(4));
 end
 fprintf("\\\\\n");
 
@@ -336,7 +331,7 @@ fprintf("$D_{err,rel}$~~~~~~[$\\%%$]\n");
 for i = 1:length(results)
     names{i} = localization_type(mkey{i});
     metrics = mvalue{i}.metrics;
-    fprintf("%s", strrep(sprintf("& %.2f ", metrics(5)),'.',','));
+    fprintf("& %.2f ", metrics(5));
 end
 fprintf("\\\\\n");
 
@@ -345,14 +340,14 @@ fprintf("$\\overline{v}_{err,x}$~~~~~~~~~[$m/s$]\n");
 for i = 1:length(results)
     names{i} = localization_type(mkey{i});
     metrics = mvalue{i}.metrics;
-    fprintf("%s", strrep(sprintf("& %.2f ", metrics(6)),'.',','));
+    fprintf("& %.2f ", metrics(6));
 end
 fprintf("\\\\\n");
 fprintf("$\\sigma_{v_{err,x}}$~~~~~~~~[$m/s$]\n");
 for i = 1:length(results)
     names{i} = localization_type(mkey{i});
     metrics = mvalue{i}.metrics;
-    fprintf("%s", strrep(sprintf("& %.2f ", metrics(7)),'.',','));
+    fprintf("& %.2f ", metrics(7));
 end
 fprintf("\\\\\n");
 
@@ -361,14 +356,14 @@ fprintf("$\\overline{v}_{err,y}$~~~~~~~~~[$m/s$]\n");
 for i = 1:length(results)
     names{i} = localization_type(mkey{i});
     metrics = mvalue{i}.metrics;
-    fprintf("%s", strrep(sprintf("& %.2f ", metrics(8)),'.',','));
+    fprintf("& %.2f ", metrics(8));
 end
 fprintf("\\\\\n");
 fprintf("$\\sigma_{v_{err,y}}$~~~~~~~~[$m/s$]\n");
 for i = 1:length(results)
     names{i} = localization_type(mkey{i});
     metrics = mvalue{i}.metrics;
-    fprintf("%s", strrep(sprintf("& %.2f ", metrics(9)),'.',','));
+    fprintf("& %.2f ", metrics(9));
 end
 fprintf("\\\\\n");
 
@@ -377,7 +372,7 @@ fprintf("$D12_{err}$~~~~~~~[$m$]\n");
 for i = 1:length(results)
     names{i} = localization_type(mkey{i});
     metrics = mvalue{i}.metrics;
-    fprintf("%s", strrep(sprintf("& %.2f ", metrics(10)),'.',','));
+    fprintf("& %.2f ", metrics(10));
 end
 fprintf("\\\\\n");
 
@@ -385,7 +380,7 @@ fprintf("$D12_{err,rel}$~~~~[$\\%%$]\n");
 for i = 1:length(results)
     names{i} = localization_type(mkey{i});
     metrics = mvalue{i}.metrics;
-    fprintf("%s", strrep(sprintf("& %.2f ", metrics(11)),'.',','));
+    fprintf("& %.2f ", metrics(11));
 end
 fprintf("\\\\\n");
 
@@ -394,7 +389,7 @@ fprintf("$T_{err}$~~~~~~~~~~~[$\\%%$]\n");
 for i = 1:length(results)
     names{i} = localization_type(mkey{i});
     metrics = mvalue{i}.metrics;
-    fprintf("%s", strrep(sprintf("& %.2f ", metrics(12)),'.',','));
+    fprintf("& %.2f ", metrics(12));
 end
 fprintf("\\\\\n");
 
@@ -402,7 +397,7 @@ fprintf("$k_{err}$~~~~~~~~~~~[$\\%%$] \n");
 for i = 1:length(results)
     names{i} = localization_type(mkey{i});
     metrics = mvalue{i}.metrics;
-    fprintf("%s", strrep(sprintf("& %.2f ", metrics(13)),'.',','));
+    fprintf("& %.2f ", metrics(13));
 end
 fprintf("\\\\\n");
 
@@ -410,7 +405,7 @@ fprintf("$\\varphi_{err}$~~~~~~~~~~~[$rad$]\n");
 for i = 1:length(results)
     names{i} = localization_type(mkey{i});
     metrics = mvalue{i}.metrics;
-    fprintf("%s", strrep(sprintf("& %.2f ", metrics(14)),'.',','));
+    fprintf("& %.2f ", metrics(14));
 end
 fprintf("\\\\\n");
 

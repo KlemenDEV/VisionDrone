@@ -373,8 +373,8 @@ vacc = mean(gt_vacc(:, 2));
 hacc = mean(gt_hacc(:, 2));
 fprintf("\n\n")
 fprintf("Top speed: %.3f m/s\n", top_speed);
-fprintf("Average sAcc: %.3f\n", sacc);
-fprintf("Average vAcc: %.3f\n", vacc);
-fprintf("Average hAcc: %.3f\n", hacc);
+fprintf("Average sAcc: %.3f\n", sacc / 1000);
+fprintf("Average vAcc: %.3f\n", vacc / 1000);
+fprintf("Average hAcc: %.3f\n", hacc / 1000);
 
 % EOF
