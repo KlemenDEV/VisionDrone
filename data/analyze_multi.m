@@ -1,3 +1,6 @@
+clc;
+close all;
+
 [files, path] = uigetfile("*.mat", "Select estimate_pose file", 'Multiselect', 'on');
 
 for k=1:length(files)
@@ -8,6 +11,9 @@ results = containers.Map('KeyType', 'char', 'ValueType', 'any');
 
 for k=1:length(files)
     file = string(files(k));
+    
+    fprintf("=====================================\n");
+    fprintf("File: %s\n\n", file);
 
     load(file);
     run analyze_impl.m
@@ -32,24 +38,30 @@ for k=1:length(files)
 	result.velerr_y = velerr_y;
 	result.estimate_pose_fit = estimate_pose_fit;
     
+    result.metrics = metrics;
+    
     results(file) = result;
 
     clearvars -except files results
 end
 
 close all;
-clc;
 
 % data entries
 mkey = keys(results);
 mvalue = values(results);
 
-figure(1)
+f = figure(1);
+f.Position = [0 0 750 450];
 gx = geoaxes;
 key = 'pk.eyJ1Ijoia2xlbWVuNjMiLCJhIjoiY2twYTg5YjN5MHE0czJyb2c5Z2x0YjRmdSJ9.m5V1rMbGCykrJ2f0OMOuWA';
-addCustomBasemap('mapbox', strcat('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/256/{z}/{x}/{y}?access_token=', key));
+addCustomBasemap('mapbox', strcat('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/256/{z}/{x}/{y}?access_token=', key), 'Attribution', 'MapBox');
 hold (gx, 'on')
 geobasemap('mapbox');
+gx.Grid = 'off';
+gx.LatitudeLabel.String = 'Zemplepisna širina';
+gx.LongitudeLabel.String = 'Zemljepisna dolžina';
+gx.Title.String = "";
 
 names = cell(length(results) + 1, 1);
 names{1} = "GPS";
@@ -60,7 +72,7 @@ for i = 1:length(results)
     if i == 1
         datum = data.datum;
         [gtlat, gtlon, ~] = local2latlon(-data.gt_pose(:,3), data.gt_pose(:,2), 0, datum);
-        geoplot(gx, gtlat, gtlon, ':', 'LineWidth', 2, 'Color', 'white');
+        geoplot(gx, gtlat, gtlon, ':', 'LineWidth', 2, 'Color', 'black');
         [lx, ly] = geolimits;
     end
     
@@ -73,7 +85,6 @@ lx(2) = lx(2) + off;
 ly(1) = ly(1) - off;
 ly(2) = ly(2) + off;
 geolimits(lx, ly);
-title(gx, "2D (map view)");
 legend(names);
 hold (gx, 'off')
 
@@ -86,9 +97,9 @@ for i = 1:length(results)
     data = mvalue{i};
     plot(data.gt_pose(:,1), data.err2d, 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
-title("2D estimate error over time");
-xlabel("time / s");
-ylabel("error / m");
+title("2D napaka ocene lokacije skozi čas");
+xlabel("čas / s");
+ylabel("p_{err} / m");
 legend(names);
 hold off;
 
@@ -107,9 +118,9 @@ for i = 1:length(results)
     
     plot(data.gt_pose(:,1), data.estimate_pose(:,2), 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
-title("2D estimate x");
-xlabel("time / s");
-ylabel("position / m");
+title("2D ocena x v ENU");
+xlabel("čas / s");
+ylabel("x_{ENU} / m");
 legend(names);
 hold off;
 
@@ -127,9 +138,9 @@ for i = 1:length(results)
 
     plot(data.gt_pose(:,1), data.estimate_pose(:,3), 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
-title("2D estimate y");
-xlabel("time / s");
-ylabel("position / m");
+title("2D ocena y v ENU");
+xlabel("čas / s");
+ylabel("y_{ENU} / m");
 legend(names);
 hold off;
 
@@ -148,9 +159,9 @@ for i = 1:length(results)
 
     plot(data.gt_vel(:,1), data.estimate_vel(:,2), 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
-title("Local velocity x");
+title("Lokalna hitrost x");
 xlabel("time / s");
-ylabel("Local velocity / m/s");
+ylabel("v_x / m/s");
 legend(names);
 hold off;
 
@@ -168,9 +179,9 @@ for i = 1:length(results)
 
     plot(data.gt_vel(:,1), data.estimate_vel(:,3), 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
-title("Local velocity y");
+title("Lokalna hitrost y");
 xlabel("time / s");
-ylabel("Local velocity / m/s");
+ylabel("v_y / m/s");
 legend(names);
 hold off;
 
@@ -183,9 +194,9 @@ for i = 1:length(results)
     data = mvalue{i};
     plot(data.gt_vel(:,1), data.velerr_x, 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
-title("Local velocity error x");
+title("Napaka ocene lokalne hitrosti x");
 xlabel("time / s");
-ylabel("Local velocity error / m/s");
+ylabel("v_{err,x} / m/s");
 legend(names);
 hold off;
 
@@ -198,9 +209,9 @@ for i = 1:length(results)
     data = mvalue{i};
     plot(data.gt_vel(:,1), data.velerr_y, 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
-title("Local velocity error y");
+title("Napaka ocene lokalne hitrosti y");
 xlabel("time / s");
-ylabel("Local velocity error / m/s");
+ylabel("v_{err,y} / m/s");
 legend(names);
 hold off;
 
@@ -219,9 +230,9 @@ for i = 1:length(results)
 
     plot(data.gt_vel_enu(:,1), data.estimate_vel_enu(:,2), 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
-title("ENU velocity x");
+title("Hitrost x v ENU KS");
 xlabel("time / s");
-ylabel("ENU velocity / m/s");
+ylabel("v_{ENU,x} / m/s");
 legend(names);
 hold off;
 
@@ -239,9 +250,9 @@ for i = 1:length(results)
 
     plot(data.gt_vel_enu(:,1), data.estimate_vel_enu(:,3), 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
-title("ENU velocity y");
+title("Hitrost x v ENU KS");
 xlabel("time / s");
-ylabel("ENU velocity / m/s");
+ylabel("v_{ENU,y} / m/s");
 legend(names);
 hold off;
 
@@ -254,9 +265,9 @@ for i = 1:length(results)
     data = mvalue{i};
     plot(data.gt_vel_enu(:,1), data.enu_velerr_x, 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
-title("ENU velocity error x");
+title("Napaka ocene hitrosti v_{ENU,x}");
 xlabel("time / s");
-ylabel("ENU velocity error / m/s");
+ylabel("v_{err,ENU,x} / m/s");
 legend(names);
 hold off;
 
@@ -269,8 +280,13 @@ for i = 1:length(results)
     data = mvalue{i};
     plot(data.gt_vel_enu(:,1), data.enu_velerr_y, 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
-title("ENU velocity error y");
+title("Napaka ocene hitrosti v_{ENU,y}");
 xlabel("time / s");
-ylabel("ENU velocity error / m/s");
+ylabel("v_{err,ENU,y} / m/s");
 legend(names);
 hold off;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Izpis tabele za latex %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
