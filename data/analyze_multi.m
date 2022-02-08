@@ -55,7 +55,7 @@ f = figure(1);
 f.Position = [0 0 750 450];
 gx = geoaxes;
 key = 'pk.eyJ1Ijoia2xlbWVuNjMiLCJhIjoiY2twYTg5YjN5MHE0czJyb2c5Z2x0YjRmdSJ9.m5V1rMbGCykrJ2f0OMOuWA';
-addCustomBasemap('mapbox', strcat('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/256/{z}/{x}/{y}?access_token=', key), 'Attribution', 'MapBox');
+addCustomBasemap('mapbox', strcat('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/256/{z}/{x}/{y}?access_token=', key), 'Attribution', 'Vir ortofoto: MapBox');
 hold (gx, 'on')
 geobasemap('mapbox');
 gx.Grid = 'off';
@@ -88,7 +88,13 @@ geolimits(lx, ly);
 legend(names);
 hold (gx, 'off')
 
-figure(2)
+f = figure(2);
+f.Position = [0 0 650 320];
+ax = gca;
+grid minor
+set(ax, 'YGrid', 'on', 'XGrid', 'off')
+hold on
+
 names = cell(length(results), 1);
 hold on;
 for i = 1:length(results)
@@ -98,13 +104,21 @@ for i = 1:length(results)
     plot(data.gt_pose(:,1), data.err2d, 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
 title("2D napaka ocene lokacije skozi čas");
+xlim([0 data.gt_pose(end, 1)])
 xlabel("čas / s");
 ylabel("p_{err} / m");
-legend(names);
+legend(names, 'Location','Best');
 hold off;
 
-figure(3)
-subplot(1,2,1)
+f = figure(3);
+f.Position = [0 0 700 320];
+tiledlayout(1,2, 'Padding', 'none', 'TileSpacing', 'compact'); 
+nexttile;
+
+ax = gca;
+grid minor
+set(ax, 'YGrid', 'on', 'XGrid', 'off')
+hold on
 names = cell(length(results) + 1, 1);
 names{1} = "GPS";
 hold on;
@@ -118,13 +132,18 @@ for i = 1:length(results)
     
     plot(data.gt_pose(:,1), data.estimate_pose(:,2), 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
-title("2D ocena x v ENU");
+title("Ocena x_{ENU}");
 xlabel("čas / s");
 ylabel("x_{ENU} / m");
-legend(names);
+xlim([0 data.gt_pose(end, 1)])
+legend(names, 'Location','Best');
 hold off;
 
-subplot(1,2,2)
+nexttile;
+ax = gca;
+grid minor
+set(ax, 'YGrid', 'on', 'XGrid', 'off')
+hold on
 names = cell(length(results) + 1, 1);
 names{1} = "GPS";
 hold on;
@@ -138,85 +157,92 @@ for i = 1:length(results)
 
     plot(data.gt_pose(:,1), data.estimate_pose(:,3), 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
-title("2D ocena y v ENU");
+title("Ocena y_{ENU}");
 xlabel("čas / s");
 ylabel("y_{ENU} / m");
-legend(names);
+xlim([0 data.gt_pose(end, 1)])
+legend(names, 'Location','Best');
 hold off;
 
-figure(4)
-subplot(2,2,1)
-names = cell(length(results) + 1, 1);
-names{1} = "GPS";
-hold on;
-for i = 1:length(results)
-    names{i + 1} = localization_type(mkey{i});
+% figure(4)
+% subplot(2,2,1)
+% names = cell(length(results) + 1, 1);
+% names{1} = "GPS";
+% hold on;
+% for i = 1:length(results)
+%     names{i + 1} = localization_type(mkey{i});
+% 
+%     data = mvalue{i};
+%     if i == 1
+%         plot(data.gt_vel(:,1), data.gt_vel(:,2), 'Color', 'black', 'LineWidth', 1.5);
+%     end
+% 
+%     plot(data.gt_vel(:,1), data.estimate_vel(:,2), 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
+% end
+% title("Lokalna hitrost x");
+% xlabel("time / s");
+% ylabel("v_x / m/s");
+% legend(names);
+% hold off;
+% 
+% subplot(2,2,2)
+% names = cell(length(results) + 1, 1);
+% names{1} = "GPS";
+% hold on;
+% for i = 1:length(results)
+%     names{i + 1} = localization_type(mkey{i});
+% 
+%     data = mvalue{i};
+%     if i == 1
+%         plot(data.gt_vel(:,1), data.gt_vel(:,3), 'Color', 'black', 'LineWidth', 1.5);
+%     end
+% 
+%     plot(data.gt_vel(:,1), data.estimate_vel(:,3), 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
+% end
+% title("Lokalna hitrost y");
+% xlabel("time / s");
+% ylabel("v_y / m/s");
+% legend(names);
+% hold off;
+% 
+% subplot(2,2,3)
+% names = cell(length(results), 1);
+% hold on;
+% for i = 1:length(results)
+%     names{i} = localization_type(mkey{i});
+% 
+%     data = mvalue{i};
+%     plot(data.gt_vel(:,1), data.velerr_x, 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
+% end
+% title("Napaka ocene lokalne hitrosti x");
+% xlabel("time / s");
+% ylabel("v_{err,x} / m/s");
+% legend(names);
+% hold off;
+% 
+% subplot(2,2,4)
+% names = cell(length(results), 1);
+% hold on;
+% for i = 1:length(results)
+%     names{i} = localization_type(mkey{i});
+% 
+%     data = mvalue{i};
+%     plot(data.gt_vel(:,1), data.velerr_y, 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
+% end
+% title("Napaka ocene lokalne hitrosti y");
+% xlabel("time / s");
+% ylabel("v_{err,y} / m/s");
+% legend(names);
+% hold off;
 
-    data = mvalue{i};
-    if i == 1
-        plot(data.gt_vel(:,1), data.gt_vel(:,2), 'Color', 'black', 'LineWidth', 1.5);
-    end
+f = figure(5);
+f.Position = [0 0 900 500];
+tiledlayout(2,2, 'Padding', 'none', 'TileSpacing', 'compact'); 
 
-    plot(data.gt_vel(:,1), data.estimate_vel(:,2), 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
-end
-title("Lokalna hitrost x");
-xlabel("time / s");
-ylabel("v_x / m/s");
-legend(names);
-hold off;
-
-subplot(2,2,2)
-names = cell(length(results) + 1, 1);
-names{1} = "GPS";
-hold on;
-for i = 1:length(results)
-    names{i + 1} = localization_type(mkey{i});
-
-    data = mvalue{i};
-    if i == 1
-        plot(data.gt_vel(:,1), data.gt_vel(:,3), 'Color', 'black', 'LineWidth', 1.5);
-    end
-
-    plot(data.gt_vel(:,1), data.estimate_vel(:,3), 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
-end
-title("Lokalna hitrost y");
-xlabel("time / s");
-ylabel("v_y / m/s");
-legend(names);
-hold off;
-
-subplot(2,2,3)
-names = cell(length(results), 1);
-hold on;
-for i = 1:length(results)
-    names{i} = localization_type(mkey{i});
-
-    data = mvalue{i};
-    plot(data.gt_vel(:,1), data.velerr_x, 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
-end
-title("Napaka ocene lokalne hitrosti x");
-xlabel("time / s");
-ylabel("v_{err,x} / m/s");
-legend(names);
-hold off;
-
-subplot(2,2,4)
-names = cell(length(results), 1);
-hold on;
-for i = 1:length(results)
-    names{i} = localization_type(mkey{i});
-
-    data = mvalue{i};
-    plot(data.gt_vel(:,1), data.velerr_y, 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
-end
-title("Napaka ocene lokalne hitrosti y");
-xlabel("time / s");
-ylabel("v_{err,y} / m/s");
-legend(names);
-hold off;
-
-figure(5)
-subplot(2,2,1)
+nexttile;
+ax = gca;
+grid minor
+set(ax, 'YGrid', 'on', 'XGrid', 'off')
 names = cell(length(results) + 1, 1);
 names{1} = "GPS";
 hold on;
@@ -230,13 +256,17 @@ for i = 1:length(results)
 
     plot(data.gt_vel_enu(:,1), data.estimate_vel_enu(:,2), 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
-title("Hitrost x v ENU KS");
-xlabel("time / s");
+title("Ocena hitrosti v_{ENU,x}");
+xlabel("čas / s");
 ylabel("v_{ENU,x} / m/s");
 legend(names);
+xlim([0 data.gt_pose(end, 1)])
 hold off;
 
-subplot(2,2,2)
+nexttile;
+ax = gca;
+grid minor
+set(ax, 'YGrid', 'on', 'XGrid', 'off')
 names = cell(length(results) + 1, 1);
 names{1} = "GPS";
 hold on;
@@ -250,13 +280,17 @@ for i = 1:length(results)
 
     plot(data.gt_vel_enu(:,1), data.estimate_vel_enu(:,3), 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
-title("Hitrost x v ENU KS");
-xlabel("time / s");
+title("Ocena hitrosti v_{ENU,y}");
+xlabel("čas / s");
 ylabel("v_{ENU,y} / m/s");
+xlim([0 data.gt_pose(end, 1)])
 legend(names);
 hold off;
 
-subplot(2,2,3)
+nexttile;
+ax = gca;
+grid minor
+set(ax, 'YGrid', 'on', 'XGrid', 'off')
 names = cell(length(results), 1);
 hold on;
 for i = 1:length(results)
@@ -266,12 +300,17 @@ for i = 1:length(results)
     plot(data.gt_vel_enu(:,1), data.enu_velerr_x, 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
 title("Napaka ocene hitrosti v_{ENU,x}");
-xlabel("time / s");
+xlabel("čas / s");
 ylabel("v_{err,ENU,x} / m/s");
+xlim([0 data.gt_pose(end, 1)])
 legend(names);
 hold off;
 
-subplot(2,2,4)
+nexttile;
+ax = gca;
+grid minor
+set(ax, 'YGrid', 'on', 'XGrid', 'off')
+xlim([0 data.gt_pose(end, 1)])
 names = cell(length(results), 1);
 hold on;
 for i = 1:length(results)
@@ -281,7 +320,7 @@ for i = 1:length(results)
     plot(data.gt_vel_enu(:,1), data.enu_velerr_y, 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
 title("Napaka ocene hitrosti v_{ENU,y}");
-xlabel("time / s");
+xlabel("čas / s");
 ylabel("v_{err,ENU,y} / m/s");
 legend(names);
 hold off;
