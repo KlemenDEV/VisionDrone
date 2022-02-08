@@ -45,6 +45,7 @@ void rcInCallback(const mavros_msgs::RCIn::ConstPtr &msg) {
 int main(int argc, char **argv) {
     ros::init(argc, argv, "gps_injection_node");
     ros::NodeHandle nh;
+    ros::NodeHandle n("~");
 
     ros::Rate loop_rate(10); // GPS has 4/5Hz, use 10Hz to fulfill Shannon's requirement
 
@@ -57,22 +58,31 @@ int main(int argc, char **argv) {
             ("/ublox/navsol", 1, &GPSData::consume, &gps_pos_antenna);
 
     // UBLOX 7+ antenna/module subscriber
-    ros::Subscriber navpvt_sub = nh.subscribe<ublox_msgs::NavPVT7>
+    ros::Subscriber navpvt_sub = nh.subscribe<ublox_msgs::NavPVT>
             ("/ublox/navpvt", 1, &GPSData::consume, &gps_pos_antenna);
 
-    // Position prediction subscribers
-    ros::Subscriber predictpose_sub = nh.subscribe<sensor_msgs::NavSatFix>
-            ("/estimate/pose", 1, &GPSData::consume, &gps_pos_predicted);
-    ros::Subscriber predictvel_sub = nh.subscribe<geometry_msgs::TwistWithCovarianceStamped>
-            ("/estimate/velocity", 1, &GPSData::consume, &gps_pos_predicted);
+    bool enable_injection;
+    n.param<bool>("enable_injection", enable_injection, true);
 
     // Set inject_data depending on mavlink RC messages
-    ros::Subscriber mavlinkrc_sub = nh.subscribe<mavros_msgs::RCIn>
-            ("/mavros/rc/in", 1, rcInCallback);
+    if (enable_injection) {
+        // Position prediction subscribers
+        ros::Subscriber predictpose_sub = nh.subscribe<sensor_msgs::NavSatFix>
+                ("/estimate/pose", 1, &GPSData::consume, &gps_pos_predicted);
+        ros::Subscriber predictvel_sub = nh.subscribe<geometry_msgs::TwistWithCovarianceStamped>
+                ("/estimate/velocity", 1, &GPSData::consume, &gps_pos_predicted);
+
+        ros::Subscriber mavlinkrc_sub = nh.subscribe<mavros_msgs::RCIn>
+                ("/mavros/rc/in", 1, rcInCallback);
+
+        ROS_INFO("GPS injection subscriber ready");
+    } else {
+        ROS_INFO("GPS passthrough ONLY, no injection possible!");
+    }
 
     UBXSender ubxSender;
 
-    ROS_DEBUG("GPS injector ready");
+    ROS_INFO("GPS injector ready");
 
     while (ros::ok()) {
         if (inject_data && gps_pos_predicted.isComplete()) {

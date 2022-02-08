@@ -1,9 +1,10 @@
 #include "GPSData.h"
 
-void GPSData::consume(const ublox_msgs::NavPVT7::ConstPtr &msg) {
+void GPSData::consume(const ublox_msgs::NavPVT::ConstPtr &msg) {
     if (this->isComplete()) // if we consume on complete data, we re-initialize the data
         this->markDirty();
 
+    // http://docs.ros.org/en/noetic/api/ublox_msgs/html/msg/NavPVT.html
     // http://docs.ros.org/en/noetic/api/ublox_msgs/html/msg/NavPVT7.html
     this->longitude = msg->lon; // [deg / 1e-7]
     this->latitude = msg->lat; // [deg / 1e-7]

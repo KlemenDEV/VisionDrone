@@ -7,6 +7,7 @@
 #include <ublox_msgs/NavSOL.h>
 
 #include <ublox_msgs/NavPVT7.h>
+#include <ublox_msgs/NavPVT.h>
 
 #include <sensor_msgs/NavSatFix.h>
 #include <geometry_msgs/TwistWithCovarianceStamped.h>
@@ -51,7 +52,7 @@ public:
     void consume(const ublox_msgs::NavSOL::ConstPtr &msg);
 
     // Consumer to assemble GPSData from UBLOX 7+ messages
-    void consume(const ublox_msgs::NavPVT7::ConstPtr &msg);
+    void consume(const ublox_msgs::NavPVT::ConstPtr &msg);
 
     // Set of 2 consumers to assemble GPSData from location predictions
     void consume(const sensor_msgs::NavSatFix::ConstPtr &msg);

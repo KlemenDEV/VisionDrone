@@ -27,13 +27,16 @@ if __name__ == "__main__":
     for topic in topics_list:
         rospy.Subscriber(topic, rospy.AnyMsg, topic_cb, queue_size=1, callback_args=topic)
 
-    ros_rate = rospy.Rate(1)  # 1 Hz
+    ros_rate = rospy.Rate(2)  # 2 Hz
     while not rospy.is_shutdown():
         if all(active_topics.values()):
-            rospy.logerror("######################################")
-            rospy.logerror("#       GPS SV number: %02d            #" % num_sv)
-            rospy.logerror("#   PFC DONE, ALL TOPICS ARE READY   #")
-            rospy.logerror("######################################")
+            rospy.logfatal("######################################")
+            rospy.logfatal("#       GPS SV number: %02d            #" % num_sv)
+            rospy.logfatal("#   PFC DONE, ALL TOPICS ARE READY   #")
+            rospy.logfatal("######################################")
             rospy.signal_shutdown("Preflight checklist done")
+        else:
+            missing = [k for k,v in active_topics.items() if v == False]
+            rospy.logwarn_throttle(5, "PFC still waiting for: " + str(missing))
 
         ros_rate.sleep()

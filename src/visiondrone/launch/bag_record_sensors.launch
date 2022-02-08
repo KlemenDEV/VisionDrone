@@ -22,6 +22,11 @@
     <!-- START PI CAMERA MODULE -->
     <include file="$(find visiondrone)/launch/subsystems/pi_camera.launch"/>
 
+    <!-- GPS INJECTION -->
+    <node pkg="gps_injection" type="gps_injection_node" name="gps_passthrough" output="screen" required="true">
+        <param name="enable_injection" value="false"/>
+    </node>
+
     <!-- RECORD ROSBAG -->
     <node pkg="rosbag" type="record" name="data_capture" required="true"
           args="$(eval 'record --tcpnodelay --buffsize 0 -O

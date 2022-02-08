@@ -1,12 +1,10 @@
 #!/usr/bin/env python
-import struct
-
-import genpy
 import rospy
 import tf.transformations
 from scipy import io
 from geometry_msgs.msg import PoseStamped, TwistWithCovarianceStamped
 from sensor_msgs.msg import Imu
+from ublox_msgs.msg import NavPVT
 
 from velocity_integrator.srv import SetDatum
 
@@ -24,6 +22,10 @@ gt_pose = np.empty((0, 4), float)
 gt_vel = np.empty((0, 4), float)
 gt_vel_enu = np.empty((0, 4), float)
 
+gt_hacc = np.empty((0, 2), float)
+gt_vacc = np.empty((0, 2), float)
+gt_sacc = np.empty((0, 2), float)
+
 current_time = None
 start_time = None
 datum = None
@@ -38,6 +40,16 @@ def odom_cb(msg):
     estimate_pose = np.vstack(
         (estimate_pose,
          np.array([current_time, msg.pose.position.x, msg.pose.position.y, msg.pose.position.z])))
+
+
+def gt_navpvt_cb(msg):
+    if current_time is None:
+        return
+
+    global gt_hacc, gt_vacc, gt_sacc
+    gt_hacc = np.vstack((gt_hacc, np.array([current_time, msg.hAcc])))
+    gt_vacc = np.vstack((gt_vacc, np.array([current_time, msg.vAcc])))
+    gt_sacc = np.vstack((gt_sacc, np.array([current_time, msg.sAcc])))
 
 
 def velocity_cb(msg):
@@ -109,6 +121,9 @@ def shutdown():
         'gt_pose': gt_pose,
         'gt_vel': gt_vel,
         'gt_vel_enu': gt_vel_enu,
+        'gt_hacc': gt_hacc,
+        'gt_vacc': gt_vacc,
+        'gt_sacc': gt_sacc,
 
         'estimate_pose': estimate_pose,
         'estimate_vel': estimate_vel,
@@ -129,6 +144,7 @@ if __name__ == '__main__':
     # gt subscribers
     gt_pose_sub = rospy.Subscriber('/ublox/fix/local', PoseStamped, gt_cb, queue_size=10)
     gt_vel_enu_sub = rospy.Subscriber('/ublox/fix_velocity', TwistWithCovarianceStamped, gt_velocity_cb, queue_size=10)
+    gt_navpvt_sub = rospy.Subscriber('/ublox/navpvt', NavPVT, gt_navpvt_cb, queue_size=10)
 
     # misc data subscribers and services
     imu_sub = rospy.Subscriber('/imu/9dof', Imu, imu_cb, queue_size=10)
