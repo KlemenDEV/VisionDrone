@@ -57,8 +57,8 @@ gx.Layout.Tile = 1;
 gx.Layout.TileSpan = [2 1];
 key = 'pk.eyJ1Ijoia2xlbWVuNjMiLCJhIjoiY2twYTg5YjN5MHE0czJyb2c5Z2x0YjRmdSJ9.m5V1rMbGCykrJ2f0OMOuWA';
 addCustomBasemap('mapbox', strcat('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/256/{z}/{x}/{y}?access_token=', key));
-[gtlat, gtlon, ~] = local2latlon(-gt_pose(:,3), gt_pose(:,2), 0, datum);
-[estimate_poselat, estimate_poselon, ~] = local2latlon(-estimate_pose(:,3), estimate_pose(:,2), 0, datum);
+[gtlat, gtlon, ~] = local2latlon(gt_pose(:,2), gt_pose(:,3), 0, datum);
+[estimate_poselat, estimate_poselon, ~] = local2latlon(estimate_pose(:,2), estimate_pose(:,3), 0, datum);
 hold (gx, 'on')
 geobasemap('mapbox');
 geoplot(gx, gtlat, gtlon);
@@ -367,12 +367,16 @@ end
 %%%%%%%%%%%%%%%%%%%
 
 % Print flight stats in console: top speed, avg sacc, vacc, hacc
-top_speed = max(smooth(sqrt(gt_vel_enu(:, 2).^2 + gt_vel_enu(:, 3).^2), 5));
+top_speed = max(smooth(sqrt(gt_vel_enu(:, 2).^2 + gt_vel_enu(:, 3).^2), 2));
+average_speed = mean(smooth(sqrt(gt_vel_enu(:, 2).^2 + gt_vel_enu(:, 3).^2), 2));
+std_speed = std(smooth(sqrt(gt_vel_enu(:, 2).^2 + gt_vel_enu(:, 3).^2), 2));
 sacc = mean(gt_sacc(:, 2));
 vacc = mean(gt_vacc(:, 2));
 hacc = mean(gt_hacc(:, 2));
 fprintf("\n\n")
 fprintf("Top speed: %.3f m/s\n", top_speed);
+fprintf("Mean speed: %.3f m/s\n", average_speed);
+fprintf("Mean speed std. dev.: %.3f m/s\n", std_speed);
 fprintf("Average sAcc: %.3f\n", sacc / 1000);
 fprintf("Average vAcc: %.3f\n", vacc / 1000);
 fprintf("Average hAcc: %.3f\n", hacc / 1000);

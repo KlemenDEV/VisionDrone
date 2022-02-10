@@ -71,12 +71,12 @@ for i = 1:length(results)
     data = mvalue{i};
     if i == 1
         datum = data.datum;
-        [gtlat, gtlon, ~] = local2latlon(-data.gt_pose(:,3), data.gt_pose(:,2), 0, datum);
+        [gtlat, gtlon, ~] = local2latlon(data.gt_pose(:,2), data.gt_pose(:,3), 0, datum);
         geoplot(gx, gtlat, gtlon, ':', 'LineWidth', 2, 'Color', 'black');
         [lx, ly] = geolimits;
     end
     
-    [estimate_poselat, estimate_poselon, ~] = local2latlon(-data.estimate_pose(:,3), data.estimate_pose(:,2), 0, datum);
+    [estimate_poselat, estimate_poselon, ~] = local2latlon(data.estimate_pose(:,2), data.estimate_pose(:,3), 0, datum);
     geoplot(gx, estimate_poselat, estimate_poselon, 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
 off = 0.0006;
