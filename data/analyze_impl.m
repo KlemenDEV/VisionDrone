@@ -57,8 +57,8 @@ gx.Layout.Tile = 1;
 gx.Layout.TileSpan = [2 1];
 key = 'pk.eyJ1Ijoia2xlbWVuNjMiLCJhIjoiY2twYTg5YjN5MHE0czJyb2c5Z2x0YjRmdSJ9.m5V1rMbGCykrJ2f0OMOuWA';
 addCustomBasemap('mapbox', strcat('https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/256/{z}/{x}/{y}?access_token=', key));
-[gtlat, gtlon, ~] = local2latlon(-gt_pose(:,3), gt_pose(:,2), 0, datum);
-[estimate_poselat, estimate_poselon, ~] = local2latlon(-estimate_pose(:,3), estimate_pose(:,2), 0, datum);
+[gtlat, gtlon, ~] = local2latlon(gt_pose(:,2), gt_pose(:,3), 0, datum);
+[estimate_poselat, estimate_poselon, ~] = local2latlon(estimate_pose(:,2), estimate_pose(:,3), 0, datum);
 hold (gx, 'on')
 geobasemap('mapbox');
 geoplot(gx, gtlat, gtlon);
@@ -268,21 +268,35 @@ diff_estimate_start_end=sqrt((estimate_pose(end - 20, 2)-estimate_pose(1, 2))^2 
 data = {
     sprintf('Biggest distance from the starting point (from GT): %.3f m', diff_maxptostart)
     ""
-    sprintf('Traveled distance (from GT): %.3f m', d_gt(end))
-    sprintf('Total traveled distance error: %.3f m (%.3f %% traveled distance)', abs(d_gt(end) - d_estimate_pose(end)), 100 * (abs(d_gt(end) - d_estimate_pose(end))) / d_gt(end))
-    ""
     sprintf('Average 2D error: %.3f m std=%.3f m', mean(err2d), std(err2d))
     sprintf('Relative average 2D error: %.3f %% std=%.3f %% of max. distance from st. pt.', mean(err2d / diff_maxptostart) * 100, std(err2d / diff_maxptostart) * 100)
     ""
-    sprintf('Average height error: %.3f m std=%.3f m', mean(errh), std(errh))
+    sprintf('Traveled distance (from GT): %.3f m', d_gt(end))
+    sprintf('Total traveled distance error: %.3f m (%.3f %% traveled distance)', abs(d_gt(end) - d_estimate_pose(end)), 100 * (abs(d_gt(end) - d_estimate_pose(end))) / d_gt(end))
     ""
     sprintf('Average ENU vx error: %.3f m/s std=%.3f m/s', mean(enu_velerr_x), std(enu_velerr_x))
     sprintf('Average ENU vy error: %.3f m/s std=%.3f m/s', mean(enu_velerr_y), std(enu_velerr_y))
     ""
     sprintf('Takeoff->land point 2D error: %.3f m', abs(diff_gt_start_end - diff_estimate_start_end))
     sprintf('Takeoff->land point 2D error: %.3f %% of max. dist. from st. pt.', abs(diff_gt_start_end - diff_estimate_start_end) / diff_maxptostart * 100)
+    ""
+    sprintf('Average height error: %.3f m std=%.3f m', mean(errh), std(errh))
 };
 uicontrol(tab6, 'Style', 'text', 'String', data, 'units', 'normalized', 'Position', [0.01 0.38 0.6 0.6], 'FontSize', 14, 'HorizontalAlignment', 'left', 'FontName', 'FixedWidth');
+
+metrics = [
+    mean(err2d)
+    std(err2d)
+    100 * mean(err2d / diff_maxptostart)
+    abs(d_gt(end) - d_estimate_pose(end))
+    100 * abs(d_gt(end) - d_estimate_pose(end)) / d_gt(end)
+    mean(enu_velerr_x)
+    std(enu_velerr_x)
+    mean(enu_velerr_y)
+    std(enu_velerr_y)
+    abs(diff_gt_start_end - diff_estimate_start_end)
+    100 * abs(diff_gt_start_end - diff_estimate_start_end) / diff_maxptostart
+];
 
 for k=1:length(data)
     fprintf("%s\n", string(data(k)));
@@ -338,8 +352,33 @@ data = {
 };
 uicontrol(tab8, 'Style', 'text', 'String', data, 'units', 'normalized', 'Position', [0.01 0.38 0.6 0.6], 'FontSize', 14, 'HorizontalAlignment', 'left', 'FontName', 'FixedWidth');
 
+metrics = [
+  metrics
+  100 * mean(err2d / diff_maxptostart)
+  100 * abs(1-k)
+  rot
+];
+
 for k=1:length(data)
     fprintf("%s\n", string(data(k)));
 end
+
+%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%
+
+% Print flight stats in console: top speed, avg sacc, vacc, hacc
+top_speed = max(smooth(sqrt(gt_vel_enu(:, 2).^2 + gt_vel_enu(:, 3).^2), 2));
+average_speed = mean(smooth(sqrt(gt_vel_enu(:, 2).^2 + gt_vel_enu(:, 3).^2), 2));
+std_speed = std(smooth(sqrt(gt_vel_enu(:, 2).^2 + gt_vel_enu(:, 3).^2), 2));
+sacc = mean(gt_sacc(:, 2));
+vacc = mean(gt_vacc(:, 2));
+hacc = mean(gt_hacc(:, 2));
+fprintf("\n\n")
+fprintf("Top speed: %.3f m/s\n", top_speed);
+fprintf("Mean speed: %.3f m/s\n", average_speed);
+fprintf("Mean speed std. dev.: %.3f m/s\n", std_speed);
+fprintf("Average sAcc: %.3f\n", sacc / 1000);
+fprintf("Average vAcc: %.3f\n", vacc / 1000);
+fprintf("Average hAcc: %.3f\n", hacc / 1000);
 
 % EOF
