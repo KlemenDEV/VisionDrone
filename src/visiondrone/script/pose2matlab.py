@@ -4,6 +4,7 @@ import tf.transformations
 from scipy import io
 from geometry_msgs.msg import PoseStamped, TwistWithCovarianceStamped
 from sensor_msgs.msg import Imu
+from std_msgs.msg import Float64
 from ublox_msgs.msg import NavPVT
 
 from velocity_integrator.srv import SetDatum
@@ -25,6 +26,9 @@ gt_vel_enu = np.empty((0, 4), float)
 gt_hacc = np.empty((0, 2), float)
 gt_vacc = np.empty((0, 2), float)
 gt_sacc = np.empty((0, 2), float)
+
+h_rel = np.empty((0, 2), float)
+h_gnd = np.empty((0, 2), float)
 
 current_time = None
 start_time = None
@@ -50,6 +54,22 @@ def gt_navpvt_cb(msg):
     gt_hacc = np.vstack((gt_hacc, np.array([current_time, msg.hAcc])))
     gt_vacc = np.vstack((gt_vacc, np.array([current_time, msg.vAcc])))
     gt_sacc = np.vstack((gt_sacc, np.array([current_time, msg.sAcc])))
+
+
+def height_rel(msg):
+    if current_time is None:
+        return
+
+    global h_rel
+    h_rel = np.vstack((h_rel, np.array([current_time, msg.data])))
+
+
+def height_gnd(msg):
+    if current_time is None:
+        return
+
+    global h_gnd
+    h_gnd = np.vstack((h_gnd, np.array([current_time, msg.data])))
 
 
 def velocity_cb(msg):
@@ -127,7 +147,10 @@ def shutdown():
 
         'estimate_pose': estimate_pose,
         'estimate_vel': estimate_vel,
-        'estimate_vel_enu': estimate_vel_enu
+        'estimate_vel_enu': estimate_vel_enu,
+
+        'h_rel': h_rel,
+        'h_gnd': h_gnd
     })
     rospy.logwarn("Writing matlab file " + path + ", " + str(estimate_pose.size) + " data entries")
 
@@ -140,6 +163,10 @@ if __name__ == '__main__':
     estimate_vel_sub = rospy.Subscriber('/estimate/velocity', TwistWithCovarianceStamped, velocity_cb, queue_size=10)
     estimate_vel_enu_sub = rospy.Subscriber('/estimate/velocity_enu', TwistWithCovarianceStamped, velocity_enu_cb,
                                             queue_size=10)
+
+    # height data subscribers
+    height_rel_sub = rospy.Subscriber('/drone/height_estimate', Float64, height_rel, queue_size=10)
+    height_gnd_sub = rospy.Subscriber('/drone/height_ground', Float64, height_gnd, queue_size=10)
 
     # gt subscribers
     gt_pose_sub = rospy.Subscriber('/ublox/fix/local', PoseStamped, gt_cb, queue_size=10)

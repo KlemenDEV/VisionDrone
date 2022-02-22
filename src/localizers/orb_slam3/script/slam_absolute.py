@@ -80,17 +80,20 @@ def perform_ransac(err, iter_count):
 
 # noinspection PyUnresolvedReferences,PyTypeChecker
 def height_callback(height):
-    global lsy, ransac_complete
+    global lsy, ransac_complete, ransac_err, ransac_m_k
     if ransac_complete is False and lsy is not None and orient_slam is not None:
         ransac_pairs.append((height.data, lsy))
 
-        if len(ransac_pairs) < 60:
+        if len(ransac_pairs) < 20:
             print("Collecting data for ransac. Frames: %d" % len(ransac_pairs))
         else:
-            perform_ransac(0.4, 5000)
+            perform_ransac(0.5, 5000)
             print("SLAM RANSAC error: %f" % ransac_err)
 
-        if ransac_err <= 0.15:
+            ransac_err = 0.1
+            ransac_m_k = 40
+
+        if ransac_err <= 0.3:
             print("RANSAC scale: %f su/m" % ransac_m_k)
 
             global R_sw
