@@ -2,7 +2,7 @@ function type = localization_type(name)
     [~, name, ~] = fileparts(name);
     parts = regexp(name, '_', 'split', 'once');
     type = string(parts(2));
-    
+
     if type == "dead_reckoning"
         type = "IMU";
     end
@@ -12,6 +12,12 @@ function type = localization_type(name)
     if type == "flow_px4"
         type = "PX4";
     end
+    if type == "flow_opencv_relheight"
+        type = "KLT_{rel}";
+    end
+    if type == "flow_px4_relheight"
+        type = "PX4_{rel}";
+    end
     if type == "motion_simulation"
         type = "MOD";
     end
@@ -19,4 +25,3 @@ function type = localization_type(name)
         type = "SLAM";
     end
 end
-

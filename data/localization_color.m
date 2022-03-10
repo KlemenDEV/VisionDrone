@@ -3,7 +3,7 @@ name = localization_type(name);
 
 color = [0 0 0];
 
-if name == "IMU"
+if name == "IMU" || name == "KLT_{rel}"
     color = sscanf("3d9db2", '%2x%2x%2x', [1 3])/255;
 end
 if name == "KLT"
@@ -15,7 +15,7 @@ end
 if name == "MOD"
     color = sscanf("e9a06c", '%2x%2x%2x', [1 3])/255;
 end
-if name == "SLAM"
+if name == "SLAM" || name == "PX4_{rel}"
     color = sscanf("ebd96a", '%2x%2x%2x', [1 3])/255;
 end
 

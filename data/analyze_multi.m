@@ -71,15 +71,15 @@ for i = 1:length(results)
     data = mvalue{i};
     if i == 1
         datum = data.datum;
-        [gtlat, gtlon, ~] = local2latlon(data.gt_pose(:,2), data.gt_pose(:,3), 0, datum);
-        geoplot(gx, gtlat, gtlon, ':', 'LineWidth', 2, 'Color', 'black');
+        [gtlat, gtlon, ~] = local2latlon(-data.gt_pose(:,3), data.gt_pose(:,2), 0, datum);
+        geoplot(gx, gtlat, gtlon, ':', 'LineWidth', 2, 'Color', '#eeeeee');
         [lx, ly] = geolimits;
     end
     
-    [estimate_poselat, estimate_poselon, ~] = local2latlon(data.estimate_pose(:,2), data.estimate_pose(:,3), 0, datum);
+    [estimate_poselat, estimate_poselon, ~] = local2latlon(-data.estimate_pose(:,3), data.estimate_pose(:,2), 0, datum);
     geoplot(gx, estimate_poselat, estimate_poselon, 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
-off = 0.0006;
+off = 0.001;
 lx(1) = lx(1) - off;
 lx(2) = lx(2) + off;
 ly(1) = ly(1) - off;
@@ -127,10 +127,10 @@ for i = 1:length(results)
     
     data = mvalue{i};
     if i == 1
-        plot(data.gt_pose(:,1), data.gt_pose(:,2), 'Color', 'black', 'LineWidth', 1.5);
+        plot(data.gt_pose(:,1), -data.gt_pose(:,3), 'Color', 'black', 'LineWidth', 1.5);
     end
     
-    plot(data.gt_pose(:,1), data.estimate_pose(:,2), 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
+    plot(data.gt_pose(:,1), -data.estimate_pose(:,3), 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
 title("Ocena x_{ENU}");
 xlabel("čas / s");
@@ -152,10 +152,10 @@ for i = 1:length(results)
 
     data = mvalue{i};
     if i == 1
-        plot(data.gt_pose(:,1), data.gt_pose(:,3), 'Color', 'black', 'LineWidth', 1.5);
+        plot(data.gt_pose(:,1), data.gt_pose(:,2), 'Color', 'black', 'LineWidth', 1.5);
     end
 
-    plot(data.gt_pose(:,1), data.estimate_pose(:,3), 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
+    plot(data.gt_pose(:,1), data.estimate_pose(:,2), 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
 title("Ocena y_{ENU}");
 xlabel("čas / s");
@@ -251,10 +251,10 @@ for i = 1:length(results)
 
     data = mvalue{i};
     if i == 1
-        plot(data.gt_vel_enu(:,1), data.gt_vel_enu(:,2), 'Color', 'black', 'LineWidth', 1.5);
+        plot(data.gt_vel_enu(:,1), -data.gt_vel_enu(:,3), 'Color', 'black', 'LineWidth', 1.5);
     end
 
-    plot(data.gt_vel_enu(:,1), data.estimate_vel_enu(:,2), 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
+    plot(data.gt_vel_enu(:,1), -data.estimate_vel_enu(:,3), 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
 title("Ocena hitrosti v_{ENU,x}");
 xlabel("čas / s");
@@ -275,10 +275,10 @@ for i = 1:length(results)
 
     data = mvalue{i};
     if i == 1
-        plot(data.gt_vel_enu(:,1), data.gt_vel_enu(:,3), 'Color', 'black', 'LineWidth', 1.5);
+        plot(data.gt_vel_enu(:,1), data.gt_vel_enu(:,2), 'Color', 'black', 'LineWidth', 1.5);
     end
 
-    plot(data.gt_vel_enu(:,1), data.estimate_vel_enu(:,3), 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
+    plot(data.gt_vel_enu(:,1), data.estimate_vel_enu(:,2), 'Color', localization_color(mkey{i}), 'LineWidth', 1.5);
 end
 title("Ocena hitrosti v_{ENU,y}");
 xlabel("čas / s");
